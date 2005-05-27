@@ -5,14 +5,20 @@
   <pomVersion>3</pomVersion>
   <name>idegaWeb Email Block</name>
   <artifactId>com.idega.block.email</artifactId>
-  <currentVersion>1.0.1</currentVersion>
-  <!--currentVersion>1.1-SNAPSHOT</currentVersion-->
+  <!--currentVersion>1.0.1</currentVersion-->
+  <currentVersion>1.1-SNAPSHOT</currentVersion>
+
   <shortDescription>Email</shortDescription>
   <versions>
     <version>
       <id>1.0</id>
       <name>1.0</name>
       <tag>EMAIL_1_0</tag>
+    </version>
+    <version>
+      <id>1.0.1</id>
+      <name>1.0.1</name>
+      <tag>EMAIL_1_0_1</tag>
     </version>
   </versions>
   <branches/>
@@ -50,8 +56,9 @@
     <dependency>
       <groupId>bundles</groupId>
       <artifactId>com.idega.core</artifactId>
-      <!--HELPER--><version>3.0.5</version><!--HELPER-->
-      <!--HELPERversion>SNAPSHOT</versionHELPER-->
+      <!--version>3.0.5</version-->
+      <version>SNAPSHOT</version>
+
       <type>jar</type>
       <url>http://www.idega.com/</url>
       <properties>
@@ -61,8 +68,9 @@
     <dependency>
       <groupId>bundles</groupId>
       <artifactId>com.idega.block.category</artifactId>
-      <!--HELPER--><version>1.0.1</version><!--HELPER-->
-      <!--HELPERversion>SNAPSHOT</versionHELPER-->
+      <!--version>1.0.1</version-->
+      <version>SNAPSHOT</version>
+
       <type>jar</type>
       <url>http://www.idega.com/</url>
       <properties>
