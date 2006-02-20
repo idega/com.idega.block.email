@@ -112,8 +112,8 @@ public class NewsLetterArchive extends CategoryBlock {
 		if (theLetter != null)
 			T.add(getLetter(iwc), 2, row);
 
-		T.setAlignment(1, 2, T.VERTICAL_ALIGN_TOP);
-		T.setAlignment(2, 2, T.VERTICAL_ALIGN_TOP);
+		T.setAlignment(1, 2, Table.VERTICAL_ALIGN_TOP);
+		T.setAlignment(2, 2, Table.VERTICAL_ALIGN_TOP);
 
 		Form F = new Form();
 		F.add(T);
@@ -203,7 +203,7 @@ public class NewsLetterArchive extends CategoryBlock {
 
 	public PresentationObject getLetter(IWContext iwc) {
 		Table T = new Table();
-		T.setWidth(T.HUNDRED_PERCENT);
+		T.setWidth(Table.HUNDRED_PERCENT);
 		int row = 1;
 		T.add(getStyleText(theLetter.getSubject(), SN_SUBJ), 1, row);
 		T.mergeCells(1, row, 2, row);

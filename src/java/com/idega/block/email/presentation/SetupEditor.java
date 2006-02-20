@@ -502,11 +502,11 @@ public class SetupEditor extends Block {
   	int row = 1;
  	T.add(getTopicLink(-1,iwrb.getLocalizedString("new_topic","New topic")),1,row);
  	row++;
-  	T.add(tf.format(iwrb.getLocalizedString("name","Name"),tf.HEADER),1,row);
-  	T.add(tf.format(iwrb.getLocalizedString("category","Category"),tf.HEADER),2,row);
-  	T.add(tf.format(iwrb.getLocalizedString("mail_server","Mail server"),tf.HEADER),3,row);
-  	T.add(tf.format(iwrb.getLocalizedString("subscribers","Subscribers"),tf.HEADER),4,row);
-  	T.add(tf.format(iwrb.getLocalizedString("welcome","Welcome"),tf.HEADER),5,row);
+  	T.add(tf.format(iwrb.getLocalizedString("name","Name"),TextFormat.HEADER),1,row);
+  	T.add(tf.format(iwrb.getLocalizedString("category","Category"),TextFormat.HEADER),2,row);
+  	T.add(tf.format(iwrb.getLocalizedString("mail_server","Mail server"),TextFormat.HEADER),3,row);
+  	T.add(tf.format(iwrb.getLocalizedString("subscribers","Subscribers"),TextFormat.HEADER),4,row);
+  	T.add(tf.format(iwrb.getLocalizedString("welcome","Welcome"),TextFormat.HEADER),5,row);
   	row++;
   	if(!topics.isEmpty()){
   		Iterator iter = topics.values().iterator();
@@ -586,7 +586,7 @@ public class SetupEditor extends Block {
   public PresentationObject getSubscribers(IWContext iwc){
   	Table T = new Table();
   	int row= 1;
-  	T.add(tf.format(iwrb.getLocalizedString("subscribing_emails","Subscribing emails"),tf.HEADER),1,row++);
+  	T.add(tf.format(iwrb.getLocalizedString("subscribing_emails","Subscribing emails"),TextFormat.HEADER),1,row++);
   	
   	if (topic > 0) {
       Collection emails = MailFinder.getInstance().getListEmails(topic);
@@ -625,13 +625,13 @@ public class SetupEditor extends Block {
     
     int row = 1;
 
-    T.add(tf.format(iwrb.getLocalizedString("letter.from_name","Sender name"),tf.HEADER),1,row);
+    T.add(tf.format(iwrb.getLocalizedString("letter.from_name","Sender name"),TextFormat.HEADER),1,row);
     T.add(fromName,2,row++);
-    T.add(tf.format(iwrb.getLocalizedString("letter.from_address","Sender address"),tf.HEADER),1,row);
+    T.add(tf.format(iwrb.getLocalizedString("letter.from_address","Sender address"),TextFormat.HEADER),1,row);
     T.add(fromAddress,2,row++);
-    T.add(tf.format(iwrb.getLocalizedString("letter.subject","Subject"),tf.HEADER),1,row);
+    T.add(tf.format(iwrb.getLocalizedString("letter.subject","Subject"),TextFormat.HEADER),1,row);
     T.add(subject,2,row++);
-    T.add(tf.format(iwrb.getLocalizedString("letter.body","Body"),tf.HEADER),1,row);
+    T.add(tf.format(iwrb.getLocalizedString("letter.body","Body"),TextFormat.HEADER),1,row);
     T.add(body,2,row++);
 
     SubmitButton save = new SubmitButton(iwrb.getLocalizedImageButton("save","Save"),"save_letter");
@@ -686,11 +686,11 @@ public class SetupEditor extends Block {
   	Table T = new Table();
   	int row = 1;
 
-  	T.add(tf.format(iwrb.getLocalizedString("name", "Name"),tf.HEADER), 1, row++);
-    T.add(tf.format(iwrb.getLocalizedString("description", "Description"),tf.HEADER), 1, row++);
-	T.add(tf.format(iwrb.getLocalizedString("sender_name", "Sender name"),tf.HEADER), 1, row++);
-	T.add(tf.format(iwrb.getLocalizedString("sender_email", "Sender email"),tf.HEADER), 1, row++);
-    T.add(tf.format(iwrb.getLocalizedString("category", "Category"),tf.HEADER), 1, row++);
+  	T.add(tf.format(iwrb.getLocalizedString("name", "Name"),TextFormat.HEADER), 1, row++);
+    T.add(tf.format(iwrb.getLocalizedString("description", "Description"),TextFormat.HEADER), 1, row++);
+	T.add(tf.format(iwrb.getLocalizedString("sender_name", "Sender name"),TextFormat.HEADER), 1, row++);
+	T.add(tf.format(iwrb.getLocalizedString("sender_email", "Sender email"),TextFormat.HEADER), 1, row++);
+    T.add(tf.format(iwrb.getLocalizedString("category", "Category"),TextFormat.HEADER), 1, row++);
     row=1;
     TextInput name = new TextInput("name");
     TextInput info = new TextInput("info");
@@ -725,10 +725,10 @@ public class SetupEditor extends Block {
     TextInput host = new TextInput("host");
     TextInput user = new TextInput("user");
     TextInput pass = new TextInput("pass");
-    T.add(tf.format(iwrb.getLocalizedString("name","Name"),tf.HEADER),1,row++);
-    T.add(tf.format(iwrb.getLocalizedString("host","Host"),tf.HEADER),1,row++);
-    T.add(tf.format(iwrb.getLocalizedString("user","User"),tf.HEADER),1,row++);
-    T.add(tf.format(iwrb.getLocalizedString("pass","Passwd"),tf.HEADER),1,row++);
+    T.add(tf.format(iwrb.getLocalizedString("name","Name"),TextFormat.HEADER),1,row++);
+    T.add(tf.format(iwrb.getLocalizedString("host","Host"),TextFormat.HEADER),1,row++);
+    T.add(tf.format(iwrb.getLocalizedString("user","User"),TextFormat.HEADER),1,row++);
+    T.add(tf.format(iwrb.getLocalizedString("pass","Passwd"),TextFormat.HEADER),1,row++);
     T.add(new HiddenInput("proto",String.valueOf(MailProtocol.SMTP)));
     if(account > 0){
     	try {

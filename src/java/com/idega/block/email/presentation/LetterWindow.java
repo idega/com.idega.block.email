@@ -92,7 +92,7 @@ public class LetterWindow extends IWAdminWindow {
 		T.add(
 			tf.format(
 				iwrb.getLocalizedString("list.sent_info", "Letter has been sent to all recipients"),
-				tf.HEADER));
+				TextFormat.HEADER));
 		return T;
 	}
 
@@ -108,7 +108,7 @@ public class LetterWindow extends IWAdminWindow {
 		int row = 1;
 
 		if (topics != null && topics.size() > 0) {
-			T.add(tf.format(iwrb.getLocalizedString("list.topic", "Topic"), tf.HEADER), 1, row);
+			T.add(tf.format(iwrb.getLocalizedString("list.topic", "Topic"), TextFormat.HEADER), 1, row);
 			DropdownMenu drp = new DropdownMenu("topic_id");
 			drp.setToSubmit();
 			java.util.Iterator iter = topics.iterator();
@@ -142,13 +142,13 @@ public class LetterWindow extends IWAdminWindow {
 		}
 
 		T.add(
-			tf.format(iwrb.getLocalizedString("letter.from_name", "Sender name"), tf.HEADER),	1,	row);
+			tf.format(iwrb.getLocalizedString("letter.from_name", "Sender name"), TextFormat.HEADER),	1,	row);
 		T.add(fromName, 2, row++);
-		T.add(tf.format(iwrb.getLocalizedString("letter.from_address", "Sender address"), tf.HEADER),1,row);
+		T.add(tf.format(iwrb.getLocalizedString("letter.from_address", "Sender address"), TextFormat.HEADER),1,row);
 		T.add(fromAddress, 2, row++);
-		T.add(tf.format(iwrb.getLocalizedString("letter.subject", "Subject"), tf.HEADER), 1, row);
+		T.add(tf.format(iwrb.getLocalizedString("letter.subject", "Subject"), TextFormat.HEADER), 1, row);
 		T.add(subject, 2, row++);
-		T.add(tf.format(iwrb.getLocalizedString("letter.body", "Body"), tf.HEADER), 1, row);
+		T.add(tf.format(iwrb.getLocalizedString("letter.body", "Body"), TextFormat.HEADER), 1, row);
 		T.add(body, 2, row++);
 
 		SubmitButton send = new SubmitButton(iwrb.getLocalizedImageButton("send", "Send"), "send");
