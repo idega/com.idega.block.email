@@ -9,22 +9,28 @@ package com.idega.block.email.presentation;
  * @version 1.0
  */
 
-import com.idega.block.email.business.*;
+import java.rmi.RemoteException;
+import java.util.Collection;
+
+import com.idega.block.email.business.EmailLetter;
+import com.idega.block.email.business.EmailTopic;
+import com.idega.block.email.business.MailBusiness;
+import com.idega.block.email.business.MailFinder;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.presentation.IWAdminWindow;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.presentation.Table;
-import com.idega.presentation.ui.*;
+import com.idega.presentation.ui.DropdownMenu;
+import com.idega.presentation.ui.Form;
+import com.idega.presentation.ui.HiddenInput;
+import com.idega.presentation.ui.SubmitButton;
+import com.idega.presentation.ui.TextArea;
+import com.idega.presentation.ui.TextInput;
 import com.idega.presentation.util.TextFormat;
-import com.idega.idegaweb.IWBundle;
-import com.idega.idegaweb.IWResourceBundle;
-
-import java.rmi.RemoteException;
-import java.util.Collection;
 
 public class LetterWindow extends IWAdminWindow {
 
-	private IWBundle iwb;
 	private IWResourceBundle iwrb;
 	public final static String prmInstanceId = "eml_inst";
 	private Collection topics;
@@ -51,7 +57,6 @@ public class LetterWindow extends IWAdminWindow {
 	public void main(IWContext iwc) throws RemoteException {
 		//debugParameters(iwc);
 
-		iwb = getBundle(iwc);
 		iwrb = getResourceBundle(iwc);
 		tf = TextFormat.getInstance();
 

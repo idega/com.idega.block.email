@@ -35,7 +35,6 @@ import com.idega.util.text.TextSoap;
 
 public class NewsLetterArchive extends CategoryBlock {
 
-	private int group = -1;
 	private int topic = -1;
 	private int letter = -1;
 
@@ -43,14 +42,10 @@ public class NewsLetterArchive extends CategoryBlock {
 	private String prmTopic = "em_nla_tpc";
 	private String prmLetterDelete = "em_nla_ldel";
 
-	private IWBundle iwb, core;
+	private IWBundle core;
 	private IWResourceBundle iwrb;
 
-	private String LinkStyle = "";
-	private String InfoStyle = "";
-
 	private Collection topics;
-	private Collection groups;
 	private Collection letters;
 
 	private EmailLetter theLetter;
@@ -73,7 +68,6 @@ public class NewsLetterArchive extends CategoryBlock {
 	}
 
 	public void main(IWContext iwc) {
-		iwb = getBundle(iwc);
 		core = iwc.getIWMainApplication().getCoreBundle();
 		iwrb = getResourceBundle(iwc);
 		Table T = new Table();

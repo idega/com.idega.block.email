@@ -57,8 +57,6 @@ public class SetupEditor extends Block {
   private final static String prmAccountId = "eme_account";
   private final static String prmEdit = "eme_edit";
   private final static String prmNew = "eme_new";
-  private final static String prmSave = "eme_save";
-  private final static String prmView = "eme_view";
   private final static String prmDel = "eme_del";
   private final static String prmEmails = "eme_emails";
   private final static String prmWelcome = "eme_welc";
@@ -70,10 +68,6 @@ public class SetupEditor extends Block {
   private int topic = -1;
   private int account = -1;
   private int letterID = -1;
-  private boolean New = false;
-  private boolean Save = false;
-  private boolean Edit = true;
-  private boolean View = true;
   private String NewObject = "", EditObject = "";
 
   private Image editImage;
@@ -81,8 +75,7 @@ public class SetupEditor extends Block {
 
   private boolean formAdded = false;
 
-  private int category = -1;
-  private IWBundle iwb, core;
+  private IWBundle core;
   private IWResourceBundle iwrb;
   private Map categories;
   private Map topics;
@@ -105,8 +98,6 @@ public class SetupEditor extends Block {
    * @todo        Description of the Method
    */
   public void main(IWContext iwc) {
-    //debugParameters(iwc);
-    iwb = getBundle(iwc);
     iwrb = getResourceBundle(iwc);
     core = iwc.getIWMainApplication().getCoreBundle();
 
@@ -158,41 +149,6 @@ public class SetupEditor extends Block {
     add(F);
   }
 
-
-  /**
-   * @param  iwc  Description of the Parameter
-   * @todo        Description of the Method
-   */
-  private void processForm(IWContext iwc) {
-    if (iwc.isParameterSet("save") || iwc.isParameterSet("save.x")) {
-      String savedObject = iwc.getParameter("save");
-     /*
-      if (savedObject.equals("group")) {
-        saveGroup(iwc);
-      } else
-      */
-      if (savedObject.equals("topic")) {
-        saveTopic(iwc);
-      } else if (savedObject.equals("account")) {
-        saveAccount(iwc);
-      }
-    } else if (iwc.isParameterSet(prmDel)) {
-      String delObject = iwc.getParameter(prmDel);
-      /*
-      if (delObject.equals("group")) {
-        deleteGroup();
-        group = -1;
-      } else
-      */
-      if (delObject.equals("topic")) {
-        deleteTopic();
-        topic = -1;
-      } else if (delObject.equals("account")) {
-        deleteAccount();
-        account = -1;
-      }
-    }
-  }
 
   /**
    *  Gets the accounts of the SetupEditor object
