@@ -13,8 +13,8 @@ import com.idega.block.email.data.MailTopic;
 import com.idega.block.email.data.MailTopicBMPBean;
 import com.idega.block.email.data.MailTopicHome;
 import com.idega.core.contact.data.Email;
-import com.idega.core.contact.data.EmailBMPBean;
 import com.idega.data.EntityFinder;
+import com.idega.data.GenericEntity;
 import com.idega.data.IDOFinderException;
 import com.idega.data.IDOLegacyEntity;
 import com.idega.data.IDOLookup;
@@ -121,7 +121,7 @@ public class MailFinder {
    * @todo                       Description of the Method
    */
   public Map mapOfEmailGroups(int ICObjectInstanceId) {
-    return EntityFinder.getInstance().getMapOfEntity(getEmailGroups(ICObjectInstanceId), ((MailGroup) com.idega.block.email.data.MailGroupBMPBean.getEntityInstance(MailGroup.class)).getIDColumnName());
+    return EntityFinder.getInstance().getMapOfEntity(getEmailGroups(ICObjectInstanceId), ((MailGroup) GenericEntity.getEntityInstance(MailGroup.class)).getIDColumnName());
   }
 
 
@@ -145,7 +145,7 @@ public class MailFinder {
    */
   public Collection getGroupAccounts(int GroupId) {
     try {
-      Collection c = EntityFinder.getInstance().findRelated(com.idega.block.email.data.MailGroupBMPBean.getEntityInstance(MailGroup.class, GroupId), MailAccount.class);
+      Collection c = EntityFinder.getInstance().findRelated(GenericEntity.getEntityInstance(MailGroup.class, GroupId), MailAccount.class);
       return c;
     } catch (IDOFinderException ex) {
 
@@ -162,7 +162,7 @@ public class MailFinder {
    */
   public Collection getTopicAccounts(int TopicId) {
     try {
-      Collection c = EntityFinder.getInstance().findRelated(com.idega.block.email.data.MailGroupBMPBean.getEntityInstance(MailTopic.class, TopicId), MailAccount.class);
+      Collection c = EntityFinder.getInstance().findRelated(GenericEntity.getEntityInstance(MailTopic.class, TopicId), MailAccount.class);
       return c;
     } catch (IDOFinderException ex) {
 
@@ -242,7 +242,7 @@ public class MailFinder {
 
   public MailTopic getTopic(int id){
     try {
-      return (MailTopic) com.idega.block.email.data.MailTopicBMPBean.getEntityInstance(MailTopic.class,id);
+      return (MailTopic) GenericEntity.getEntityInstance(MailTopic.class,id);
     }
     catch (Exception ex) {
 
@@ -259,7 +259,7 @@ public class MailFinder {
    */
   public Collection getListEmails(int listId) {
     try {
-      return EntityFinder.getInstance().findRelated(com.idega.block.email.data.MailListBMPBean.getEntityInstance(MailList.class, listId), Email.class);
+      return EntityFinder.getInstance().findRelated(GenericEntity.getEntityInstance(MailList.class, listId), Email.class);
     } catch (Exception ex) {
 
     }
@@ -268,7 +268,7 @@ public class MailFinder {
   
   public int getListEmailsCount(int listId){
   	try{
-  	return com.idega.block.email.data.MailListBMPBean.getEntityInstance(MailList.class, listId).getNumberOfRecordsRelated((IDOLegacyEntity)EmailBMPBean.getEntityInstance(Email.class));
+  	return GenericEntity.getEntityInstance(MailList.class, listId).getNumberOfRecordsRelated((IDOLegacyEntity)GenericEntity.getEntityInstance(Email.class));
   	}catch(Exception ex){ex.printStackTrace();}
   	return 0;
   }
