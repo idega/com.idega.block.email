@@ -703,8 +703,8 @@ public class SetupEditor extends Block {
    	T.add(host,2,row++);
    	T.add(user,2,row++);
    	T.add(pass,2,row++);
-   	T.add(new SubmitButton(iwrb.getLocalizedImageButton("save","Save"),"save_account"),2,row);;
-    T.add(new SubmitButton(iwrb.getLocalizedImageButton("delete","Delete"),"remove_account"),2,row);;
+   	T.add(new SubmitButton(iwrb.getLocalizedImageButton("save","Save"),"save_account"),2,row);
+    T.add(new SubmitButton(iwrb.getLocalizedImageButton("delete","Delete"),"remove_account"),2,row);
     return T;
   }
   
