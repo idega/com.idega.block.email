@@ -194,8 +194,9 @@ public class MailBusiness {
         account.insert();
       }
 
-      if(entityClass!=null && entityId > 0)
-      account.addTo(entityClass, entityId);
+      if(entityClass!=null && entityId > 0) {
+				account.addTo(entityClass, entityId);
+			}
 
       return account;
     } catch (Exception ex) {

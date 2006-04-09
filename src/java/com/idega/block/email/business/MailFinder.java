@@ -191,8 +191,9 @@ public class MailFinder {
       }
       return accounts;
     }
-    else
-      System.err.println("topic accounts empty");
+		else {
+			System.err.println("topic accounts empty");
+		}
     return null;
   }
 
@@ -217,8 +218,9 @@ public class MailFinder {
       }
       return accounts;
     }
-   else
-    System.err.println("group accounts empty");
+		else {
+			System.err.println("group accounts empty");
+		}
     return null;
   }
 
@@ -288,8 +290,9 @@ public class MailFinder {
       EntityFinder.debug = true;
       java.util.List c = EntityFinder.getInstance().findAllByColumn(Email.class,com.idega.core.contact.data.EmailBMPBean.getColumnNameAddress(),EmailAddress);
       EntityFinder.debug = false;
-      if(c!=null && c.size() > 0)
-        return (Email) c.get(0);
+      if(c!=null && c.size() > 0) {
+				return (Email) c.get(0);
+			}
     }
     catch (Exception ex) {
 
