@@ -32,22 +32,22 @@ public class MessageInfo {
             int numParts = mp.getCount();
             for (int i = 0; i < numParts; ++i) {
                 if (mp.getBodyPart(i).isMimeType("text/plain")) {
-									return (String)mp.getBodyPart(i).getContent();
-								}
+					return (String)mp.getBodyPart(i).getContent();
+				}
             }
             return "";
         } else if (this.message.isMimeType("multipart/*")) {
 	          Multipart mp = (Multipart)content;
             if (mp.getBodyPart(0).isMimeType("text/plain")) {
-							return (String)mp.getBodyPart(0).getContent();
-						}
-						else {
-							return "";
-						}
+				return (String)mp.getBodyPart(0).getContent();
+			}
+			else {
+				return "";
+			}
         }
-				else {
-					return "";
-				}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -66,14 +66,14 @@ public class MessageInfo {
         Date date;
         SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy hh:mm EE");
         if ((date = this.message.getSentDate()) != null) {
-					return (df.format(date));
-				}
-				else if ((date = this.message.getReceivedDate()) != null) {
-					return (df.format(date));
-				}
-				else {
-					return "";
-				}
+			return (df.format(date));
+		}
+		else if ((date = this.message.getReceivedDate()) != null) {
+			return (df.format(date));
+		}
+		else {
+			return "";
+		}
      }
 
     /**
@@ -102,11 +102,11 @@ public class MessageInfo {
      */
     public String getReceivedDate() throws MessagingException {
         if (hasReceivedDate()) {
-					return (this.message.getReceivedDate().toString());
-				}
-				else {
-					return "";
-				}
+			return (this.message.getReceivedDate().toString());
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -114,11 +114,11 @@ public class MessageInfo {
      */
     public String getSentDate() throws MessagingException {
         if (hasSentDate()) {
-					return (this.message.getSentDate().toString());
-				}
-				else {
-					return "";
-				}
+			return (this.message.getSentDate().toString());
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -126,11 +126,11 @@ public class MessageInfo {
      */
     public String getSubject() throws MessagingException {
         if (hasSubject()) {
-					return this.message.getSubject();
-				}
-				else {
-					return "";
-				}
+			return this.message.getSubject();
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -150,8 +150,8 @@ public class MessageInfo {
         if (this.message.isMimeType("multipart/*")) {
 	    Multipart mp = (Multipart)this.message.getContent();
             if (mp.getCount() > 1) {
-							hasAttachments = true;
-						}
+				hasAttachments = true;
+			}
         }
 
         return hasAttachments;
@@ -232,8 +232,8 @@ public class MessageInfo {
      */
     private String formatAddresses(Address[] addrs) {
         if (addrs == null) {
-					return "";
-				}
+			return "";
+		}
         StringBuffer strBuf = new StringBuffer(getDisplayAddress(addrs[0]));
         for (int i = 1; i < addrs.length; i++) {
             strBuf.append(", ").append(getDisplayAddress(addrs[i]));
@@ -251,9 +251,9 @@ public class MessageInfo {
            ((pers = ((InternetAddress)a).getPersonal()) != null)) {
 	    addr = pers + "  "+"&lt;"+((InternetAddress)a).getAddress()+"&gt;";
         }
-				else {
-					addr = a.toString();
-				}
+		else {
+			addr = a.toString();
+		}
         return addr;
     }
 }

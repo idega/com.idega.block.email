@@ -1,21 +1,18 @@
 package com.idega.block.email.client.presentation;
 
-import java.util.Iterator;
-import java.util.Map;
-
+import com.idega.block.email.client.business.*;
 import com.idega.block.email.business.EmailAccount;
-import com.idega.block.email.client.business.MailUserBean;
-import com.idega.block.email.client.business.MessageFinder;
-import com.idega.block.email.client.business.MessageInfo;
-import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.presentation.Table;
-import com.idega.presentation.text.Link;
-import com.idega.presentation.ui.Form;
-import com.idega.presentation.ui.SubmitButton;
-import com.idega.presentation.ui.TextInput;
+import com.idega.presentation.ui.*;
+import com.idega.presentation.text.*;
+import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWResourceBundle;
+
+import java.util.Map;
+import java.util.Iterator;
 
 /**
  * Title:
@@ -28,6 +25,7 @@ import com.idega.presentation.ui.TextInput;
 
 public class MailClient extends Block {
 
+  private final static String prmMsgStartIndex = "em_cl_msg_st_in";
   private final static String prmMsgNum = "em_cl_msg_num";
   private final static String prmSessionUser = "em_email_user";
   private final static String prmSessionUserMsgs = "em_email_user_msgs";
@@ -37,6 +35,7 @@ public class MailClient extends Block {
   private Map messagesMap;
   private EmailAccount mailaccount;
 
+  private IWBundle iwb ;
   private IWResourceBundle iwrb;
 
   private String EMAILBUNDLE_IDENTIFIER = "com.idega.block.email";
@@ -50,6 +49,7 @@ public class MailClient extends Block {
 
   public void main(IWContext iwc) throws Exception{
     debugParameters(iwc);
+    this.iwb = getBundle(iwc);
     this.iwrb = getResourceBundle(iwc);
     // process forms
     processForm(iwc);
@@ -58,11 +58,11 @@ public class MailClient extends Block {
     Table T = new Table();
     if(this.mailuser!=null){
       if(iwc.isParameterSet(prmMsgNum)) {
-				T.add(getMessage(iwc));
-			}
-			else {
-				T.add(getListMessages(iwc));
-			}
+		T.add(getMessage(iwc));
+	}
+	else {
+		T.add(getListMessages(iwc));
+	}
     }
     else{
       T.add(getLogin(iwc));

@@ -2,7 +2,6 @@ package com.idega.block.email.presentation;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import com.idega.block.category.presentation.CategoryBlock;
 import com.idega.block.email.business.EmailTopic;
 import com.idega.block.email.business.MailBusiness;
@@ -55,7 +54,7 @@ public class NewsLetter extends CategoryBlock {
 	 */
 	public static String EMAIL_BUNDLE_IDENTIFIER = "com.idega.block.email";
 
-	private IWBundle core;
+	private IWBundle iwb, core;
 
 	private IWResourceBundle iwrb;
 
@@ -89,11 +88,12 @@ public class NewsLetter extends CategoryBlock {
 	private boolean _showCancelImage;
 
 	private String _bgColor = "#ffffff";
-
+	
 	private boolean useButtons = true;
 	private boolean useLinks = false;
 	private String arrowStyleClass;
 	private String linkStyleClass;
+	
 
 	/** Constructor for the NewsLetter object */
 	public NewsLetter() {
@@ -129,10 +129,12 @@ public class NewsLetter extends CategoryBlock {
 
 	/**
 	 * @param iwc
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @todo Description of the Method
 	 */
 	public void main(IWContext iwc) {
+		//debugParameters(iwc);
+		this.iwb = getBundle(iwc);
 		this.core = iwc.getIWMainApplication().getCoreBundle();
 		this.iwrb = getResourceBundle(iwc);
 		Table T = new Table();
@@ -198,7 +200,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Gets the dropdownView of the NewsLetter object
 	 * 
 	 * @param iwc
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @return The dropdown view value
 	 */
 	public PresentationObject getDropdownView(IWContext iwc) {
@@ -329,7 +331,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Gets the checkBoxView of the NewsLetter object
 	 * 
 	 * @param iwc
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @return The check box view value
 	 */
 	public PresentationObject getCheckBoxView(IWContext iwc) {
@@ -422,10 +424,10 @@ public class NewsLetter extends CategoryBlock {
 			Link sendLink = new Link(this.iwrb.getLocalizedString("subscribe", "Subscribe"));
 			sendLink.addParameter("nl_send", "true");
 			sendLink.setToFormSubmit(form);
-
-			// added 20.01.2005 - ac
+			
+			//added 20.01.2005 - ac
 			sendLink.setToolTip("Please fill in your email, mark the desired newsletter and choose subscribe or unsubscribe.");
-
+			
 			if (this.linkStyleClass != null) {
 				sendLink.setStyle(this.linkStyleClass);
 			}
@@ -493,7 +495,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Gets the addLink of the NewsLetter object
 	 * 
 	 * @param image
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @return The add link value
 	 */
 	private Link getAddLink(Image image) {
@@ -507,7 +509,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Gets the setupLink of the NewsLetter object
 	 * 
 	 * @param image
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @return The setup link value
 	 */
 	private Link getSetupLink(Image image) {
@@ -521,7 +523,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Gets the categoryLink of the NewsLetter object
 	 * 
 	 * @param image
-	 *          Description of the Parameter
+	 *            Description of the Parameter
 	 * @return The category link value
 	 */
 	private Link getCategoryLink(Image image) {
@@ -534,7 +536,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the viewType attribute of the NewsLetter object
 	 * 
 	 * @param viewType
-	 *          The new viewType value
+	 *            The new viewType value
 	 */
 	public void setViewType(int viewType) {
 		this.viewType = viewType;
@@ -544,7 +546,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the input style attribute of the NewsLetter object
 	 * 
 	 * @param inputStyle -
-	 *          the new value for _inputStyle
+	 *            the new value for _inputStyle
 	 */
 	public void setInputStyle(String inputStyle) {
 		this._inputStyle = inputStyle;
@@ -563,7 +565,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the input length attribute of the NewsLetter object
 	 * 
 	 * @param inputLength -
-	 *          the new value for _inputStyle
+	 *            the new value for _inputStyle
 	 */
 	public void setInputLength(int inputLength) {
 		this._inputLength = inputLength;
@@ -573,7 +575,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the submitImage attribute of the NewsLetter object
 	 * 
 	 * @param submitImage
-	 *          The new submitImage value
+	 *            The new submitImage value
 	 */
 	public void setSubmitImage(Image submitImage) {
 		this.submitImage = submitImage;
@@ -583,7 +585,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the cancelImage attribute of the NewsLetter object
 	 * 
 	 * @param cancelImage
-	 *          The new cancelImage value
+	 *            The new cancelImage value
 	 */
 	public void setCancelImage(Image cancelImage) {
 		this.cancelImage = cancelImage;
@@ -593,7 +595,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the submit button below the input
 	 * 
 	 * @param _submitBelow
-	 *          The new _submitBelow value
+	 *            The new _submitBelow value
 	 */
 	public void setSubmitBelowInput(boolean submitBelow) {
 		this._submitBelow = submitBelow;
@@ -603,7 +605,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the space between the submit button and the input
 	 * 
 	 * @param _spaceBetween
-	 *          The new _spaceBetween value
+	 *            The new _spaceBetween value
 	 */
 	public void setSpaceBetween(String spaceBetween) {
 		this._spaceBetween = spaceBetween;
@@ -621,7 +623,7 @@ public class NewsLetter extends CategoryBlock {
 	 * Sets the _showCancelImage.
 	 * 
 	 * @param showUnsubscribe
-	 *          The _showCancelImage to set
+	 *            The _showCancelImage to set
 	 */
 	public void setShowUnsubscribeButton(boolean showUnsubscribe) {
 		this._showCancelImage = showUnsubscribe;
@@ -666,42 +668,33 @@ public class NewsLetter extends CategoryBlock {
 	}
 
 	/**
-	 * @param arrowStyleClass
-	 *          The arrowStyleClass to set.
+	 * @param arrowStyleClass The arrowStyleClass to set.
 	 */
 	public void setArrowStyleClass(String arrowStyleClass) {
 		this.arrowStyleClass = arrowStyleClass;
 	}
-
 	/**
-	 * @param linkStyleClass
-	 *          The linkStyleClass to set.
+	 * @param linkStyleClass The linkStyleClass to set.
 	 */
 	public void setLinkStyleClass(String linkStyleClass) {
 		this.linkStyleClass = linkStyleClass;
 	}
-
 	/**
-	 * @param useButtons
-	 *          The useButtons to set.
+	 * @param useButtons The useButtons to set.
 	 */
 	public void setUseButtons(boolean useButtons) {
 		this.useButtons = useButtons;
 		this.useLinks = !useButtons;
 	}
-
 	/**
-	 * @param useLinks
-	 *          The useLinks to set.
+	 * @param useLinks The useLinks to set.
 	 */
 	public void setUseLinks(boolean useLinks) {
 		this.useLinks = useLinks;
 		this.useButtons = !useLinks;
 	}
-
 	/**
-	 * @param space
-	 *          The spacing to set.
+	 * @param space The spacing to set.
 	 */
 	public void setSaceBeforeButtons(int spacing) {
 		this._spaceBeforeButtons = spacing;

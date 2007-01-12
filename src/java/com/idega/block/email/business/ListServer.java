@@ -37,8 +37,10 @@ public class ListServer {
 	private final static String INBOX = "INBOX", POP_MAIL = "pop3", SMTP_MAIL = "smtp";
 	private boolean debugOn = false;
 	private String _smtpHost = null,
+		_pop3Host = null,
 		_user = null,
 		_password = null,
+		_emailListFile = null,
 		_fromName = null;
 	private InternetAddress[] _toList = null;
 	/**
@@ -109,8 +111,10 @@ public class ListServer {
 		String fromName)
 		throws Exception {
 		this._smtpHost = smtpHost;
+		this._pop3Host = pop3Host;
 		this._user = user;
 		this._password = password;
+		this._emailListFile = emailListFile;
 		if (fromName != null) {
 			this._fromName = fromName;
 		}

@@ -18,11 +18,11 @@ public class AttachmentInfo {
     public String getAttachmentType() throws MessagingException {
         String contentType;
         if ((contentType = this.part.getContentType()) == null) {
-					return "invalid part";
-				}
-				else {
-					return contentType;
-				}
+			return "invalid part";
+		}
+		else {
+			return contentType;
+		}
     }
 
     /**
@@ -30,11 +30,11 @@ public class AttachmentInfo {
      */
     public String getContent() throws java.io.IOException, MessagingException {
         if (hasMimeType("text/plain")) {
-					return (String)this.part.getContent();
-				}
-				else {
-					return "";
-				}
+			return (String)this.part.getContent();
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -43,11 +43,11 @@ public class AttachmentInfo {
     public String getDescription() throws MessagingException {
         String description;
         if ((description = this.part.getDescription()) != null) {
-					return description;
-				}
-				else {
-					return "";
-				}
+			return description;
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -56,11 +56,11 @@ public class AttachmentInfo {
     public String getFilename() throws MessagingException {
         String filename;
         if ((filename = this.part.getFileName()) != null) {
-					return filename;
-				}
-				else {
-					return "";
-				}
+			return filename;
+		}
+		else {
+			return "";
+		}
     }
 
     /**
@@ -96,11 +96,11 @@ public class AttachmentInfo {
      */
     public boolean isInline() throws MessagingException {
         if (this.part.getDisposition() != null) {
-					return this.part.getDisposition().equals(Part.INLINE);
-				}
-				else {
-					return true;
-				}
+			return this.part.getDisposition().equals(Part.INLINE);
+		}
+		else {
+			return true;
+		}
     }
 
     /**
