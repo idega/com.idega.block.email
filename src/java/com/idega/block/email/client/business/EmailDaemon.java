@@ -24,9 +24,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * 
- * Last modified: $Date: 2008/04/16 16:20:40 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/16 16:21:58 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -68,7 +68,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		
 		if (!CoreConstants.EMPTY.equals(this.host)) {
 		    if ((CoreConstants.EMPTY.equals(this.account_name)) || (CoreConstants.EMPTY.equals(this.protocol)) || (CoreConstants.EMPTY.equals(this.password))){    
-			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Mail properties are empty");
 		    }else {
 			    mailUser.login(this.host,this.account_name, this.password,this.protocol);	
 //			    getting message map
