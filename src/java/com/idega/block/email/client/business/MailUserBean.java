@@ -45,24 +45,6 @@ public class MailUserBean {
         return this.folder;
     }
 
-    public static void main(String[] args) {
-	 Pattern autoNumPattern = Pattern.compile(IDNETIFIER_PATTERN);
-	 
-	 Matcher autoNumMatcher;
-	 
-	String subject = "asddasdIW-1234-14-14-232Aa asad";
-	autoNumMatcher = autoNumPattern.matcher(subject);
-	
-	if (autoNumMatcher.find()) {
-	    int start = autoNumMatcher.start();
-	    int end = autoNumMatcher.end();
-	    System.out.println(subject.substring(start,end));
-	    System.out.println("okay");
-	    
-	}else{
-	    System.out.println("no good");
-	}
-    }
     /**
      * Returns all messages with right pattern.
      * Be carefull - changes messages status in mail server
@@ -111,29 +93,6 @@ public class MailUserBean {
 	
 	return messageMap;
     }
-    /**
-     * Returns all messages with that subject
-     *
-     */
-    /*
-    public int getNewMessagesInterval(long timeInMillis, String subject) throws MessagingException{
-	Message[] message = getMessages();	
-	long currentTime = System.currentTimeMillis();
-	int sk =0;
-	
-	for (int i = 0; i <   message.length; i++) {
-	    long sentEmailTime = message[i].getSentDate().getTime();
-	       
-	    if ((currentTime - sentEmailTime < timeInMillis)&&(message[i].getSubject().equals(subject))){
-		   
-		   sk++;  
-		   
-	    }
-      
-	}
-	return sk;
-    }
-    */
 
     /**
      * Returns the number of messages in the folder.
