@@ -24,9 +24,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * 
- * Last modified: $Date: 2008/04/16 16:19:08 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/16 16:20:40 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -67,7 +67,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		this.password = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 		
 		if (!CoreConstants.EMPTY.equals(this.host)) {
-		    if ((CoreConstants.EMPTY.equals(this.host)) || (CoreConstants.EMPTY.equals(this.account_name)) || (CoreConstants.EMPTY.equals(this.protocol)) || (CoreConstants.EMPTY.equals(this.password))){    
+		    if ((CoreConstants.EMPTY.equals(this.account_name)) || (CoreConstants.EMPTY.equals(this.protocol)) || (CoreConstants.EMPTY.equals(this.password))){    
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
 		    }else {
 			    mailUser.login(this.host,this.account_name, this.password,this.protocol);	
