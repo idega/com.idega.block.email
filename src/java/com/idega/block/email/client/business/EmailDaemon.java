@@ -24,9 +24,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
- * Last modified: $Date: 2008/04/16 16:00:04 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/16 16:04:32 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -66,26 +66,28 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		this.protocol = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 		this.password = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 		
+		if (!(CoreConstants.EMPTY.equals(this.host)) || (!CoreConstants.EMPTY.equals(this.account_name)) || (!CoreConstants.EMPTY.equals(this.protocol)) || (!CoreConstants.EMPTY.equals(this.password))){    
 		
-		if (CoreConstants.EMPTY.equals(this.host)) {
-		    Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
-		}else {
-		    if ( (!CoreConstants.EMPTY.equals(this.account_name)) && (!CoreConstants.EMPTY.equals(this.protocol)) && (!CoreConstants.EMPTY.equals(this.password))) 
-		    {
+		    if (CoreConstants.EMPTY.equals(this.host)) {
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
+		    }else {
+			if ( (!CoreConstants.EMPTY.equals(this.account_name)) && (!CoreConstants.EMPTY.equals(this.protocol)) && (!CoreConstants.EMPTY.equals(this.password))) 
+			{
 
-			 mailUser.login(this.host,this.account_name, this.protocol, this.password);	
-//			 getting message map
-			 Map<String, Message> messages = mailUser.getMessageMap();
+			    mailUser.login(this.host,this.account_name, this.protocol, this.password);	
+//			    getting message map
+			    Map<String, Message> messages = mailUser.getMessageMap();
 			 
-			 if ((messages != null) && (!messages.isEmpty())){
+			    if ((messages != null) && (!messages.isEmpty())){
 			     
-			     ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
-			     eventEmail.setMessages(messages);
-			     ctx.publishEvent(eventEmail);
+				ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
+				eventEmail.setMessages(messages);
+				ctx.publishEvent(eventEmail);
 			     
-			 }
+			    }
 			 
-			 mailUser.logout();
+			    mailUser.logout();
+			}
 		    }
 		}
 				
