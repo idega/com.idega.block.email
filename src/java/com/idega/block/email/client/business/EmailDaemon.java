@@ -24,9 +24,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * 
- * Last modified: $Date: 2008/04/16 16:04:32 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/16 16:19:08 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -66,15 +66,11 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		this.protocol = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 		this.password = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 		
-		if (!(CoreConstants.EMPTY.equals(this.host)) || (!CoreConstants.EMPTY.equals(this.account_name)) || (!CoreConstants.EMPTY.equals(this.protocol)) || (!CoreConstants.EMPTY.equals(this.password))){    
-		
-		    if (CoreConstants.EMPTY.equals(this.host)) {
+		if (!CoreConstants.EMPTY.equals(this.host)) {
+		    if ((CoreConstants.EMPTY.equals(this.host)) || (CoreConstants.EMPTY.equals(this.account_name)) || (CoreConstants.EMPTY.equals(this.protocol)) || (CoreConstants.EMPTY.equals(this.password))){    
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
 		    }else {
-			if ( (!CoreConstants.EMPTY.equals(this.account_name)) && (!CoreConstants.EMPTY.equals(this.protocol)) && (!CoreConstants.EMPTY.equals(this.password))) 
-			{
-
-			    mailUser.login(this.host,this.account_name, this.protocol, this.password);	
+			    mailUser.login(this.host,this.account_name, this.password,this.protocol);	
 //			    getting message map
 			    Map<String, Message> messages = mailUser.getMessageMap();
 			 
@@ -83,14 +79,11 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 				ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
 				eventEmail.setMessages(messages);
 				ctx.publishEvent(eventEmail);
-			     
 			    }
 			 
 			    mailUser.logout();
 			}
-		    }
 		}
-				
 	    }
 
 	} catch (Exception x) {
