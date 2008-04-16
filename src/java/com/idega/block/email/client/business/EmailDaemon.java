@@ -21,12 +21,14 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationStartedEvent;
 import com.idega.util.CoreConstants;
 import com.idega.util.EventTimer;
+
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
- * Last modified: $Date: 2008/04/16 15:43:33 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/16 16:00:04 $ by $Author: arunas $
  */
+
 @Scope("singleton")
 @Service
 public class EmailDaemon implements ApplicationContextAware, ApplicationListener, ActionListener{
@@ -59,10 +61,11 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 	try {
 	    if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
 		
-		this.host = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(CoreConstants.PROP_SYSTEM_MAIL_FROM_ADDRESS, CoreConstants.EMPTY);
+		this.host = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_MAIL_HOST, CoreConstants.EMPTY);
 		this.account_name = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 		this.protocol = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 		this.password = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
+		
 		
 		if (CoreConstants.EMPTY.equals(this.host)) {
 		    Logger.getLogger(getClass().getName()).log(Level.WARNING, "Host mail is empty");
