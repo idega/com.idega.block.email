@@ -1,7 +1,20 @@
 package com.idega.block.email.client.business;
 
-import java.util.*;
-import javax.mail.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Store;
+import javax.mail.search.SearchTerm;
+
+import com.idega.util.CoreConstants;
 
 /**
  * This JavaBean is used to store mail user information.
@@ -13,10 +26,16 @@ public class MailUserBean {
     private String password;
     private Session session;
     private Store store;
-    private URLName url;
-    private String protocol = "imap";
-    private String mbox = "INBOX";
-
+    private String protocol;
+    private static final String DEFAULT_PROTOCOL = "pop3";
+    private static final String DEFAULT_FOLDER  = "INBOX";
+    private static final String IDNETIFIER_PATTERN = "IW[A-Z]*-\\d{4}-\\d{2}-\\d{2}-[A-Z0-9]{4,}";
+    private static Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
+    public Map<String, Message> messageMap;
+    public Message[] messages;
+    private Matcher subjectMatcher;
+    
+   
     public MailUserBean(){}
 
     /**
@@ -25,6 +44,96 @@ public class MailUserBean {
     public Folder getFolder() {
         return this.folder;
     }
+
+    public static void main(String[] args) {
+	 Pattern autoNumPattern = Pattern.compile(IDNETIFIER_PATTERN);
+	 
+	 Matcher autoNumMatcher;
+	 
+	String subject = "asddasdIW-1234-14-14-232Aa asad";
+	autoNumMatcher = autoNumPattern.matcher(subject);
+	
+	if (autoNumMatcher.find()) {
+	    int start = autoNumMatcher.start();
+	    int end = autoNumMatcher.end();
+	    System.out.println(subject.substring(start,end));
+	    System.out.println("okay");
+	    
+	}else{
+	    System.out.println("no good");
+	}
+    }
+    /**
+     * Returns all messages with right pattern.
+     * Be carefull - changes messages status in mail server
+     */
+    private synchronized Message[] getMessages() throws MessagingException {
+	
+	this.messages = this.folder.search(new SearchTerm() {      
+
+	    @Override
+	    public boolean match(Message message) {	
+		try {
+		    subjectMatcher = subjectPattern.matcher(message.getSubject());
+		    if((subjectMatcher.find())&&(!message.isSet(Flags.Flag.ANSWERED))){
+			    message.setFlag(Flags.Flag.ANSWERED, true);  
+			    return true;
+			}
+		} catch (MessagingException e) {
+		    e.printStackTrace();
+		}
+		return false;
+	    }
+        
+	 });
+	return this.messages;
+    }
+    
+    /**
+     * Returns message map 
+     *
+     */
+     public Map<String, Message> getMessageMap() throws MessagingException{
+	 
+	this.messages = getMessages();
+	messageMap = new HashMap<String, Message>();
+
+	for (int i = 0, n = this.messages.length; i <  n; i++) {
+	    
+	    this.subjectMatcher = subjectPattern.matcher(this.messages[i].getSubject());
+	    subjectMatcher.find();
+	    
+	    String indentifier = this.messages[i].getSubject().substring(this.subjectMatcher.start(), this.subjectMatcher.end());
+	    
+	    this.messageMap.put(indentifier, this.messages[i]);
+	                                         
+	}
+	
+	return messageMap;
+    }
+    /**
+     * Returns all messages with that subject
+     *
+     */
+    /*
+    public int getNewMessagesInterval(long timeInMillis, String subject) throws MessagingException{
+	Message[] message = getMessages();	
+	long currentTime = System.currentTimeMillis();
+	int sk =0;
+	
+	for (int i = 0; i <   message.length; i++) {
+	    long sentEmailTime = message[i].getSentDate().getTime();
+	       
+	    if ((currentTime - sentEmailTime < timeInMillis)&&(message[i].getSubject().equals(subject))){
+		   
+		   sk++;  
+		   
+	    }
+      
+	}
+	return sk;
+    }
+    */
 
     /**
      * Returns the number of messages in the folder.
@@ -37,21 +146,27 @@ public class MailUserBean {
      * hostname getter method.
      */
     public String getHostname() {
+	
         return this.hostname;
+        
     }
 
     /**
      * hostname setter method.
      */
     public void setHostname(String hostname) {
+	
         this.hostname = hostname;
+        
     }
 
     /**
      * username getter method.
      */
     public String getUsername() {
+	
         return this.username;
+        
     }
 
     /**
@@ -65,28 +180,36 @@ public class MailUserBean {
      * password getter method.
      */
     public String getPassword() {
+	
         return this.password;
+        
     }
 
     /**
      * password setter method.
      */
     public void setProtocol(String protocol) {
+	
         this.protocol = protocol;
+        
     }
 
      /**
      * password getter method.
      */
     public String getProtocol() {
+	
         return this.protocol;
+        
     }
 
     /**
      * password setter method.
      */
     public void setPassword(String password) {
+	
         this.password = password;
+        
     }
 
 
@@ -94,61 +217,71 @@ public class MailUserBean {
      * session getter method.
      */
     public Session getSession() {
+	
         return this.session;
+        
     }
 
     /**
      * session setter method.
      */
     public void setSession(Session s) {
+	
         this.session = s;
+        
     }
 
     /**
      * store getter method.
      */
     public Store getStore() {
+	
         return this.store;
+        
     }
 
     /**
      * store setter method.
      */
     public void setStore(Store store) {
+	
         this.store = store;
-    }
-
-    /**
-     * url getter method.
-     */
-    public URLName getUrl() {
-        return this.url;
+        
     }
 
     /**
      * Method for checking if the user is logged in.
      */
     public boolean isLoggedIn() {
+	
         return this.store.isConnected();
+        
     }
 
     /**
-     * Method used to login to the mail host.
+     * Method used to login to the mail inbox.
      */
     public void login() throws Exception {
-        this.url = new URLName(this.protocol, getHostname(), -1, this.mbox,
-                          getUsername(), getPassword());
-        Properties props = System.getProperties();
-        this.session = Session.getInstance(props, null);
-        this.store = this.session.getStore(this.url);
-        this.store.connect();
-        this.folder = this.session.getFolder(this.url);
+	
+	Properties props = new Properties();
+	this.session = Session.getDefaultInstance(props, null);
+	
+	if (CoreConstants.EMPTY.equals(this.protocol)) {
+	    this.store = this.session.getStore(DEFAULT_PROTOCOL);
+	}else {
+	    this.store = this.session.getStore(this.protocol);
+	}
+	
+        this.store.connect(this.hostname,this.username,this.password);
+        this.folder = store.getFolder(DEFAULT_FOLDER);
 
         this.folder.open(Folder.READ_WRITE);
+
+        
     }
 
     /**
-     * Method used to login to the mail host.
+     * Method used to login to the mail inbox.
      */
     public void login(String hostname, String username, String password,String protocol)
         throws Exception {
@@ -165,7 +298,7 @@ public class MailUserBean {
      * Method used to logout from the mail host.
      */
     public void logout() throws MessagingException {
-        this.folder.close(false);
+        this.folder.close(true);
         this.store.close();
         this.store = null;
         this.session = null;
