@@ -18,15 +18,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationShutdownEvent;
 import com.idega.idegaweb.IWMainApplicationStartedEvent;
 import com.idega.util.CoreConstants;
 import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * 
- * Last modified: $Date: 2008/04/16 16:21:58 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/17 18:52:13 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -53,7 +54,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 	this.emailTimer.addActionListener(this);
 	
 	// Starts the thread after 5 mins.
-	this.emailTimer.start(EventTimer.THREAD_SLEEP_5_MINUTES);
+	this.emailTimer.start(EventTimer.THREAD_SLEEP_0_5_SECONDS);
 
     }
     
@@ -94,8 +95,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     
     public void stop() {
 	
-	if (this.emailTimer != null) {
-	    
+	if (this.emailTimer != null) {    
 	    this.emailTimer.stop();
 	    this.emailTimer = null;
 	    
@@ -104,12 +104,15 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     }
     
     public void onApplicationEvent(ApplicationEvent applicationevent) {
+	
 	if (applicationevent instanceof IWMainApplicationStartedEvent) {
 	    
 	    this.deamon = new EmailDaemon();
 	    this.deamon.setApplicationContext(ctx);
 	    this.deamon.start();
 	    
+	} else if (applicationevent instanceof IWMainApplicationShutdownEvent){
+	    this.deamon.stop();
 	}
 	
     }
