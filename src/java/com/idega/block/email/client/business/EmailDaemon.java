@@ -25,9 +25,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * 
- * Last modified: $Date: 2008/04/17 18:52:13 $ by $Author: arunas $
+ * Last modified: $Date: 2008/04/21 05:01:43 $ by $Author: civilis $
  */
 
 @Scope("singleton")
@@ -47,15 +47,23 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     private String host, account_name, protocol, password;
     
     public void start() {
-	mailUser = new MailUserBean();
-	
-	// checking uploaded files 5 minutes. 
-	this.emailTimer = new EventTimer(EventTimer.THREAD_SLEEP_5_MINUTES,THREAD_NAME);
-	this.emailTimer.addActionListener(this);
-	
-	// Starts the thread after 5 mins.
-	this.emailTimer.start(EventTimer.THREAD_SLEEP_0_5_SECONDS);
-
+    	
+    	mailUser = new MailUserBean();
+		
+		long defaultCheckInterval = EventTimer.THREAD_SLEEP_5_MINUTES;
+		String checkIntervalStr = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty("email_daemon_check_interval", String.valueOf(defaultCheckInterval));
+		
+		long checkInterval;
+		
+		if(CoreConstants.EMPTY.equals(checkIntervalStr))
+			checkInterval = defaultCheckInterval;
+		else
+			checkInterval = new Long(checkIntervalStr);
+		
+		this.emailTimer = new EventTimer(checkInterval);
+		this.emailTimer.addActionListener(this);
+		
+		this.emailTimer.start(checkInterval);
     }
     
     public void actionPerformed(ActionEvent event) {
