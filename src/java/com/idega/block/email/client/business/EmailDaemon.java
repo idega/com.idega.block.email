@@ -25,9 +25,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * 
- * Last modified: $Date: 2008/04/21 05:01:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/22 04:35:47 $ by $Author: civilis $
  */
 
 @Scope("singleton")
@@ -48,28 +48,34 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     
     public void start() {
     	
-    	mailUser = new MailUserBean();
+    	try {
 		
-		long defaultCheckInterval = EventTimer.THREAD_SLEEP_5_MINUTES;
-		String checkIntervalStr = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty("email_daemon_check_interval", String.valueOf(defaultCheckInterval));
-		
-		long checkInterval;
-		
-		if(CoreConstants.EMPTY.equals(checkIntervalStr))
-			checkInterval = defaultCheckInterval;
-		else
-			checkInterval = new Long(checkIntervalStr);
-		
-		this.emailTimer = new EventTimer(checkInterval);
-		this.emailTimer.addActionListener(this);
-		
-		this.emailTimer.start(checkInterval);
+    		mailUser = new MailUserBean();
+    		
+    		long defaultCheckInterval = EventTimer.THREAD_SLEEP_5_MINUTES;
+    		String checkIntervalStr = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty("email_daemon_check_interval", String.valueOf(defaultCheckInterval));
+    		
+    		long checkInterval;
+    		
+    		if(CoreConstants.EMPTY.equals(checkIntervalStr))
+    			checkInterval = defaultCheckInterval;
+    		else
+    			checkInterval = new Long(checkIntervalStr);
+    		
+    		this.emailTimer = new EventTimer(checkInterval, THREAD_NAME);
+    		this.emailTimer.addActionListener(this);
+    		
+    		this.emailTimer.start(checkInterval);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
     
     public void actionPerformed(ActionEvent event) {
 	try {
-	    if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
 		
+	    if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
+	    	
 		this.host = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_MAIL_HOST, CoreConstants.EMPTY);
 		this.account_name = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 		this.protocol = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
@@ -82,7 +88,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 			    mailUser.login(this.host,this.account_name, this.password,this.protocol);	
 //			    getting message map
 			    Map<String, Message> messages = mailUser.getMessageMap();
-			 
+			    
 			    if ((messages != null) && (!messages.isEmpty())){
 			     
 				ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
@@ -113,22 +119,19 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     
     public void onApplicationEvent(ApplicationEvent applicationevent) {
 	
-	if (applicationevent instanceof IWMainApplicationStartedEvent) {
-	    
-	    this.deamon = new EmailDaemon();
-	    this.deamon.setApplicationContext(ctx);
-	    this.deamon.start();
-	    
-	} else if (applicationevent instanceof IWMainApplicationShutdownEvent){
-	    this.deamon.stop();
-	}
-	
+		if (applicationevent instanceof IWMainApplicationStartedEvent) {
+		    
+		    this.deamon = new EmailDaemon();
+		    this.deamon.setApplicationContext(ctx);
+		    this.deamon.start();
+		    
+		} else if (applicationevent instanceof IWMainApplicationShutdownEvent){
+		    this.deamon.stop();
+		}
     }
 
     public void setApplicationContext(ApplicationContext applicationcontext)
 	    throws BeansException {
 		ctx = applicationcontext;
-		
     }
-
 }
