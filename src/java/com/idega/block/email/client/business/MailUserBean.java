@@ -30,10 +30,10 @@ public class MailUserBean {
     private static final String DEFAULT_PROTOCOL = "pop3";
     private static final String DEFAULT_FOLDER  = "INBOX";
     private static final String IDNETIFIER_PATTERN = "[A-Z]{1,3}-\\d{4}-\\d{2}-\\d{2}-[A-Z0-9]{4,}";
-    private static Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
+    protected static Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
     public Map<String, Message> messageMap;
     public Message[] messages;
-    private Matcher subjectMatcher;
+    protected Matcher subjectMatcher;
     
    
     public MailUserBean(){}
