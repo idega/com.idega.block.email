@@ -28,7 +28,8 @@ public class MailUserBean {
     private Store store;
     private String protocol;
     private static final String DEFAULT_PROTOCOL = "pop3";
-    private static final String DEFAULT_FOLDER  = "INBOX";
+    private static final String DEFAULT_FOLDER  = "Inbox";
+    private static final String MSGS_FOLDER  = "ReadMessages";
     private static final String IDNETIFIER_PATTERN = "[A-Z]{1,3}-\\d{4}-\\d{2}-\\d{2}-[A-Z0-9]{4,}";
     protected static Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
     public Map<String, Message> messageMap;
@@ -54,13 +55,16 @@ public class MailUserBean {
 	this.messages = this.folder.search(new SearchTerm() {      
 
 	    @Override
-	    public boolean match(Message message) {	
+	    public boolean match(Message message) {
+		
 		try {
-		    subjectMatcher = subjectPattern.matcher(message.getSubject());
-		    if((subjectMatcher.find())&&(!message.isSet(Flags.Flag.ANSWERED))){
-			    message.setFlag(Flags.Flag.ANSWERED, true);  
+		 	
+			subjectMatcher = subjectPattern.matcher(message.getSubject());
+			
+			if (subjectMatcher.find())	    
 			    return true;
-			}
+			else return false;
+		    
 		} catch (MessagingException e) {
 		    e.printStackTrace();
 		}
@@ -68,7 +72,27 @@ public class MailUserBean {
 	    }
         
 	 });
+	
 	return this.messages;
+    }
+    /**
+     * move all messages from folder to new or existing folder
+     * 
+     */
+    public void moveMessages() throws MessagingException{
+	    
+	    Folder msgFolder = this.store.getFolder(MSGS_FOLDER);
+	    
+	    if (!msgFolder.exists())
+		msgFolder.create(Folder.HOLDS_MESSAGES);
+	    
+	    Message[] msgs = getMessages();
+	    
+	    this.folder.copyMessages(msgs, msgFolder);
+	    
+	    for (int i = 0; i < msgs.length; i++) 
+		msgs[i].setFlag(Flags.Flag.DELETED, true);
+	    
     }
     
     /**
