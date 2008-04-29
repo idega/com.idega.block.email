@@ -25,9 +25,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * 
- * Last modified: $Date: 2008/04/22 04:35:47 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/29 09:51:16 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -95,7 +95,8 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 				eventEmail.setMessages(messages);
 				ctx.publishEvent(eventEmail);
 			    }
-			 
+			    
+			    mailUser.moveMessages();
 			    mailUser.logout();
 			}
 		}
