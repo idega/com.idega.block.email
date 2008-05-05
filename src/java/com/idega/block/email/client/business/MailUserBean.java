@@ -31,7 +31,7 @@ public class MailUserBean {
     private static final String DEFAULT_FOLDER  = "Inbox";
     private static final String MSGS_FOLDER  = "ReadMessages";
     private static final String IDNETIFIER_PATTERN = "[A-Z]{1,3}-\\d{4}-\\d{2}-\\d{2}-[A-Z0-9]{4,}";
-    protected static Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
+    private static final Pattern subjectPattern = Pattern.compile(IDNETIFIER_PATTERN);
     public Map<String, Message> messageMap;
     public Message[] messages;
     protected Matcher subjectMatcher;
@@ -44,6 +44,10 @@ public class MailUserBean {
      */
     public Folder getFolder() {
         return this.folder;
+    }
+    
+    protected Pattern getSubjectPattern() {
+    	return subjectPattern;
     }
 
     /**
@@ -59,10 +63,12 @@ public class MailUserBean {
 		
 		try {
 		 	
-			subjectMatcher = subjectPattern.matcher(message.getSubject());
+			subjectMatcher = getSubjectPattern().matcher(message.getSubject());
 			
-			if (subjectMatcher.find())	    
-			    return true;
+			if (subjectMatcher.find()) {
+				return true;
+			}
+			    
 			else return false;
 		    
 		} catch (MessagingException e) {
@@ -106,7 +112,7 @@ public class MailUserBean {
 
 	for (int i = 0, n = this.messages.length; i <  n; i++) {
 	    
-	    this.subjectMatcher = subjectPattern.matcher(this.messages[i].getSubject());
+	    this.subjectMatcher = getSubjectPattern().matcher(this.messages[i].getSubject());
 	    subjectMatcher.find();
 	    
 	    String indentifier = this.messages[i].getSubject().substring(this.subjectMatcher.start(), this.subjectMatcher.end());
