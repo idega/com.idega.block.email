@@ -25,9 +25,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  * 
- * Last modified: $Date: 2008/04/29 09:51:16 $ by $Author: arunas $
+ * Last modified: $Date: 2008/05/27 19:05:58 $ by $Author: valdas $
  */
 
 @Scope("singleton")
@@ -41,7 +41,6 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
     private ApplicationContext ctx;
 
     public static final String PROP_MAIL_HOST = "mail_host";
-    private static final String PROP_SYSTEM_ACCOUNT = "mail_user_account";
     private static final String PROP_SYSTEM_PROTOCOL = "mail_protocol";
     private static final String PROP_SYSTEM_PASSWORD = "mail_password";
     private String host, account_name, protocol, password;
@@ -77,7 +76,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 	    if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
 	    	
 		this.host = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_MAIL_HOST, CoreConstants.EMPTY);
-		this.account_name = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
+		this.account_name = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(CoreConstants.PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 		this.protocol = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 		this.password = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 		
