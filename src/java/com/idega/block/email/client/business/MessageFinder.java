@@ -27,10 +27,10 @@ public class MessageFinder {
   public MessageFinder() {
   }
 
-  public static List getMessagesInfo(MailUserBean user){
+  public static List getMessagesInfo(EmailParams params) {
 		try{
       FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.DELETED), false);
-      Folder f = user.getFolder();
+      Folder f = params.getFolder();
       Message[] msgs = f.search(ft);
       List l = new ArrayList();
       MessageInfo mi;
@@ -49,8 +49,8 @@ public class MessageFinder {
     return null;
   }
 
-  public static Map getMappedMessagesInfo(MailUserBean user){
-    return getMappedMessagesInfo(getMessagesInfo(user));
+  public static Map getMappedMessagesInfo(EmailParams params){
+    return getMappedMessagesInfo(getMessagesInfo(params));
 
   }
 
