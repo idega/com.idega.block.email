@@ -2,6 +2,7 @@ package com.idega.block.email.client.business;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -26,9 +27,9 @@ import com.idega.util.EventTimer;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  * 
- * Last modified: $Date: 2008/07/16 11:39:45 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/28 12:19:01 $ by $Author: juozas $
  */
 
 @Scope("singleton")
@@ -114,7 +115,7 @@ public class EmailDaemon implements ApplicationContextAware,
 								EmailParams params = emailFinder.login(host,
 										accountName, password, protocol);
 								// getting message map
-								Map<String, Message> messages = emailFinder
+								Map<String, List<Message>> messages = emailFinder
 										.getMessageMap(params);
 
 								if ((messages != null) && (!messages.isEmpty())) {
