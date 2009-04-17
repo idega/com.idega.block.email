@@ -89,7 +89,10 @@ EmailSenderHelper.proceedSendingMessage = function() {
 			
 			jQuery('input[type=\'text\']', container).attr('value', '');
 			jQuery('textarea', container).attr('value', '');
-			FileUploadHelper.removeAllUploadedFiles();
+			
+			if (typeof FileUploadHelper != 'undefined') {
+				FileUploadHelper.removeAllUploadedFiles();
+			}
 		}, errorHandler: function() {
 			closeAllLoadingMessages();
 			humanMsg.displayMsg(EmailSenderHelper.localizations.error);
