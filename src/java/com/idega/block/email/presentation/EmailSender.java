@@ -1,5 +1,7 @@
 package com.idega.block.email.presentation;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Arrays;
 
 import javax.faces.context.FacesContext;
@@ -19,15 +21,16 @@ import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.PresentationUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2009/04/17 11:22:04 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/17 12:56:47 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
@@ -112,7 +115,13 @@ public class EmailSender extends IWBaseComponent {
 			setRecipientBcc(iwc.getParameter(RECIPIENT_BCC_PARAMETER));
 		}
 		if (iwc.isParameterSet(SUBJECT_PARAMETER)) {
-			setSubject(iwc.getParameter(SUBJECT_PARAMETER));
+			String subject = null;
+			try {
+				subject = URLDecoder.decode(iwc.getParameter(SUBJECT_PARAMETER), CoreConstants.ENCODING_UTF8);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			setSubject(StringUtil.isEmpty(subject) ? iwc.getParameter(SUBJECT_PARAMETER) : subject);
 		}
 		if (iwc.isParameterSet(MESSAGE_PARAMETER)) {
 			setMessage(iwc.getParameter(MESSAGE_PARAMETER));
