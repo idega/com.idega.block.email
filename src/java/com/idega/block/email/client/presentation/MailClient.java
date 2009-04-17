@@ -3,6 +3,7 @@ package com.idega.block.email.client.presentation;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailAccount;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.client.business.EmailSubjectPatternFinder;
@@ -40,15 +41,15 @@ public class MailClient extends Block {
 
 	private IWResourceBundle iwrb;
 
-	private String EMAILBUNDLE_IDENTIFIER = "com.idega.block.email";
-
 	public MailClient() {
 	}
 
+	@Override
 	public String getBundleIdentifier() {
-		return this.EMAILBUNDLE_IDENTIFIER;
+		return EmailConstants.IW_BUNDLE_IDENTIFIER;
 	}
 
+	@Override
 	public void main(IWContext iwc) throws Exception {
 		debugParameters(iwc);
 		this.iwrb = getResourceBundle(iwc);

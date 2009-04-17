@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.idega.block.category.business.CategoryFinder;
 import com.idega.block.category.data.ICCategory;
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailAccount;
 import com.idega.block.email.business.EmailLetter;
 import com.idega.block.email.business.EmailTopic;
@@ -62,7 +63,6 @@ public class SetupEditor extends Block {
   private final static String prmWelcome = "eme_welc";
   private final static String prmEditTopic = "eme_tpced";
 
-  private final static String EMAIL_BUNDLE_IDENTIFIER = "com.idega.block.email";
 
   private int instance = -1;
   private int topic = -1;
@@ -88,8 +88,9 @@ public class SetupEditor extends Block {
    *
    * @return    The bundle identifier value
    */
-  public String getBundleIdentifier() {
-    return EMAIL_BUNDLE_IDENTIFIER;
+  @Override
+public String getBundleIdentifier() {
+    return EmailConstants.IW_BUNDLE_IDENTIFIER;
   }
 
 
@@ -97,7 +98,8 @@ public class SetupEditor extends Block {
    * @param  iwc  Description of the Parameter
    * @todo        Description of the Method
    */
-  public void main(IWContext iwc) {
+  @Override
+public void main(IWContext iwc) {
     this.iwrb = getResourceBundle(iwc);
     this.core = iwc.getIWMainApplication().getCoreBundle();
 

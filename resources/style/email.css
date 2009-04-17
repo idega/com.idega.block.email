@@ -1,0 +1,73 @@
+@CHARSET "UTF-8";
+
+.emailSenderForm {
+	margin: 0 !important;
+	padding: 6px !important;
+}
+
+.emailSenderFormItem {
+	margin: 0 !important;
+	padding: 0 !important;
+	overflow: hidden;
+	margin-bottom: 6px !important;
+}
+
+.emailSenderFormItem label {
+	display: block;
+	float: left;
+	width: 150px;
+	line-height: 19px;
+	font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #1f1f1f;
+}
+
+label.error {
+	width: auto !important;
+	color: #FF2700 !important;
+	margin-left: 5px;
+}
+
+span.requiredField {
+	color:#FF2700;
+	font-size:1.4em;
+}
+
+.emailSenderFormItem input, textarea, ul {
+	float: left;
+	width: 300px !important;
+	margin: 0 !important;
+	padding: 2px 4px;
+	font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #1f1f1f;
+}
+
+.fileUploadViewerUploadedFilesContainerStyle ul {
+	list-style-type: none;
+	padding-left: 150px;
+}
+
+.fileUploaderDeleteFileButtonStyle:HOVER {
+	cursor: pointer;
+}
+
+.emailSenderFormItem textarea {
+	width: 303px !important;
+}
+
+.emailSenderButtons {
+	float: right;
+	margin: 0 !important;
+	text-align: left;
+	padding: 0 12px 12px 6px !important;
+	overflow: hidden;
+}
+
+.emailSenderButtons input {
+	font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", Arial, Helvetica, sans-serif !important;
+	margin: 0 !important;
+	font-size: 12px !important;
+	text-transform: capitalize !important;
+	padding: 3px 5px;
+}

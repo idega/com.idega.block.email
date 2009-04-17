@@ -12,6 +12,7 @@ package com.idega.block.email.presentation;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailLetter;
 import com.idega.block.email.business.EmailTopic;
 import com.idega.block.email.business.MailBusiness;
@@ -50,10 +51,12 @@ public class LetterWindow extends IWAdminWindow {
 		setTitlebar(true);
 	}
 
+	@Override
 	public String getBundleIdentifier() {
-		return "com.idega.block.email";
+		return EmailConstants.IW_BUNDLE_IDENTIFIER;
 	}
 
+	@Override
 	public void main(IWContext iwc) throws RemoteException {
 		//debugParameters(iwc);
 

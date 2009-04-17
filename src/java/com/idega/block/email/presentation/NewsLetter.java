@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import com.idega.block.category.presentation.CategoryBlock;
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailTopic;
 import com.idega.block.email.business.MailBusiness;
 import com.idega.block.email.business.MailFinder;
@@ -49,11 +50,6 @@ public class NewsLetter extends CategoryBlock {
 	 * @todo Description of the Field
 	 */
 	public final static int CHECK = 3;
-
-	/**
-	 * @todo Description of the Field
-	 */
-	public static String EMAIL_BUNDLE_IDENTIFIER = "com.idega.block.email";
 
 	private IWBundle core;
 
@@ -105,6 +101,7 @@ public class NewsLetter extends CategoryBlock {
 	 * 
 	 * @return The multible value
 	 */
+	@Override
 	public boolean getMultible() {
 		return false;
 	}
@@ -114,6 +111,7 @@ public class NewsLetter extends CategoryBlock {
 	 * 
 	 * @return The category type value
 	 */
+	@Override
 	public String getCategoryType() {
 		return "Newsletter";
 	}
@@ -123,8 +121,9 @@ public class NewsLetter extends CategoryBlock {
 	 * 
 	 * @return The bundle identifier value
 	 */
+	@Override
 	public String getBundleIdentifier() {
-		return EMAIL_BUNDLE_IDENTIFIER;
+		return EmailConstants.IW_BUNDLE_IDENTIFIER;
 	}
 
 	/**
@@ -132,6 +131,7 @@ public class NewsLetter extends CategoryBlock {
 	 *          Description of the Parameter
 	 * @todo Description of the Method
 	 */
+	@Override
 	public void main(IWContext iwc) {
 		this.core = iwc.getIWMainApplication().getCoreBundle();
 		this.iwrb = getResourceBundle(iwc);

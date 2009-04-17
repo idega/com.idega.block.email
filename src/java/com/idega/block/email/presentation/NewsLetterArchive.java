@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.idega.block.category.presentation.CategoryBlock;
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailLetter;
 import com.idega.block.email.business.EmailTopic;
 import com.idega.block.email.business.MailBusiness;
@@ -51,22 +52,24 @@ public class NewsLetterArchive extends CategoryBlock {
 	private EmailLetter theLetter;
 	private DateFormat df;
 
-	public static String EMAIL_BUNDLE_IDENTIFIER = "com.idega.block.email";
-
 	public NewsLetterArchive() {
 		setAutoCreate(false);
 	}
+	@Override
 	public String getCategoryType() {
 		return "Newsletter";
 	}
+	@Override
 	public boolean getMultible() {
 		return true;
 	}
 
+	@Override
 	public String getBundleIdentifier() {
-		return EMAIL_BUNDLE_IDENTIFIER;
+		return EmailConstants.IW_BUNDLE_IDENTIFIER;
 	}
 
+	@Override
 	public void main(IWContext iwc) {
 		this.core = iwc.getIWMainApplication().getCoreBundle();
 		this.iwrb = getResourceBundle(iwc);
@@ -257,6 +260,7 @@ public class NewsLetterArchive extends CategoryBlock {
 		return T;
 	}
 
+	@Override
 	public Map getStyleNames() {
 		HashMap map = new HashMap();
 		String[] styleNames = { SN_TOPIC, SN_FROM, SN_SUBJ, SN_DATE, SN_BODY, SN_TITLE };
