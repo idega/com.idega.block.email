@@ -11,11 +11,14 @@ import org.directwebremoting.annotations.Param;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.email.bean.MessageParameters;
+import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.business.IBOLookup;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
@@ -31,9 +34,9 @@ import com.idega.util.StringHandler;
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2009/04/17 11:22:04 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
  */
 
 @Service(EmailSenderHelperImpl.BEAN_NAME)
@@ -49,6 +52,9 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	
 	private IWSlideService slide;
 	
+	@Autowired
+	private ApplicationContext context;
+	
 	@RemoteMethod
 	public boolean sendMessage(MessageParameters parameters) {
 		if (parameters == null) {
@@ -60,19 +66,35 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		
 		File attachedFile = getFileToAttach(parameters.getAttachments(), parameters.getSubject());
 		
+		boolean success = true;
 		try {
 			SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), host,
 					parameters.getSubject(), parameters.getMessage(), attachedFile);
 			return Boolean.TRUE;
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error sending mail: " + parameters, e);
+			success = false;
 		} finally {
-			if (attachedFile != null) {
-				attachedFile.delete();
+			if (success) {
+				publishEvent(parameters, attachedFile);
+			} else {
+				//	Attached file will be deleted by published event's handler
+				if (attachedFile != null) {
+					attachedFile.delete();
+				}
 			}
 		}
 		
 		return Boolean.FALSE;
+	}
+	
+	private void publishEvent(MessageParameters parameters, File attachedFile) {
+		ApplicationEmailEvent event = new ApplicationEmailEvent(this);
+		
+		parameters.setAttachment(attachedFile);
+		event.setParameters(parameters);
+		
+		context.publishEvent(event);
 	}
 	
 	private File getFileToAttach(List<String> filesInSlide, String subject) {

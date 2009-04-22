@@ -10,6 +10,8 @@ xmlns="http://www.w3.org/1999/xhtml">
 	
 	<body>
 		<form class="emailSenderForm" id="emailSenderFormId">
+			<input type="hidden" name="emailSenderFullName" value="#{emailSenderStateBean.currentUser.name}" />
+		
 			<div class="emailSenderFormItem">
 				<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:
 					<span class="requiredField">*</span>

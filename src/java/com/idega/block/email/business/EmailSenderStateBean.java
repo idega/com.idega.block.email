@@ -1,6 +1,7 @@
 package com.idega.block.email.business;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,9 @@ import com.idega.util.StringUtil;
  * State bean for {@link EmailSender}
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2009/04/17 11:22:04 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
  */
 
 @Scope("request")
@@ -37,7 +38,11 @@ public class EmailSenderStateBean {
 	private String subject;
 	private String message;
 	
+	private User currentUser;
 	private String currentUserEmail;
+	
+	private List<String> namesForExternalParameters;
+	private List<String> externalParameters;
 	
 	public String getFrom() {
 		if (from == null) {
@@ -82,12 +87,15 @@ public class EmailSenderStateBean {
 	@SuppressWarnings("unchecked")
 	private String getCurrentUserEmail() {
 		if (currentUserEmail == null) {
-			IWContext iwc = CoreUtil.getIWContext();
-			if (!iwc.isLoggedOn()) {
-				return null;
+			User currentUser = getCurrentUser();
+			if (currentUser == null) {
+				IWContext iwc = CoreUtil.getIWContext();
+				if (!iwc.isLoggedOn()) {
+					return null;
+				}
+				
+				currentUser = iwc.getCurrentUser();
 			}
-			
-			User currentUser = iwc.getCurrentUser();
 			if (currentUser == null) {
 				return null;
 			}
@@ -110,5 +118,28 @@ public class EmailSenderStateBean {
 			}
 		}
 		return currentUserEmail;
-	} 
+	}
+	
+	public List<String> getExternalParameters() {
+		return externalParameters;
+	}
+	public void setExternalParameters(List<String> externalParameters) {
+		this.externalParameters = externalParameters;
+	}
+	
+	public User getCurrentUser() {
+		return currentUser;
+	}
+	public void setCurrentUser(User currentUser) {
+		this.currentUser = currentUser;
+	}
+	
+	public List<String> getNamesForExternalParameters() {
+		return namesForExternalParameters;
+	}
+	public void setNamesForExternalParameters(
+			List<String> namesForExternalParameters) {
+		this.namesForExternalParameters = namesForExternalParameters;
+	}
+	
 }

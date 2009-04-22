@@ -3,6 +3,8 @@ package com.idega.block.email.presentation;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.faces.context.FacesContext;
 
@@ -18,8 +20,10 @@ import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
@@ -28,9 +32,9 @@ import com.idega.util.expression.ELUtil;
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2009/04/17 12:56:47 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
@@ -40,6 +44,9 @@ public class EmailSender extends IWBaseComponent {
 	public static final String RECIPIENT_BCC_PARAMETER = "recipientBcc";
 	public static final String SUBJECT_PARAMETER = "subject";
 	public static final String MESSAGE_PARAMETER = "message";
+	
+	public static final String EXTERNAL_PARAMETERS = "externalParameters";
+	public static final String NAMES_FOR_EXTERNAL_PARAMETERS = "namesForExternalParameters";
 	
 	@Autowired
 	private EmailSenderStateBean emailSender;
@@ -56,6 +63,9 @@ public class EmailSender extends IWBaseComponent {
 	private String recipientBcc;
 	private String subject;
 	private String message;
+	
+	private List<String> namesForExternalParameters;
+	private List<String> externalParameters;
 	
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -86,22 +96,6 @@ public class EmailSender extends IWBaseComponent {
 		));
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation());
 		
-		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
-			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
-			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occured while sending email...")).append("', success: '")
-			.append(iwrb.getLocalizedString("email_sender.success", "E-mail was successfully sent")).append("', enterSenderEmail: '")
-			.append(iwrb.getLocalizedString("email_sender.enter_sender_email", "Please enter a valid sender email address"))
-			.append("', enterRecipientEmail: '")
-			.append(iwrb.getLocalizedString("email_sender.enter_recipient_email", "Please enter a valid recipient email address"))
-			.append("', enterValidEmail: '").append(iwrb.getLocalizedString("email_sender.enter_valid_email", "Please enter a valid email address"))
-			.append("', enterSubject: '").append(iwrb.getLocalizedString("email_sender.enter_subject", "Please enter subject"))
-			.append("', enterMessage: '").append(iwrb.getLocalizedString("email_sender.enter_message", "Please enter some message"))
-		.append("'});").toString();
-		if (!CoreUtil.isSingleComponentRenderingProcess(iwc)) {
-			initAction = new StringBuilder("jQuery(window).load(function() {").append(initAction).append("});").toString();
-		}
-		PresentationUtil.addJavaScriptActionToBody(iwc, initAction);
-		
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
 		}
@@ -127,12 +121,88 @@ public class EmailSender extends IWBaseComponent {
 			setMessage(iwc.getParameter(MESSAGE_PARAMETER));
 		}
 		
+		setNamesForExternalParameters(getValues(iwc, NAMES_FOR_EXTERNAL_PARAMETERS));
+		setExternalParameters(getValues(iwc, EXTERNAL_PARAMETERS));
+
 		getEmailSender().setFrom(getFrom());
 		getEmailSender().setRecipientTo(getRecipientTo());
 		getEmailSender().setRecipientCc(getRecipientCc());
 		getEmailSender().setRecipientBcc(getRecipientBcc());
 		getEmailSender().setSubject(getSubject());
 		getEmailSender().setMessage(getMessage());
+		
+		if (iwc.isLoggedOn()) {
+			getEmailSender().setCurrentUser(iwc.getCurrentUser());
+		}
+		
+		getEmailSender().setNamesForExternalParameters(getNamesForExternalParameters());
+		getEmailSender().setExternalParameters(getExternalParameters());
+		
+		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
+			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
+			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occured while sending email...")).append("', success: '")
+			.append(iwrb.getLocalizedString("email_sender.success", "E-mail was successfully sent")).append("', enterSenderEmail: '")
+			.append(iwrb.getLocalizedString("email_sender.enter_sender_email", "Please enter a valid sender email address"))
+			.append("', enterRecipientEmail: '")
+			.append(iwrb.getLocalizedString("email_sender.enter_recipient_email", "Please enter a valid recipient email address"))
+			.append("', enterValidEmail: '").append(iwrb.getLocalizedString("email_sender.enter_valid_email", "Please enter a valid email address"))
+			.append("', enterSubject: '").append(iwrb.getLocalizedString("email_sender.enter_subject", "Please enter subject"))
+			.append("', enterMessage: '").append(iwrb.getLocalizedString("email_sender.enter_message", "Please enter some message"))
+		.append("'}); EmailSenderHelper.setProperties(").append(getProperties()).append(");").toString();
+		if (!CoreUtil.isSingleComponentRenderingProcess(iwc)) {
+			initAction = new StringBuilder("jQuery(window).load(function() {").append(initAction).append("});").toString();
+		}
+		PresentationUtil.addJavaScriptActionToBody(iwc, initAction);
+	}
+	
+	private String getProperties() {
+		if (ListUtil.isEmpty(externalParameters)) {
+			return "null";
+		}
+		
+		StringBuilder properties = new StringBuilder("[");
+		
+		if (ListUtil.isEmpty(namesForExternalParameters) || externalParameters.size() != namesForExternalParameters.size()) {
+			String unkownName = "unkown";
+			for (Iterator<String> valuesIter = externalParameters.iterator(); valuesIter.hasNext();) {
+				properties.append(getProperty(unkownName, valuesIter.next()));
+				
+				if (valuesIter.hasNext()) {
+					properties.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < externalParameters.size(); i++) {
+				properties.append(getProperty(namesForExternalParameters.get(i), externalParameters.get(i)));
+				
+				if ((i + 1) < externalParameters.size()) {
+					properties.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+		}
+		
+		properties.append("]");
+		return properties.toString();
+	}
+	
+	private String getProperty(String name, String value) {
+		return new StringBuilder("{").append("id: '").append(name).append(CoreConstants.QOUTE_SINGLE_MARK).append(CoreConstants.COMMA).append(" value: ")
+			.append(CoreConstants.QOUTE_SINGLE_MARK).append(value).append(CoreConstants.QOUTE_SINGLE_MARK).append("}")
+		.toString();
+	}
+	
+	private List<String> getValues(IWContext iwc, String parameterName) {
+		if (!iwc.isParameterSet(parameterName)) {
+			return null;
+		}
+		
+		String[] values = iwc.getParameterValues(parameterName);
+		if (ArrayUtil.isEmpty(values)) {
+			return null;
+		}
+		
+		return Arrays.asList(values);
 	}
 
 	@Override
@@ -215,6 +285,22 @@ public class EmailSender extends IWBaseComponent {
 
 	public void setWeb2(Web2Business web2) {
 		this.web2 = web2;
+	}
+
+	public List<String> getExternalParameters() {
+		return externalParameters;
+	}
+
+	public void setExternalParameters(List<String> externalParameters) {
+		this.externalParameters = externalParameters;
+	}
+
+	public List<String> getNamesForExternalParameters() {
+		return namesForExternalParameters;
+	}
+
+	public void setNamesForExternalParameters(List<String> namesForExternalParameters) {
+		this.namesForExternalParameters = namesForExternalParameters;
 	}
 	
 }

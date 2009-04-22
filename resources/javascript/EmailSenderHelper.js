@@ -11,8 +11,14 @@ EmailSenderHelper.localizations = {
 	enterMessage:			'Please enter some message'
 }
 
+EmailSenderHelper.properties = null;
+
 EmailSenderHelper.setLocalizations = function(localizations) {
 	EmailSenderHelper.localizations = localizations;
+}
+
+EmailSenderHelper.setProperties = function(properties) {
+	EmailSenderHelper.properties = properties;
 }
 
 EmailSenderHelper.proceedValidator = function() {
@@ -103,6 +109,7 @@ EmailSenderHelper.proceedSendingMessage = function() {
 
 EmailSenderHelper.getMessageParametersObject = function(from, recipientTo, recipientCc, recipientBcc, subject, message, attachment) {
 	var parameters = {
+		senderName: EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'emailSenderFullName\']', jQuery('#emailSenderFormId')),
 		from: from || null,
 	
 		recipientTo: recipientTo || null,
@@ -112,7 +119,8 @@ EmailSenderHelper.getMessageParametersObject = function(from, recipientTo, recip
 		subject: subject || null,
 		message: message || null,
 	
-		attachments: FileUploadHelper.allUploadedFiles || null
+		attachments: FileUploadHelper.allUploadedFiles || null,
+		properties: EmailSenderHelper.properties
 	}
 	return parameters;
 }
