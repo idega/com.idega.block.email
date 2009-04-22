@@ -73,6 +73,8 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	
 	var from = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderFrom\']', container);
 	
+	var replyTo = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderReplyTo\']', container);
+	
 	var recipientTo = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderTo\']', container);;
 	var recipientCc = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderCc\']', container);;
 	var recipientBcc = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderBcc\']', container);;
@@ -83,7 +85,7 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	var attachment = null;
 	
 	showLoadingMessage(EmailSenderHelper.localizations.sending);
-	EmailSender.sendMessage(EmailSenderHelper.getMessageParametersObject(from, recipientTo, recipientCc, recipientBcc, subject, message, attachment), {
+	EmailSender.sendMessage(EmailSenderHelper.getMessageParametersObject(from, replyTo, recipientTo, recipientCc, recipientBcc, subject, message, attachment), {
 		callback: function(result) {
 			closeAllLoadingMessages();
 			if (result == null || result == 'false') {
@@ -91,14 +93,21 @@ EmailSenderHelper.proceedSendingMessage = function() {
 				return;
 			}
 			
-			humanMsg.displayMsg(EmailSenderHelper.localizations.success);
-			
-			jQuery('input[type=\'text\']', container).attr('value', '');
-			jQuery('textarea', container).attr('value', '');
-			
 			if (typeof FileUploadHelper != 'undefined') {
 				FileUploadHelper.removeAllUploadedFiles();
 			}
+			
+			humanMsg.displayMsg(EmailSenderHelper.localizations.success, {
+				callback: function() {
+					try {
+						window.parent.jQuery.fn.fancybox.close();
+					} catch(e) {}
+				},
+				timeout: 1500
+			});
+			
+			jQuery('input[type=\'text\']', container).attr('value', '');
+			jQuery('textarea', container).attr('value', '');
 		}, errorHandler: function() {
 			closeAllLoadingMessages();
 			humanMsg.displayMsg(EmailSenderHelper.localizations.error);
@@ -107,10 +116,12 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	});
 }
 
-EmailSenderHelper.getMessageParametersObject = function(from, recipientTo, recipientCc, recipientBcc, subject, message, attachment) {
+EmailSenderHelper.getMessageParametersObject = function(from, replyTo, recipientTo, recipientCc, recipientBcc, subject, message, attachment) {
 	var parameters = {
 		senderName: EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'emailSenderFullName\']', jQuery('#emailSenderFormId')),
 		from: from || null,
+	
+		replyTo: replyTo || null,
 	
 		recipientTo: recipientTo || null,
 		recipientCc: recipientCc || null,

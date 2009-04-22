@@ -16,9 +16,9 @@ import com.idega.dwr.business.DWRAnnotationPersistance;
  * Message (email) fields bean
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
  */
 
 @DataTransferObject
@@ -30,6 +30,9 @@ public class MessageParameters implements DWRAnnotationPersistance {
 	private String senderName;
 	@RemoteProperty
 	private String from;
+	
+	@RemoteProperty
+	private String replyTo;
 	
 	@RemoteProperty
 	private String recipientTo;
@@ -135,6 +138,14 @@ public class MessageParameters implements DWRAnnotationPersistance {
 
 	public void setSenderName(String senderName) {
 		this.senderName = senderName;
+	}
+
+	public String getReplyTo() {
+		return replyTo;
+	}
+
+	public void setReplyTo(String replyTo) {
+		this.replyTo = replyTo;
 	}
 	
 }

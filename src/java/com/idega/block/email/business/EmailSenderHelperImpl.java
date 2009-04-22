@@ -34,9 +34,9 @@ import com.idega.util.StringHandler;
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
  */
 
 @Service(EmailSenderHelperImpl.BEAN_NAME)
@@ -68,8 +68,8 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		
 		boolean success = true;
 		try {
-			SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), host,
-					parameters.getSubject(), parameters.getMessage(), attachedFile);
+			SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
+					host, parameters.getSubject(), parameters.getMessage(), attachedFile);
 			return Boolean.TRUE;
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error sending mail: " + parameters, e);

@@ -18,6 +18,10 @@ xmlns="http://www.w3.org/1999/xhtml">
 				</label>
 				<input id="emailSenderFrom" class="required" type="text" name="emailSenderFrom" value="#{emailSenderStateBean.from}" />
 		 	</div>
+		 	<div class="emailSenderFormItem">
+				<label for="emailSenderReplyTo">#{localizedStrings['com.idega.block.email']['email_sender.reply_to']}:</label>
+				<input id="emailSenderReplyTo" type="text" name="emailSenderReplyTo" value="#{emailSenderStateBean.replyTo}" />
+		 	</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderTo">#{localizedStrings['com.idega.block.email']['email_sender.to']}:
 					<span class="requiredField">*</span>

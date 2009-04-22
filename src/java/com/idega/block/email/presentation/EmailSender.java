@@ -32,13 +32,14 @@ import com.idega.util.expression.ELUtil;
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2009/04/22 12:55:16 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
 	public static final String FROM_PARAMETER = "from";
+	public static final String REPLY_TO_PARAMETER = "replyTo";
 	public static final String RECIPIENT_TO_PARAMETER = "recipientTo";
 	public static final String RECIPIENT_CC_PARAMETER = "recipientCc";
 	public static final String RECIPIENT_BCC_PARAMETER = "recipientBcc";
@@ -58,6 +59,7 @@ public class EmailSender extends IWBaseComponent {
 	private Web2Business web2;
 	
 	private String from;
+	private String replyTo;
 	private String recipientTo;
 	private String recipientCc;
 	private String recipientBcc;
@@ -99,6 +101,9 @@ public class EmailSender extends IWBaseComponent {
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
 		}
+		if (iwc.isParameterSet(REPLY_TO_PARAMETER)) {
+			setReplyTo(iwc.getParameter(REPLY_TO_PARAMETER));
+		}
 		if (iwc.isParameterSet(RECIPIENT_TO_PARAMETER)) {
 			setRecipientTo(iwc.getParameter(RECIPIENT_TO_PARAMETER));
 		}
@@ -125,6 +130,7 @@ public class EmailSender extends IWBaseComponent {
 		setExternalParameters(getValues(iwc, EXTERNAL_PARAMETERS));
 
 		getEmailSender().setFrom(getFrom());
+		getEmailSender().setReplyTo(getReplyTo());
 		getEmailSender().setRecipientTo(getRecipientTo());
 		getEmailSender().setRecipientCc(getRecipientCc());
 		getEmailSender().setRecipientBcc(getRecipientBcc());
@@ -301,6 +307,14 @@ public class EmailSender extends IWBaseComponent {
 
 	public void setNamesForExternalParameters(List<String> namesForExternalParameters) {
 		this.namesForExternalParameters = namesForExternalParameters;
+	}
+
+	public String getReplyTo() {
+		return replyTo;
+	}
+
+	public void setReplyTo(String replyTo) {
+		this.replyTo = replyTo;
 	}
 	
 }
