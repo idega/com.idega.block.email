@@ -32,9 +32,9 @@ import com.idega.util.expression.ELUtil;
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/23 12:25:00 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
@@ -146,7 +146,7 @@ public class EmailSender extends IWBaseComponent {
 		
 		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
 			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
-			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occured while sending email...")).append("', success: '")
+			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occurred while sending email...")).append("', success: '")
 			.append(iwrb.getLocalizedString("email_sender.success", "E-mail was successfully sent")).append("', enterSenderEmail: '")
 			.append(iwrb.getLocalizedString("email_sender.enter_sender_email", "Please enter a valid sender email address"))
 			.append("', enterRecipientEmail: '")
