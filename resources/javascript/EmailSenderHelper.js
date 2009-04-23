@@ -2,7 +2,7 @@ if (EmailSenderHelper == null) var EmailSenderHelper = {};
 
 EmailSenderHelper.localizations = {
 	sending:	'Sending...',
-	error:		'Ooops... Some error occured while sending email...',
+	error:		'Ooops... Some error occurred while sending email...',
 	success:	'E-mail was successfully sent',
 	enterSenderEmail:		'Please enter a valid sender email address',
 	enterRecipientEmail:	'Please enter a valid recipient email address',
@@ -22,11 +22,32 @@ EmailSenderHelper.setProperties = function(properties) {
 }
 
 EmailSenderHelper.proceedValidator = function() {
+	jQuery.validator.addMethod('emails',
+		function(value, element, params) {
+			var tempValidator = this;
+			
+			value = value.replace(' ', '');
+			var emails = value.split(',');
+			if (emails == null || emails.length == 0) {
+				return true;
+			}
+			
+			var result = true;
+			for (var i = 0; (i < emails.length && result); i++) {
+				result = jQuery.validator.methods['email'].call( this, emails[i], element);
+			}
+			return result; 
+		},
+	EmailSenderHelper.localizations.enterValidEmail);
+	
 	var validator = jQuery('#emailSenderFormId').validate({
 		rules: {
 			emailSenderFrom: {
 				required: true,
 				email: true
+			},
+			emailSenderReplyTo: {
+				emails: true
 			},
 			emailSenderTo: {
 				required: true,
@@ -43,6 +64,7 @@ EmailSenderHelper.proceedValidator = function() {
 		},
 		messages: {
 			emailSenderFrom: EmailSenderHelper.localizations.enterSenderEmail,
+			emailSenderReplyTo: EmailSenderHelper.localizations.enterValidEmail,
 			emailSenderTo: EmailSenderHelper.localizations.enterRecipientEmail,
 			emailSenderCc: EmailSenderHelper.localizations.enterValidEmail,
 			emailSenderBcc: EmailSenderHelper.localizations.enterValidEmail,
