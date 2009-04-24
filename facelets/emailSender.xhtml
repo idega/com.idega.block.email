@@ -11,6 +11,7 @@ xmlns="http://www.w3.org/1999/xhtml">
 	<body>
 		<form class="emailSenderForm" id="emailSenderFormId">
 			<input type="hidden" name="emailSenderFullName" value="#{emailSenderStateBean.currentUser.name}" />
+			<input type="hidden" name="allowChangeRecipientAddress" value="#{emailSenderStateBean.allowChangeRecipientAddress}" />
 		
 			<div class="emailSenderFormItem">
 				<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:
@@ -37,9 +38,7 @@ xmlns="http://www.w3.org/1999/xhtml">
 				<input id="emailSenderBcc" type="text" name="emailSenderBcc" value="#{emailSenderStateBean.recipientBcc}" />
 			</div>
 			<div class="emailSenderFormItem">
-				<label for="emailSenderSubject">#{localizedStrings['com.idega.block.email']['email_sender.subject']}:
-					<span class="requiredField">*</span>
-				</label>
+				<label for="emailSenderSubject">#{localizedStrings['com.idega.block.email']['email_sender.subject']}:</label>
 				<input id="emailSenderSubject" type="text" name="emailSenderSubject" value="#{emailSenderStateBean.subject}" />
 			</div>
 			<div class="emailSenderFormItem">
@@ -47,10 +46,8 @@ xmlns="http://www.w3.org/1999/xhtml">
 				<content:fileUploadViewer allowMultipleFiles="false" autoAddFileInput="false" autoUpload="true" showUploadedFiles="true" formId="emailSenderFormId" />
 			</div>
 			<div class="emailSenderFormItem">
-				<label for="emailSenderMessage">#{localizedStrings['com.idega.block.email']['email_sender.message']}:
-					<span class="requiredField">*</span>
-				</label>
-				<textarea id="emailSenderMessage" class="required" name="emailSenderMessage" cols="25" rows="10" />
+				<label for="emailSenderMessage">#{localizedStrings['com.idega.block.email']['email_sender.message']}:</label>
+				<textarea id="emailSenderMessage" name="emailSenderMessage" cols="25" rows="10" />
 			</div>
 			
 			<div class="emailSenderButtons">

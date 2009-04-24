@@ -19,6 +19,12 @@ EmailSenderHelper.setLocalizations = function(localizations) {
 
 EmailSenderHelper.setProperties = function(properties) {
 	EmailSenderHelper.properties = properties;
+	
+	var container = jQuery('#emailSenderFormId');
+	var keepEnabledFromField = EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'allowChangeRecipientAddress\']', container);
+	if (keepEnabledFromField != 'true' && EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderFrom\']', container) != null) {
+		jQuery('input[type=\'text\'][name=\'emailSenderFrom\']').attr('disabled', 'disabled');
+	}
 }
 
 EmailSenderHelper.proceedValidator = function() {
@@ -58,18 +64,14 @@ EmailSenderHelper.proceedValidator = function() {
 			},
 			emailSenderBcc: {
 				email: true
-			},
-			emailSenderSubject: "required",
-			emailSenderMessage: "required"
+			}
 		},
 		messages: {
 			emailSenderFrom: EmailSenderHelper.localizations.enterSenderEmail,
 			emailSenderReplyTo: EmailSenderHelper.localizations.enterValidEmail,
 			emailSenderTo: EmailSenderHelper.localizations.enterRecipientEmail,
 			emailSenderCc: EmailSenderHelper.localizations.enterValidEmail,
-			emailSenderBcc: EmailSenderHelper.localizations.enterValidEmail,
-			emailSenderSubject: EmailSenderHelper.localizations.enterSubject,
-			emailSenderMessage: EmailSenderHelper.localizations.enterMessage
+			emailSenderBcc: EmailSenderHelper.localizations.enterValidEmail
 		}
 	});
 	

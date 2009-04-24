@@ -20,9 +20,9 @@ import com.idega.util.StringUtil;
  * State bean for {@link EmailSender}
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/24 12:11:45 $ by: $Author: valdas $
  */
 
 @Scope("request")
@@ -44,6 +44,8 @@ public class EmailSenderStateBean {
 	
 	private List<String> namesForExternalParameters;
 	private List<String> externalParameters;
+	
+	private boolean allowChangeRecipientAddress = true;
 	
 	public String getFrom() {
 		if (from == null) {
@@ -147,6 +149,13 @@ public class EmailSenderStateBean {
 	}
 	public void setReplyTo(String replyTo) {
 		this.replyTo = replyTo;
+	}
+	
+	public boolean isAllowChangeRecipientAddress() {
+		return allowChangeRecipientAddress;
+	}
+	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
+		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
 	}
 	
 }

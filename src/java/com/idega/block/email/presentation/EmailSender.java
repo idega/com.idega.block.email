@@ -32,9 +32,9 @@ import com.idega.util.expression.ELUtil;
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2009/04/23 12:25:00 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/24 12:11:45 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
@@ -48,6 +48,8 @@ public class EmailSender extends IWBaseComponent {
 	
 	public static final String EXTERNAL_PARAMETERS = "externalParameters";
 	public static final String NAMES_FOR_EXTERNAL_PARAMETERS = "namesForExternalParameters";
+	
+	public static final String ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER = "allowChangeRecipientAddress";
 	
 	@Autowired
 	private EmailSenderStateBean emailSender;
@@ -68,6 +70,8 @@ public class EmailSender extends IWBaseComponent {
 	
 	private List<String> namesForExternalParameters;
 	private List<String> externalParameters;
+	
+	private boolean allowChangeRecipientAddress = true;
 	
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -125,6 +129,9 @@ public class EmailSender extends IWBaseComponent {
 		if (iwc.isParameterSet(MESSAGE_PARAMETER)) {
 			setMessage(iwc.getParameter(MESSAGE_PARAMETER));
 		}
+		if (iwc.isParameterSet(ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER)) {
+			setAllowChangeRecipientAddress(Boolean.valueOf(iwc.getParameter(ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER)));
+		}
 		
 		setNamesForExternalParameters(getValues(iwc, NAMES_FOR_EXTERNAL_PARAMETERS));
 		setExternalParameters(getValues(iwc, EXTERNAL_PARAMETERS));
@@ -143,6 +150,8 @@ public class EmailSender extends IWBaseComponent {
 		
 		getEmailSender().setNamesForExternalParameters(getNamesForExternalParameters());
 		getEmailSender().setExternalParameters(getExternalParameters());
+		
+		getEmailSender().setAllowChangeRecipientAddress(isAllowChangeRecipientAddress());
 		
 		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
 			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
@@ -315,6 +324,14 @@ public class EmailSender extends IWBaseComponent {
 
 	public void setReplyTo(String replyTo) {
 		this.replyTo = replyTo;
+	}
+
+	public boolean isAllowChangeRecipientAddress() {
+		return allowChangeRecipientAddress;
+	}
+
+	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
+		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
 	}
 	
 }
