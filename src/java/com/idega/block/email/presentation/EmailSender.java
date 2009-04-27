@@ -32,9 +32,9 @@ import com.idega.util.expression.ELUtil;
  * Simple e-mail form
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2009/04/24 12:11:45 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/04/27 12:55:26 $ by: $Author: valdas $
  */
 public class EmailSender extends IWBaseComponent {
 
@@ -100,7 +100,7 @@ public class EmailSender extends IWBaseComponent {
 				jQuery.getBundleURIToJQueryLib(),
 				web2.getBundleUriToHumanizedMessagesScript()
 		));
-		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation());
+		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation(Boolean.FALSE));
 		
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
