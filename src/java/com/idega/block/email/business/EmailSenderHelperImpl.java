@@ -34,9 +34,9 @@ import com.idega.util.StringHandler;
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2009/04/22 14:43:45 $ by: $Author: valdas $
+ * Last modified: $Date: 2009/05/15 07:23:40 $ by: $Author: valdas $
  */
 
 @Service(EmailSenderHelperImpl.BEAN_NAME)
@@ -174,7 +174,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	private IWSlideService getSlideService() {
 		if (slide == null) {
 			try {
-				slide = (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+				slide = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
 			} catch(Exception e) {
 				LOGGER.log(Level.SEVERE, "Error getting " + IWSlideService.class, e);
 			}
