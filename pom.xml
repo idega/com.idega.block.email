@@ -62,7 +62,7 @@
     </dependency>
     <dependency>
     	<groupId>com.idega.block.platform</groupId>
-  		<artifactId>com.idega.facelets</artifactId>
+  		<artifactId>com.idega.faces</artifactId>
   	</dependency>
   	<dependency>
   		<groupId>com.idega.block.platform</groupId>
