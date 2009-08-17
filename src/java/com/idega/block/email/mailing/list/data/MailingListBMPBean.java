@@ -122,7 +122,7 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		SelectQuery query = new SelectQuery(table);
     	query.addColumn(new Column(table, getIDColumnName()));
     	
-    	query.addCriteria(new MatchCriteria(new Column(NAME), MatchCriteria.EQUALS, name));
+    	query.addCriteria(new MatchCriteria(new Column(table, NAME), MatchCriteria.EQUALS, name));
     	addNotDeletedCriteria(query);
     	
     	return (Integer) idoFindOnePKByQuery(query);
@@ -133,7 +133,7 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		SelectQuery query = new SelectQuery(table);
     	query.addColumn(new Column(table, getIDColumnName()));
     	
-    	query.addCriteria(new MatchCriteria(new Column(getUniqueIdColumnName()), MatchCriteria.EQUALS, uniqueId));
+    	query.addCriteria(new MatchCriteria(new Column(table, getUniqueIdColumnName()), MatchCriteria.EQUALS, uniqueId));
     	
     	return (Integer) idoFindOnePKByQuery(query);
 	}
