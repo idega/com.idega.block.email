@@ -18,6 +18,45 @@
             </value>
             <type>map</type>
           </key>
+          <key>
+            <name>com.idega.block.email.mailing.list.presentation.MailingListAdministration</name>
+            <value>
+              <map>
+                <key>
+                  <name>component_property_file</name>
+                  <type>java.lang.String</type>
+                  <value>com.idega.block.email.mailing.list.presentation.MailingListAdministration.pxml</value>
+                </key>
+              </map>
+            </value>
+            <type>map</type>
+          </key>
+          <key>
+            <name>com.idega.block.email.mailing.list.presentation.UserMailingLists</name>
+            <value>
+              <map>
+                <key>
+                  <name>component_property_file</name>
+                  <type>java.lang.String</type>
+                  <value>com.idega.block.email.mailing.list.presentation.UserMailingLists.pxml</value>
+                </key>
+              </map>
+            </value>
+            <type>map</type>
+          </key>
+          <key>
+            <name>com.idega.block.email.mailing.list.presentation.MailingListViewer</name>
+            <value>
+              <map>
+                <key>
+                  <name>component_property_file</name>
+                  <type>java.lang.String</type>
+                  <value>com.idega.block.email.mailing.list.presentation.MailingListViewer.pxml</value>
+                </key>
+              </map>
+            </value>
+            <type>map</type>
+          </key>
         </map>
       </value>
       <type>map</type>
