@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<page-templates>
+	<page name="Mailing list" type="mailing_list_viewer" iconfile="idegaweb/bundles/com.idega.block.email.bundle/resources/images/pageIcons/mailingList.png" templatefile="idegaweb/bundles/com.idega.block.email.bundle/resources/pages/idega_theme_mailing_list_viewer.xml"></page>
+</page-templates>
