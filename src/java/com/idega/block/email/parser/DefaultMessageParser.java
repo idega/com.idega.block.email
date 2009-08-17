@@ -99,14 +99,14 @@ public abstract class DefaultMessageParser implements EmailParser {
 	}
 	
 	public synchronized EmailMessage getParsedMessage(Message message, EmailParams params) throws Exception {
-		try {
-			EmailMessage parsedMessage = getNewMessage();
-			
+		EmailMessage parsedMessage = getNewMessage();
+		try {			
 			parsedMessage.setSubject(message.getSubject());
 			
 			Object[] msgAndAttachments = parseContent(message);
 			if (ArrayUtil.isEmpty(msgAndAttachments)) {
-				return null;
+				parsedMessage = null;
+				return parsedMessage;
 			}
 			
 			String body = (String) msgAndAttachments[0];
@@ -132,11 +132,11 @@ public abstract class DefaultMessageParser implements EmailParser {
 			Map<String, InputStream> files = (Map<String, InputStream>) msgAndAttachments[1];
 			parsedMessage.setAttachments(files);
 			
-			LOGGER.info("PARSED: " + parsedMessage);
 			return parsedMessage;
 		} finally {
-			LOGGER.info("Will delete original message!");
-			getEmailsFinder().moveMessage(message, params);
+			if (parsedMessage != null) {
+				getEmailsFinder().moveMessage(message, params);
+			}
 		}
 	}
 
