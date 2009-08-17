@@ -90,7 +90,10 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 						String protocol = settings.getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 						String password = settings.getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 
-						if (StringUtil.isEmpty(host) || StringUtil.isEmpty(accountName) || StringUtil.isEmpty(protocol) || StringUtil.isEmpty(password)) {
+						if (StringUtil.isEmpty(host)) {
+							return;
+						}
+						if (StringUtil.isEmpty(accountName) || StringUtil.isEmpty(protocol) || StringUtil.isEmpty(password)) {
 							LOGGER.log(Level.WARNING, "Mail properties are empty");
 							return;
 						}
