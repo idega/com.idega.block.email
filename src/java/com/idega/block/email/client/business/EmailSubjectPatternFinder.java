@@ -1,30 +1,33 @@
 package com.idega.block.email.client.business;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.search.SearchTerm;
-
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.idega.block.email.bean.FoundMessagesInfo;
+import com.idega.block.email.patterns.EmailSubjectSearchable;
+import com.idega.idegaweb.IWMainApplication;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
+import com.idega.util.ListUtil;
 
 /**
  * This JavaBean is used to store mail user information.
  */
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(EmailSubjectPatternFinder.BEAN_IDENTIFIER)
 public class EmailSubjectPatternFinder {
 	
@@ -32,107 +35,85 @@ public class EmailSubjectPatternFinder {
 	private static final String DEFAULT_PROTOCOL = "pop3";
 	private static final String DEFAULT_FOLDER = "Inbox";
 	private static final String MSGS_FOLDER = "ReadMessages";
-	private static final String IDNETIFIER_PATTERN = "[A-Z]{1,3}-\\d{4}-\\d{2}-\\d{2}-[A-Z0-9]{4,}";
-	private static final Pattern subjectPattern = Pattern
-	        .compile(IDNETIFIER_PATTERN);
 	
-	public EmailSubjectPatternFinder() {
-	}
+	private Collection<EmailSubjectSearchable> emailSubjectSearchers;
 	
-	/**
-	 * Returns the javax.mail.Folder object.
-	 */
-	protected Pattern getSubjectPattern() {
-		return subjectPattern;
-	}
-	
-	/**
-	 * Returns all messages with right pattern. Be carefull - changes messages status in mail server
-	 */
-	private Message[] getMessages(EmailParams params) throws MessagingException {
-		
-		Message[] messages = params.getFolder().search(new SearchTerm() {
-			
-			@Override
-			public boolean match(Message message) {
-				
-				try {
-					
-					String subject = message.getSubject();
-					
-					if (subject != null) {
-						
-						Matcher subjectMatcher = getSubjectPattern().matcher(
-						    subject);
-						
-						if (subjectMatcher.find()) {
-							return true;
-						}
-					}
-
-					else
-						return false;
-					
-				} catch (MessagingException e) {
-					e.printStackTrace();
-				}
-				return false;
-			}
-			
-		});
-		
-		params.setMessagesFound(messages);
-		
-		return messages;
-	}
+	public EmailSubjectPatternFinder() {}
 	
 	/**
 	 * move all messages from folder to new or existing folder
 	 */
 	public void moveMessages(EmailParams params) throws MessagingException {
-		
 		Folder msgFolder = params.getStore().getFolder(MSGS_FOLDER);
+		Folder inbox = params.getFolder();
+		Message[] msgs = params.getMessagesFound();
+		
+		for (Message msg: msgs) {
+			moveMessage(msg, inbox, msgFolder, params);
+		}
+	}
+	
+	public void moveMessage(Message message, EmailParams params) throws MessagingException {
+		moveMessage(message, params.getFolder(), params.getStore().getFolder(MSGS_FOLDER), params);
+	}
+	
+	private synchronized void moveMessage(Message message, Folder inbox, Folder msgFolder, EmailParams params) throws MessagingException {
+		Collection<Message> foundMessages = new ArrayList<Message>(Arrays.asList(params.getMessagesFound()));
+		foundMessages.remove(message);
+		params.setMessagesFound(ArrayUtil.convertListToArray(foundMessages));
 		
 		if (!msgFolder.exists())
 			msgFolder.create(Folder.HOLDS_MESSAGES);
 		
-		Message[] msgs = params.getMessagesFound();
+		inbox.copyMessages(new Message[] {message}, msgFolder);
+		message.setFlag(Flags.Flag.DELETED, true);
+		System.out.println("DELETED message: '" + message + "' with subject: " + message.getSubject());	//	TODO
 		
-		params.getFolder().copyMessages(msgs, msgFolder);
-		
-		for (int i = 0; i < msgs.length; i++)
-			msgs[i].setFlag(Flags.Flag.DELETED, true);
+		if (ArrayUtil.isEmpty(params.getMessagesFound())) {
+			logout(params);
+		}
 	}
 	
 	/**
 	 * Returns message map
 	 */
-	public Map<String, List<Message>> getMessageMap(EmailParams params)
-	        throws MessagingException {
+	public Map<String, FoundMessagesInfo> getMessageMap(EmailParams params) throws MessagingException {
 		
-		Message[] messages = getMessages(params);
-		Map<String, List<Message>> messageMap = new HashMap<String, List<Message>>();
+		Collection<Message> foundMessages = new ArrayList<Message>();
+		Map<String, FoundMessagesInfo> allMessages = new HashMap<String, FoundMessagesInfo>();
 		
-		for (int i = 0, n = messages.length; i < n; i++) {
-			
-			Matcher subjectMatcher = getSubjectPattern().matcher(
-			    messages[i].getSubject());
-			subjectMatcher.find();
-			
-			String indentifier = messages[i].getSubject().substring(
-			    subjectMatcher.start(), subjectMatcher.end());
-			if (messageMap.get(indentifier) == null) {
-				List<Message> messageList = new ArrayList<Message>();
-				messageList.add(messages[i]);
-				messageMap.put(indentifier, messageList);
-			}else{
-				messageMap.get(indentifier).add(messages[i]);
+		for (EmailSubjectSearchable emailSearcher: getEmailSubjectSearchers()) {
+			Map<String, FoundMessagesInfo> messages = emailSearcher.getSearchResultsFormatted(params);
+			if (messages == null || messages.isEmpty()) {
+				continue;
 			}
 			
-			
+			for (String identifier: messages.keySet()) {
+				FoundMessagesInfo messagesByIdentifier = messages.get(identifier);
+				if (messagesByIdentifier == null || ListUtil.isEmpty(messagesByIdentifier.getMessages())) {
+					continue;
+				}
+				
+				FoundMessagesInfo formattedMessages = allMessages.get(identifier);
+				if (formattedMessages == null) {
+					formattedMessages = new FoundMessagesInfo(messagesByIdentifier.getMessages(), messagesByIdentifier.getParserType());
+					allMessages.put(identifier, formattedMessages);
+				} else {
+					for (Message messageByIdentifier: messagesByIdentifier.getMessages()) {
+						if (!formattedMessages.getMessages().contains(messageByIdentifier)) {
+							formattedMessages.addMessage(messageByIdentifier);
+						}
+					}
+				}
+			}
 		}
-		
-		return messageMap;
+
+		for (FoundMessagesInfo messageInfo: allMessages.values()) {
+			foundMessages.addAll(messageInfo.getMessages());
+		}
+		params.setMessagesFound(ListUtil.isEmpty(foundMessages) ? new Message[] {} : ArrayUtil.convertListToArray(foundMessages));
+			
+		return allMessages;
 	}
 	
 	/**
@@ -182,7 +163,42 @@ public class EmailSubjectPatternFinder {
 	 * Method used to logout from the mail host.
 	 */
 	public void logout(EmailParams params) throws MessagingException {
+		if (params.isLoggedOut()) {
+			return;
+		}
+		
 		params.getFolder().close(true);
 		params.getStore().close();
+		params.setLoggedOut(true);
 	}
+
+	@SuppressWarnings("unchecked")
+	public Collection<EmailSubjectSearchable> getEmailSubjectSearchers() {
+		if (ListUtil.isEmpty(emailSubjectSearchers)) {
+			Map<String, ? extends EmailSubjectSearchable> beans = WebApplicationContextUtils
+				.getWebApplicationContext(IWMainApplication.getDefaultIWMainApplication().getServletContext()).getBeansOfType(EmailSubjectSearchable.class);
+			if (beans == null || beans.isEmpty()) {
+				return null;
+			}
+			
+			emailSubjectSearchers = new ArrayList<EmailSubjectSearchable>(beans.size());
+			for (EmailSubjectSearchable searcher: beans.values()) {
+				addEmailSubjectSearcher(searcher);
+			}
+		}
+		
+		return emailSubjectSearchers;
+	}
+
+	public void addEmailSubjectSearcher(EmailSubjectSearchable emailSubjectSearcher) {
+		if (emailSubjectSearchers == null) {
+			emailSubjectSearchers = new ArrayList<EmailSubjectSearchable>();
+		}
+		
+		if (emailSubjectSearchers.contains(emailSubjectSearcher)) {
+			return;
+		}
+		emailSubjectSearchers.add(emailSubjectSearcher);
+	}
+	
 }

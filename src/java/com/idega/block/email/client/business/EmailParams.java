@@ -23,6 +23,8 @@ public class EmailParams {
 	private String protocol;
 	private Message[] messagesFound;
 	
+	private boolean loggedOut;
+	
 	public Message[] getMessagesFound() {
 		return messagesFound;
 	}
@@ -71,4 +73,11 @@ public class EmailParams {
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
+	public boolean isLoggedOut() {
+		return loggedOut;
+	}
+	public void setLoggedOut(boolean loggedOut) {
+		this.loggedOut = loggedOut;
+	}
+	
 }

@@ -2,6 +2,7 @@ package com.idega.block.email.business;
 
 import java.util.List;
 
+import com.idega.block.email.parser.EmailParser;
 import com.idega.business.SpringBeanName;
 
 /**
