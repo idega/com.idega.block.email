@@ -67,7 +67,6 @@ public class EmailSubjectPatternFinder {
 		
 		inbox.copyMessages(new Message[] {message}, msgFolder);
 		message.setFlag(Flags.Flag.DELETED, true);
-		System.out.println("DELETED message: '" + message + "' with subject: " + message.getSubject());	//	TODO
 		
 		if (ArrayUtil.isEmpty(params.getMessagesFound())) {
 			logout(params);
