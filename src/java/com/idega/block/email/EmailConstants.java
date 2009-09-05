@@ -21,4 +21,6 @@ public class EmailConstants {
 	public static final String MULTIPART_ALTERNATIVE_TYPE = "multipart/alternative";
 	public static final String MULTIPART_RELATED_TYPE = "multipart/related";
 	public static final String MESSAGE_RFC822_TYPE = "message/rfc822";
+	
+	public static final String IW_MAILING_LIST = "-iwlist";
 }

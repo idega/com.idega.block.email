@@ -1,0 +1,44 @@
+@CHARSET "UTF-8";
+
+.formSection {
+	margin: 0 !important;
+	padding: 6px !important;
+}
+
+.formItem {
+	margin: 0 0 6px !important;
+	overflow: hidden;
+	padding: 0 !important;
+}
+
+.formItem label {
+	display: block;
+	float: left;
+	font-size: 11px;
+	line-height: 19px;
+	width: 120px;
+}
+
+.formItem input {
+	float: left;
+	font-size: 11px;
+	margin: 0 !important;
+	padding: 2px 4px;
+	width: 150px;
+}
+
+.mailingListMessages {
+	list-style: none;
+}
+
+.mailingListMessageSubject {
+	float: left;
+}
+
+.mailingListMessageReceived {
+	float: right;
+}
+
+.mailingListMessageAttachmentSize {
+	margin-left: 5px;
+}

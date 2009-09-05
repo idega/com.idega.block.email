@@ -14,8 +14,16 @@ public class FoundMessagesInfo implements Serializable {
 	
 	private MessageParserType parserType;
 
+	private String identifier;
+	
 	public FoundMessagesInfo(MessageParserType parserType) {
 		this.parserType = parserType;
+	}
+	
+	public FoundMessagesInfo(String identifier, MessageParserType parserType) {
+		this(parserType);
+		
+		this.identifier = identifier;
 	}
 	
 	public FoundMessagesInfo(Collection<Message> messages, MessageParserType parserType) {
@@ -41,7 +49,15 @@ public class FoundMessagesInfo implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Type: " + parserType + ", messages: " + getMessages();
+		return "Identifier: " + identifier + ", type: " + parserType + ", messages: " + getMessages();
+	}
+
+	public String getIdentifier() {
+		return identifier;
+	}
+
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
 	}	
 	
 }

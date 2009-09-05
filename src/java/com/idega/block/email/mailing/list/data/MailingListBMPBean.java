@@ -3,11 +3,12 @@ package com.idega.block.email.mailing.list.data;
 import java.util.Collection;
 import javax.ejb.FinderException;
 
+import com.idega.block.email.data.Message;
+import com.idega.block.email.data.MessageBMPBean;
 import com.idega.data.IDOAddRelationshipException;
 import com.idega.data.IDORelationshipException;
 import com.idega.data.IDORemoveRelationshipException;
 import com.idega.data.TreeableEntityBMPBean;
-import com.idega.data.UniqueIDCapable;
 import com.idega.data.query.Column;
 import com.idega.data.query.Criteria;
 import com.idega.data.query.InCriteria;
@@ -17,15 +18,18 @@ import com.idega.data.query.SelectQuery;
 import com.idega.data.query.Table;
 import com.idega.user.data.User;
 
-public class MailingListBMPBean extends TreeableEntityBMPBean implements MailingList, UniqueIDCapable {
+@SuppressWarnings("unchecked")
+public class MailingListBMPBean extends TreeableEntityBMPBean implements MailingList {
 
 	private static final long serialVersionUID = -5748549253502076077L;
 
 	public static final String TABLE_NAME = "MAILING_LIST";
 	public static final String MAILING_LIST_SUBSCRIBERS = TABLE_NAME + "_SUBSCRIBERS";
 	public static final String MAILING_LIST_WAITING = TABLE_NAME + "_WAITING";
+	public static final String MAILING_LIST_MESSAGES = TABLE_NAME + MessageBMPBean.TABLE_NAME;
 	
 	private static final String NAME = "name";
+	private static final String NAME_IN_LATIN_LETTERS = "name_in_latin_letters";
 	private static final String PRIVATE_MAILING_LIST = "private";
 	private static final String DELETED = "deleted";
 	private static final String SENDER_ADDRESS = "sender_address";
@@ -41,6 +45,7 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		addAttribute(getIDColumnName());
 		
 		addAttribute(NAME, "Name", true, true, String.class);
+		addAttribute(NAME_IN_LATIN_LETTERS, "Name in Lating letter", true, true, String.class);
 		addAttribute(SENDER_ADDRESS, "Sender address", true, true, String.class);
 		addAttribute(SENDER_NAME, "Sender name", true, true, String.class);
 		addAttribute(PRIVATE_MAILING_LIST, "Mailing list is private", true, true, Boolean.class);
@@ -51,9 +56,9 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		
 		addManyToManyRelationShip(User.class, MAILING_LIST_SUBSCRIBERS);
 		addManyToManyRelationShip(User.class, MAILING_LIST_WAITING);
+		addManyToManyRelationShip(Message.class, MAILING_LIST_MESSAGES);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Collection<User> getSubscribers() {
 		try {
 			return this.idoGetRelatedEntitiesBySQL(User.class, "select subscribers.ic_user_id from " + MAILING_LIST_SUBSCRIBERS + " subscribers, " +
@@ -77,7 +82,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		this.idoAddTo(subscriber, MAILING_LIST_WAITING);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<User> getWaitingList() {
 		try {
 			return this.idoGetRelatedEntitiesBySQL(User.class, "select waiting.ic_user_id from " + MAILING_LIST_WAITING + " waiting, " +
@@ -111,9 +115,9 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		setColumn(PRIVATE_MAILING_LIST, privateMailingList);
 	}
 	
-	private void addNotDeletedCriteria(SelectQuery query) {
-		Criteria isNull = new MatchCriteria(new Column(DELETED), MatchCriteria.IS, MatchCriteria.NULL);
-		Criteria notEquals = new MatchCriteria(new Column(DELETED), MatchCriteria.NOTEQUALS, true);
+	private void addNotDeletedCriteria(Table table, SelectQuery query) {
+		Criteria isNull = new MatchCriteria(new Column(table, DELETED), MatchCriteria.IS, MatchCriteria.NULL);
+		Criteria notEquals = new MatchCriteria(new Column(table, DELETED), MatchCriteria.NOTEQUALS, true);
 		query.addCriteria(new OR(isNull, notEquals));
 	}
 	
@@ -123,7 +127,18 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	query.addColumn(new Column(table, getIDColumnName()));
     	
     	query.addCriteria(new MatchCriteria(new Column(table, NAME), MatchCriteria.EQUALS, name));
-    	addNotDeletedCriteria(query);
+    	addNotDeletedCriteria(table, query);
+    	
+    	return (Integer) idoFindOnePKByQuery(query);
+	}
+	
+	public Integer ejbFindByNameInLatinLetters(String nameInLatinLetters) throws FinderException {
+		Table table = new Table(this);
+		SelectQuery query = new SelectQuery(table);
+    	query.addColumn(new Column(table, getIDColumnName()));
+    	
+    	query.addCriteria(new MatchCriteria(new Column(table, NAME_IN_LATIN_LETTERS), MatchCriteria.EQUALS, nameInLatinLetters));
+    	addNotDeletedCriteria(table, query);
     	
     	return (Integer) idoFindOnePKByQuery(query);
 	}
@@ -138,7 +153,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	return (Integer) idoFindOnePKByQuery(query);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<Integer> ejbFindAll() throws FinderException {
 		Table table = new Table(this);
 		SelectQuery query = new SelectQuery(table);
@@ -146,7 +160,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	return idoFindPKsByQuery(query);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<Integer> ejbFindAllByUser(User user) throws FinderException {
 		Table mailingLists = new Table(this);
 		Table mailingListsSubscribers = new Table(MAILING_LIST_SUBSCRIBERS);
@@ -161,7 +174,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	return idoFindPKsByQuery(query);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<Integer> ejbFindAllUserIsWaitingToBeConfirmed(User user) throws FinderException {
 		Table mailingLists = new Table(this);
 		Table waitingLists = new Table(MAILING_LIST_WAITING);
@@ -176,7 +188,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	return idoFindPKsByQuery(query);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Collection<Integer> ejbFindAllListsUserIsNotInvolved(User user) throws FinderException {
 		String query = new StringBuilder("select ").append(getEntityName()).append(".").append(getIDColumnName()).append(" from ").append(getEntityName())
 			.append(" where ").append(getEntityName()).append(".").append(getIDColumnName()).append(" not in (select ").append(MAILING_LIST_SUBSCRIBERS)
@@ -190,7 +201,6 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
     	return idoFindPKsBySQL(query);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<Integer> ejbFindMailingListsByIds(String[] ids) throws FinderException {
 		Table table = new Table(this);
 		SelectQuery query = new SelectQuery(table);
@@ -224,4 +234,30 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 	public void setSenderName(String senderName) {
 		setColumn(SENDER_NAME, senderName);
 	}
+
+	public void addMessage(Message message) throws IDOAddRelationshipException {
+		this.idoAddTo(message);
+	}
+
+	public Collection<Message> getMessages() {
+		try {
+			return this.idoGetRelatedEntities(Message.class);
+		} catch (IDORelationshipException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public void removeMessage(Message message) throws IDORemoveRelationshipException {
+		this.idoRemoveFrom(message, MAILING_LIST_MESSAGES);
+	}
+
+	public String getNameInLatinLetters() {
+		return (String) getColumnValue(NAME_IN_LATIN_LETTERS);
+	}
+
+	public void setNameInLatinLetters(String nameInLatinLetters) {
+		setColumn(NAME_IN_LATIN_LETTERS, nameInLatinLetters);
+	}
+
 }

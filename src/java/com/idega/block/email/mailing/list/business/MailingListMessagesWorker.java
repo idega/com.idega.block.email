@@ -1,5 +1,8 @@
 package com.idega.block.email.mailing.list.business;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
@@ -16,18 +19,24 @@ import org.springframework.stereotype.Service;
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.client.business.EmailParams;
+import com.idega.block.email.data.MessageHome;
 import com.idega.block.email.mailing.list.data.MailingList;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.core.contact.data.Email;
+import com.idega.core.file.data.ICFile;
+import com.idega.core.file.data.ICFileHome;
+import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.core.messaging.MessagingSettings;
+import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -63,15 +72,15 @@ public class MailingListMessagesWorker implements Runnable {
 			return;
 		}
 		
-		for (String uniqueId: messages.keySet()) {
-			FoundMessagesInfo info = messages.get(uniqueId);
+		for (String nameInLatinLetters: messages.keySet()) {
+			FoundMessagesInfo info = messages.get(nameInLatinLetters);
 			if (info.getParserType() != MessageParserType.MAILING_LIST) {
 				continue;
 			}
 			
-			MailingList mailingList = mailingListManager.getMailingListByUniqueId(uniqueId);
+			MailingList mailingList = mailingListManager.getMailingListByNameInLatinLetters(nameInLatinLetters);
 			if (mailingList == null) {
-				LOGGER.warning("Unable to send message to mailing list: " + uniqueId + ", " + messages.get(uniqueId));
+				LOGGER.warning("Unable to send message to mailing list: " + nameInLatinLetters + ", " + messages.get(nameInLatinLetters));
 				continue;
 			}
 			
@@ -115,7 +124,6 @@ public class MailingListMessagesWorker implements Runnable {
 		if (StringUtil.isEmpty(senderName)) {
 			senderName = senderAddress;
 		}
-		String subject = mailingList.getName();
 		for (Message message: messagesInfo.getMessages()) {
 			EmailMessage parsedMessage = null;
 			try {
@@ -126,24 +134,54 @@ public class MailingListMessagesWorker implements Runnable {
 			if (parsedMessage == null) {
 				continue;
 			}
-						
+			
 			parsedMessage.setFromAddress(senderAddress);
 			parsedMessage.setSenderName(senderName);
+			parsedMessage.setSubject(StringUtil.isEmpty(messagesInfo.getIdentifier()) ?
+					parsedMessage.getSubject() : StringHandler.replace(parsedMessage.getSubject(), messagesInfo.getIdentifier(), CoreConstants.EMPTY).trim());
 			parsedMessage.setMailServer(mailServer);
-			parsedMessage.setSubject(subject);
 			parsedMessage.setMailType(CoreConstants.MAIL_TEXT_HTML_TYPE);
 			
 			for (Email email: emails) {
 				try {
 					parsedMessage.setToAddress(email.getEmailAddress());
+					
+					addMessage(mailingList, parsedMessage);
+					
 					parsedMessage.send();
-					LOGGER.info("Sent: " + parsedMessage);
-					//	TODO: add to sent messages for mailing list
 				} catch(Exception e) {
 					LOGGER.log(Level.WARNING, "Error sending message " + parsedMessage, e);
 				}
 			}
 		}
+	}
+	
+	private void addMessage(MailingList mailingList, EmailMessage emailMessage) throws Exception {
+		MessageHome messageHome = (MessageHome) IDOLookup.getHome(com.idega.block.email.data.Message.class);
+		com.idega.block.email.data.Message message = messageHome.create();
+		message.setSubject(emailMessage.getSubject());
+		message.setSenderAddress(emailMessage.getFromAddress());
+		message.setMessageContent(StringHandler.getStreamFromString(emailMessage.getBody()));
+		message.setReceived(new Timestamp(System.currentTimeMillis()));
+		message.store();
+		
+		Collection<File> attachments = emailMessage.getAttachedFiles();
+		if (!ListUtil.isEmpty(attachments)) {
+			ICFileHome fileHome = (ICFileHome) IDOLookup.getHome(ICFile.class);
+			for (File attachment: attachments) {
+				ICFile attachmentInDB = fileHome.create();
+				attachmentInDB.setName(attachment.getName());
+				attachmentInDB.setFileValue(new FileInputStream(attachment));
+				MimeTypeUtil.resolveMimeTypeFromFileName(attachment.getName());
+				attachmentInDB.setMimeType(MimeTypeUtil.resolveMimeTypeFromFileName(attachment.getName()));
+				attachmentInDB.store();
+				message.addAttachment(attachmentInDB);
+			}
+			message.store();
+		}
+		
+		mailingList.addMessage(message);
+		mailingList.store();
 	}
 	
 	private Collection<Email> getEmailAddresses(Collection<User> users) {

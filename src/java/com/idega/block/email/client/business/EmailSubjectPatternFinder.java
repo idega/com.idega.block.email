@@ -96,6 +96,7 @@ public class EmailSubjectPatternFinder {
 				FoundMessagesInfo formattedMessages = allMessages.get(identifier);
 				if (formattedMessages == null) {
 					formattedMessages = new FoundMessagesInfo(messagesByIdentifier.getMessages(), messagesByIdentifier.getParserType());
+					formattedMessages.setIdentifier(messagesByIdentifier.getIdentifier());
 					allMessages.put(identifier, formattedMessages);
 				} else {
 					for (Message messageByIdentifier: messagesByIdentifier.getMessages()) {

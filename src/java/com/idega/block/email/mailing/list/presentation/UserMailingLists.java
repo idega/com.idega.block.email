@@ -46,25 +46,6 @@ public class UserMailingLists extends BasicMailingList {
 		}
 		
 		if (iwc.isParameterSet(PARAMETER_SUBSCRIBE_TO_MAILING_LIST)) {
-			/*Collection<MailingList> listsToSubscribe = mailingListManager.getMailingLists();
-			if (!ListUtil.isEmpty(listsToSubscribe)) {
-				for (MailingList listToSubscribe: listsToSubscribe) {
-					if (listToSubscribe.isPrivate()) {
-						try {
-							listToSubscribe.addToWaitingList(currentUser);
-						} catch (IDOAddRelationshipException e) {
-							e.printStackTrace();
-						}
-					} else {
-						try {
-							listToSubscribe.addSubscriber(currentUser);
-						} catch (IDOAddRelationshipException e) {
-							e.printStackTrace();
-						}
-					}
-					listToSubscribe.store();
-				}
-			}*/
 			mailingListManager.subscribeToMailingLists(Arrays.asList(iwc.getParameterValues(PARAMETER_SUBSCRIBE_TO_MAILING_LIST)), currentUser);
 		}
 		
@@ -158,7 +139,8 @@ public class UserMailingLists extends BasicMailingList {
 		TableRow headerRow = headerRows.createRow();
 		addCell(headerRow, checkBoxLabel);
 		addCell(headerRow, iwrb.getLocalizedString("ml.name", "Name"));
-				
+		
+		String uriToMailingListViewerPage = getUriToMailingListViewer(iwc);
 		TableBodyRowGroup bodyRows = table.createBodyRowGroup();
 		for (MailingList mailingList: lists) {
 			TableRow bodyRow = bodyRows.createRow();
@@ -173,7 +155,7 @@ public class UserMailingLists extends BasicMailingList {
 			
 			UIComponent component = null;
 			if (PARAMETER_UN_SUBSCRIBE_FROM_MAILING_LIST.equals(checkBoxParameter)) {
-				component = getLink(mailingList.getName(), getUriToMailingListViewer(iwc), CoreConstants.EMPTY,
+				component = getLink(mailingList.getName(), uriToMailingListViewerPage, CoreConstants.EMPTY,
 						new AdvancedProperty(MailingListViewer.PARAMETER_MAILING_LIST_UNIQUE_ID, uniqueId)
 				);
 			} else {

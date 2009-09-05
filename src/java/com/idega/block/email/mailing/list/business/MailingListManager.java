@@ -15,6 +15,7 @@ public interface MailingListManager {
 			Collection<User> confirmedFromWaitingList);
 	
 	public MailingList getMailingListByUniqueId(String uniqueId);
+	public MailingList getMailingListByNameInLatinLetters(String nameInLatinLetters);
 	
 	public boolean subscribeToMailingList(String uniqueId, String subscriberEmailAddress);
 	public boolean subscribeToMailingLists(Collection<String> uniqueIds, String subscriberEmailAddress);

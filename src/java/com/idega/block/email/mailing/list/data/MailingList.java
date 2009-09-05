@@ -2,14 +2,16 @@ package com.idega.block.email.mailing.list.data;
 
 import java.util.Collection;
 
+import com.idega.block.email.data.Message;
 import com.idega.data.IDOAddRelationshipException;
 import com.idega.data.IDOEntity;
 import com.idega.data.IDORemoveRelationshipException;
+import com.idega.data.MetaDataCapable;
 import com.idega.data.TreeableEntity;
 import com.idega.data.UniqueIDCapable;
 import com.idega.user.data.User;
 
-public interface MailingList extends IDOEntity, TreeableEntity, UniqueIDCapable {
+public interface MailingList extends IDOEntity, TreeableEntity, UniqueIDCapable, MetaDataCapable {
 
 	public Collection<User> getSubscribers();
 	public void addSubscriber(User subscriber) throws IDOAddRelationshipException;
@@ -22,6 +24,9 @@ public interface MailingList extends IDOEntity, TreeableEntity, UniqueIDCapable 
 	public String getName();
 	public void setName(String name);
 	
+	public String getNameInLatinLetters();
+	public void setNameInLatinLetters(String nameInLatinLetters);
+	
 	public boolean isPrivate();
 	public void setPrivate(boolean privateMailingList);
 
@@ -33,4 +38,8 @@ public interface MailingList extends IDOEntity, TreeableEntity, UniqueIDCapable 
 	
 	public String getSenderName();
 	public void setSenderName(String senderName);
+	
+	public void addMessage(Message message) throws IDOAddRelationshipException;
+	public void removeMessage(Message message) throws IDORemoveRelationshipException;
+	public Collection<Message> getMessages();
 }

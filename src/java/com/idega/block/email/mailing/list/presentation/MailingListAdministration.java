@@ -12,7 +12,6 @@ import javax.faces.component.UIComponent;
 import com.idega.block.email.EmailConstants;
 import com.idega.block.email.client.business.EmailDaemon;
 import com.idega.block.email.mailing.list.data.MailingList;
-import com.idega.block.email.patterns.MailingListMessageSearcher;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.data.IDOAddRelationshipException;
@@ -48,6 +47,7 @@ public class MailingListAdministration extends BasicMailingList {
 	private static final String PARAMETER_SAVE_ACTION = "mlngLstSaveAction";
 	private static final String PARAMETER_DELETE_ACTION = "mlngLstDeleteAction";
 	private static final String PARAMETER_UNDELETE_ACTION = "mlngLstUnDeleteAction";
+	
 	private static final String PARAMETER_MAILING_LIST_ID = "mlngLstId";
 	private static final String PARAMETER_NAME = "mlngLstName";
 	private static final String PARAMETER_PRIVATE_OR_NOT = "mlngLstPrivateOrNot";
@@ -254,9 +254,16 @@ public class MailingListAdministration extends BasicMailingList {
 	}
 	
 	private Layer getFormItem(String label, String inputName, String value) {
+		return getFormItem(label, inputName, value, false);
+	}
+	
+	private Layer getFormItem(String label, String inputName, String value, boolean disabled) {
 		TextInput input = new TextInput(inputName);
 		if (!StringUtil.isEmpty(value)) {
 			input.setContent(value);
+		}
+		if (disabled) {
+			input.setDisabled(Boolean.TRUE);
 		}
 		return getFormItem(label, input);
 	}
@@ -279,6 +286,12 @@ public class MailingListAdministration extends BasicMailingList {
 		
 		//	Name
 		container.add(getFormItem(iwrb.getLocalizedString("ml.name", "Name"), PARAMETER_NAME, mailingList == null ? CoreConstants.EMPTY : mailingList.getName()));
+		
+		String nameInLatinLetters = mailingList == null ? null : mailingList.getNameInLatinLetters();
+		if (!StringUtil.isEmpty(nameInLatinLetters)) {
+			container.add(getFormItem(iwrb.getLocalizedString("ml.name_in_latin_letters", "Name in Latin letters"), "mlngLstNameInLatin", nameInLatinLetters,
+					Boolean.TRUE));
+		}
 		
 		//	Sender e-mail's address
 		container.add(getFormItem(iwrb.getLocalizedString("ml.sender_email", "Sender e-mail's address"), PARAMETER_SENDER_EMAIL,
@@ -382,9 +395,15 @@ public class MailingListAdministration extends BasicMailingList {
 					EmailDaemon.class + " what settings are needed");
 			return null;
 		}
-		String mailTo = new StringBuilder("mailto:").append(mailToMailingList).append("?subject=").append(mailingList.getName())
-			.append(MailingListMessageSearcher.MAILING_LIST_MESSAGE_SUBJECT_IDENTIFIER).append(mailingList.getUniqueId())
-		.toString();
+		String nameInLatinLetters = mailingList.getNameInLatinLetters();
+		if (StringUtil.isEmpty(nameInLatinLetters)) {
+			Logger.getLogger(MailingListAdministration.class.getName()).warning("Mailing list '" + mailingList.getName() +
+					"' doesn't have name in Latin letters. Please update mailing list!");
+			return null;
+		}
+		
+		String mailTo = new StringBuilder("mailto:").append(mailToMailingList).append("?subject=[").append(nameInLatinLetters)
+			.append(EmailConstants.IW_MAILING_LIST).append("]").toString();
 		
 		if (component instanceof GenericButton) {
 			((GenericButton) component).setContent(label);

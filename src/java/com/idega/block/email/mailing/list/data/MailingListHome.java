@@ -16,6 +16,8 @@ public interface MailingListHome extends IDOHome {
 	
 	public MailingList findByName(String name) throws FinderException;
 	
+	public MailingList findByNameInLatinLetters(String nameInLatinLetters) throws FinderException;
+	
 	public MailingList findByUniqueId(String uniqueId) throws FinderException;
 	
 	public Collection<MailingList> findAll() throws FinderException;

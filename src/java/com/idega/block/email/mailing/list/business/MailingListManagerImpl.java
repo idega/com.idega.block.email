@@ -25,6 +25,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 
 @Service
@@ -44,17 +45,8 @@ public class MailingListManagerImpl implements MailingListManager {
 			return null;
 		}
 		
-		MailingList mailingList = null;
-		
-		//	Looking if mailing list already exists
-		try {
-			mailingList = mailingListHome.findByName(name);
-		} catch (FinderException e) {}
-		if (mailingList != null) {
-			return mailingList;
-		}
-		
 		//	Creating new mailing list
+		MailingList mailingList = null;
 		try {
 			mailingList = mailingListHome.create();
 		} catch (CreateException e) {
@@ -65,8 +57,51 @@ public class MailingListManagerImpl implements MailingListManager {
 		}
 		
 		mailingList.setName(name);
+		String nameInLatinLetters = getNameInLatinLetters(name);
+		if (StringUtil.isEmpty(nameInLatinLetters)) {
+			LOGGER.warning("Unable to create mailing list because name in Latin letters was not generated for original name: " + name);
+			return null;
+		}
+		
+		mailingList.setNameInLatinLetters(nameInLatinLetters);
 		mailingList.store();
 		return mailingList;
+	}
+	
+	private String getNameInLatinLetters(String name) {
+		return getNameInLatinLetters(null, name);
+	}
+	
+	private String getNameInLatinLetters(MailingList mailingList, String name) {
+		return getNameInLatinLetters(mailingList, name, 0);
+	}
+	
+	private String getNameInLatinLetters(MailingList mailingList, String name, int reTryId) {
+		if (StringUtil.isEmpty(name)) {
+			LOGGER.warning("Can not generate name in Latin letters because provided name is empty!");
+			return null;
+		}
+		
+		String nameAsSource = name;
+		if (reTryId > 0) {
+			nameAsSource = nameAsSource + reTryId;
+		}
+		
+		String nameInLatinLetters = StringHandler.stripNonRomanCharacters(nameAsSource, new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'});
+		if (StringUtil.isEmpty(nameInLatinLetters)) {
+			return null;
+		}
+		
+		MailingList ml = getMailingListByNameInLatinLetters(nameInLatinLetters);
+		if (ml != null) {
+			if (mailingList != null && !(ml.getPrimaryKey().toString().equals(ml.getPrimaryKey().toString()))) {
+				return getNameInLatinLetters(mailingList, mailingList.getName(), reTryId + 1);
+			} else {
+				return getNameInLatinLetters(mailingList, name, reTryId + 1);
+			}
+		}
+		
+		return nameInLatinLetters;
 	}
 
 	public MailingList getMailingListByUniqueId(String uniqueId) {
@@ -263,6 +298,13 @@ public class MailingListManagerImpl implements MailingListManager {
 		}
 		
 		mailingList.setName(name);
+		String nameInLatinLetters = getNameInLatinLetters(mailingList, name);
+		if (StringUtil.isEmpty(nameInLatinLetters)) {
+			LOGGER.warning("Unable to modify mailing list because name in Latin letters was not generated for original name: " + name);
+			return false;
+		}
+		
+		mailingList.setNameInLatinLetters(nameInLatinLetters);
 		mailingList.setSenderAddress(senderEmail);
 		mailingList.setSenderName(senderName);
 		mailingList.setPrivate(isPrivate);
@@ -430,6 +472,22 @@ public class MailingListManagerImpl implements MailingListManager {
 		try {
 			return mailingListHome.findMailingListsByIds(ids);
 		} catch (FinderException e) {}
+		
+		return null;
+	}
+
+	public MailingList getMailingListByNameInLatinLetters(String nameInLatinLetters) {
+		if (StringUtil.isEmpty(nameInLatinLetters)) {
+			LOGGER.warning("Name in Latin is empty!");
+			return null;
+		}
+		
+		try {
+			return getMailingListHome().findByNameInLatinLetters(nameInLatinLetters);
+		} catch (FinderException e) {
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error looking for mailing list by name in latin letters:" + nameInLatinLetters);
+		}
 		
 		return null;
 	}

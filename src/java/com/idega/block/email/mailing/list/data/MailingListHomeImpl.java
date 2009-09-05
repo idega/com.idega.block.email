@@ -32,6 +32,13 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		this.idoCheckInPooledEntity(entity);
 		return this.findByPrimaryKey(pk);
 	}
+	
+	public MailingList findByNameInLatinLetters(String nameInLatinLetters) throws FinderException {
+		IDOEntity entity = this.idoCheckOutPooledEntity();
+		Integer pk = ((MailingListBMPBean) entity).ejbFindByNameInLatinLetters(nameInLatinLetters);
+		this.idoCheckInPooledEntity(entity);
+		return this.findByPrimaryKey(pk);
+	}
 
 	public MailingList findByUniqueId(String uniqueId) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
@@ -79,6 +86,5 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		this.idoCheckInPooledEntity(entity);
 		return this.findByPrimaryKeyCollection(IDs);
 	}
-	
-	
+
 }
