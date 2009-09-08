@@ -26,6 +26,7 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 	public static final String TABLE_NAME = "MAILING_LIST";
 	public static final String MAILING_LIST_SUBSCRIBERS = TABLE_NAME + "_SUBSCRIBERS";
 	public static final String MAILING_LIST_WAITING = TABLE_NAME + "_WAITING";
+	public static final String MAILING_LIST_SENDERS = TABLE_NAME + "_SENDERS";
 	public static final String MAILING_LIST_MESSAGES = TABLE_NAME + MessageBMPBean.TABLE_NAME;
 	
 	private static final String NAME = "name";
@@ -56,6 +57,7 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 		
 		addManyToManyRelationShip(User.class, MAILING_LIST_SUBSCRIBERS);
 		addManyToManyRelationShip(User.class, MAILING_LIST_WAITING);
+		addManyToManyRelationShip(User.class, MAILING_LIST_SENDERS);
 		addManyToManyRelationShip(Message.class, MAILING_LIST_MESSAGES);
 	}
 
@@ -95,6 +97,25 @@ public class MailingListBMPBean extends TreeableEntityBMPBean implements Mailing
 	
 	public void removeFromWaitingList(User subscriber) throws IDORemoveRelationshipException {
 		this.idoRemoveFrom(subscriber, MAILING_LIST_WAITING);
+	}
+	
+	public void addSender(User sender) throws IDOAddRelationshipException {
+		this.idoAddTo(sender, MAILING_LIST_SENDERS);
+	}
+	
+	public Collection<User> getSenders() {
+		try {
+			return this.idoGetRelatedEntitiesBySQL(User.class, "select senders.ic_user_id from " + MAILING_LIST_SENDERS + " senders, " +
+					TABLE_NAME + " mailing_lists where senders." + getIDColumnName() + " = mailing_lists." + getIDColumnName() +
+					" and mailing_lists." + getIDColumnName() + " = " + getId());
+		} catch (IDORelationshipException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public void removeSender(User sender) throws IDORemoveRelationshipException {
+		this.idoRemoveFrom(sender, MAILING_LIST_SENDERS);
 	}
 
 	@Override

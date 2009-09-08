@@ -13,6 +13,10 @@ import com.idega.user.data.User;
 
 public interface MailingList extends IDOEntity, TreeableEntity, UniqueIDCapable, MetaDataCapable {
 
+	public Collection<User> getSenders();
+	public void addSender(User sender) throws IDOAddRelationshipException;
+	public void removeSender(User sender) throws IDORemoveRelationshipException;
+	
 	public Collection<User> getSubscribers();
 	public void addSubscriber(User subscriber) throws IDOAddRelationshipException;
 	public void removeSubscriber(User subscriber) throws IDORemoveRelationshipException;

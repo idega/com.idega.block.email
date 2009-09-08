@@ -283,12 +283,12 @@ public class MailingListManagerImpl implements MailingListManager {
 	}
 
 	public boolean editMailingList(String uniqueId, String name, String senderEmail, String senderName, boolean isPrivate, Collection<User> subscribers,
-			Collection<User> confirmedFromWaitingList) {
-		return editMailingList(getMailingListByUniqueId(uniqueId), name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList);
+			Collection<User> confirmedFromWaitingList, Collection<User> senders) {
+		return editMailingList(getMailingListByUniqueId(uniqueId), name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList, senders);
 	}
 	
 	public boolean editMailingList(MailingList mailingList, String name, String senderEmail, String senderName, boolean isPrivate, Collection<User> subscribers,
-			Collection<User> confirmedFromWaitingList) {
+			Collection<User> confirmedFromWaitingList, Collection<User> senders) {
 		if (mailingList == null) {
 			return false;
 		}
@@ -343,7 +343,42 @@ public class MailingListManagerImpl implements MailingListManager {
 			}
 		}
 		
+		//	Senders
+		Collection<User> currentSenders = mailingList.getSenders();
+		Collection<User> newSenders = getUsersToAdd(currentSenders, senders);
+		if (!addSenders(mailingList, newSenders)) {
+			return false;
+		}
+		Collection<User> notSenders = getUsersToRemove(currentSenders, senders);
+		if (!ListUtil.isEmpty(notSenders)) {
+			for (User notSender: notSenders) {
+				try {
+					mailingList.removeSender(notSender);
+				} catch (IDORemoveRelationshipException e) {
+					LOGGER.log(Level.WARNING, "Error removing sender ("+notSender+") from mailing list: " + mailingList.getName(), e);
+					return false;
+				}
+			}
+		}
+		
 		mailingList.store();
+		
+		return true;
+	}
+	
+	private boolean addSenders(MailingList mailingList, Collection<User> senders) {
+		if (ListUtil.isEmpty(senders)) {
+			return true;
+		}
+		
+		for (User sender: senders) {
+			try {
+				mailingList.addSender(sender);
+			} catch (IDOAddRelationshipException e) {
+				LOGGER.log(Level.WARNING, "Error adding sebder ("+sender+") to mailing list: " + mailingList.getName(), e);
+				return false;
+			}
+		}
 		
 		return true;
 	}

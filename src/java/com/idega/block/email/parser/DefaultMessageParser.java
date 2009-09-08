@@ -114,13 +114,13 @@ public abstract class DefaultMessageParser implements EmailParser {
 				body = CoreConstants.EMPTY;
 			parsedMessage.setBody(body);
 			
+			String fromAddress = getFromAddress(message);
+			
 			Address[] froms = message.getFrom();
 			String senderName = null;
-			String fromAddress = null;
 			for (Address address : froms) {
 				if (address instanceof InternetAddress) {
 					InternetAddress iaddr = (InternetAddress) address;
-					fromAddress = iaddr.getAddress();
 					senderName = iaddr.getPersonal();
 					break;
 				}
@@ -365,4 +365,15 @@ public abstract class DefaultMessageParser implements EmailParser {
 		return null;
 	}
 
+	public String getFromAddress(Message message) throws MessagingException {
+		Address[] froms = message.getFrom();
+		for (Address address : froms) {
+			if (address instanceof InternetAddress) {
+				InternetAddress iaddr = (InternetAddress) address;
+				return iaddr.getAddress();
+			}
+		}
+		
+		return null;
+	}
 }

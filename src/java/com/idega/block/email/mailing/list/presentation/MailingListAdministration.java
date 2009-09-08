@@ -52,6 +52,7 @@ public class MailingListAdministration extends BasicMailingList {
 	private static final String PARAMETER_NAME = "mlngLstName";
 	private static final String PARAMETER_PRIVATE_OR_NOT = "mlngLstPrivateOrNot";
 	private static final String PARAMETER_MAILING_LIST_SUBSCRIBERS = "mlngLstSubscribers";
+	private static final String PARAMETER_MAILING_LIST_VALID_SENDERS = "mlngLstValidSenders";
 	private static final String PARAMETER_MAILING_LIST_WAITING_USERS = "mlngLstWaitingUsersConfirmed";
 	private static final String PARAMETER_SENDER_EMAIL = "mlngLstSenderEmailAddress";
 	private static final String PARAMETER_SENDER_NAME = "mlngLstSenderName";
@@ -64,7 +65,7 @@ public class MailingListAdministration extends BasicMailingList {
 	private Form form = null;
 	
 	@Override
-	public void present(IWContext iwc) throws Exception {		
+	public void present(IWContext iwc) throws Exception {
 		form = new Form();
 		add(form);
 		
@@ -98,6 +99,7 @@ public class MailingListAdministration extends BasicMailingList {
 			boolean isPrivate = iwc.isParameterSet(PARAMETER_PRIVATE_OR_NOT) ? Boolean.valueOf(iwc.getParameter(PARAMETER_PRIVATE_OR_NOT)) : false;
 			Collection<User> subscribers = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_SUBSCRIBERS));
 			Collection<User> confirmedFromWaitingList = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_WAITING_USERS));
+			Collection<User> senders = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_VALID_SENDERS));
 			
 			if (iwc.isParameterSet(PARAMETER_MAILING_LIST_ID)) {
 				//	Editing
@@ -105,7 +107,8 @@ public class MailingListAdministration extends BasicMailingList {
 				if (mailingList == null) {
 					addErrorMessage(iwrb.getLocalizedString("ml.mailing_list_was_not_found", "Mailing list was not found"));
 				} else {
-					if (!mailingListManager.editMailingList(mailingList, name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList)) {
+					if (!mailingListManager.editMailingList(mailingList, name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList,
+							senders)) {
 						addErrorMessage(iwrb.getLocalizedString("ml.error_editing_mailing_list", "Some error occurred editing mailing list"));
 					}
 				}
@@ -122,6 +125,15 @@ public class MailingListAdministration extends BasicMailingList {
 						for (User subscriber: subscribers) {
 							try {
 								newMailingList.addSubscriber(subscriber);
+							} catch (IDOAddRelationshipException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+					if (!ListUtil.isEmpty(senders)) {
+						for (User sender: senders) {
+							try {
+								newMailingList.addSender(sender);
 							} catch (IDOAddRelationshipException e) {
 								e.printStackTrace();
 							}
@@ -308,7 +320,7 @@ public class MailingListAdministration extends BasicMailingList {
 		privateOrNot.addRadioButton(Boolean.TRUE.toString(), new Text(iwrb.getLocalizedString("yes", "Yes")),
 				mailingList == null ? false : mailingList.isPrivate());
 		container.add(getFormItem(iwrb.getLocalizedString("ml.private", "Private"), privateOrNot));
-		
+				
 		return container;
 	}
 	
@@ -316,6 +328,10 @@ public class MailingListAdministration extends BasicMailingList {
 		Layer formSection = getBasicMailingListForm(iwc, null);
 		form.add(formSection);
 		
+		formSection.add(getUsersFilterContainer(null, PARAMETER_MAILING_LIST_VALID_SENDERS,
+				new StringBuilder(iwrb.getLocalizedString("ml.set_senders", "Set senders")).append(CoreConstants.SPACE)
+				.append(iwrb.getLocalizedString("ml_senders_warning", "WARNING: if no senders are set when ANYBODY can send mails to mailing list!"))
+				.toString(), true));
 		formSection.add(getUsersFilterContainer(null, PARAMETER_MAILING_LIST_SUBSCRIBERS, iwrb.getLocalizedString("ml.set_subscribers", "Set subscribers"), true));
 		
 		Layer buttons = new Layer();
@@ -350,6 +366,12 @@ public class MailingListAdministration extends BasicMailingList {
 		
 		Layer container = getBasicMailingListForm(iwc, mailingList);
 		form.add(container);
+
+		//	Senders
+		container.add(getUsersFilterContainer(mailingList.getSenders(), PARAMETER_MAILING_LIST_VALID_SENDERS,
+				new StringBuilder(iwrb.getLocalizedString("ml.set_senders", "Set senders")).append(CoreConstants.SPACE)
+				.append(iwrb.getLocalizedString("ml_senders_warning", "WARNING: if no senders are set when ANYBODY can send mails to mailing list!")).toString(),
+				true));
 		
 		//	Subscribers
 		container.add(getUsersFilterContainer(mailingList.getSubscribers(), PARAMETER_MAILING_LIST_SUBSCRIBERS,

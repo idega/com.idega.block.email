@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
 
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParserType;
@@ -28,4 +29,6 @@ public interface EmailParser {
 	public abstract EmailMessage getParsedMessage(Message message, EmailParams params) throws Exception;
 	
 	public abstract MessageParserType getMessageParserType();
+	
+	public abstract String getFromAddress(Message  message) throws MessagingException;
 }

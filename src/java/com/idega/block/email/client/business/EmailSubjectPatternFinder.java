@@ -6,12 +6,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -49,26 +51,34 @@ public class EmailSubjectPatternFinder {
 		Message[] msgs = params.getMessagesFound();
 		
 		for (Message msg: msgs) {
-			moveMessage(msg, inbox, msgFolder, params);
+			moveMessage(msg, inbox, msgFolder, params, true);
 		}
 	}
 	
 	public void moveMessage(Message message, EmailParams params) throws MessagingException {
-		moveMessage(message, params.getFolder(), params.getStore().getFolder(MSGS_FOLDER), params);
+		moveMessage(message, params.getFolder(), params.getStore().getFolder(MSGS_FOLDER), params, true);
 	}
 	
-	private synchronized void moveMessage(Message message, Folder inbox, Folder msgFolder, EmailParams params) throws MessagingException {
+	public void moveMessage(Message message, EmailParams params, String destinationFolderName) throws MessagingException {		
+		Folder inbox = params.getFolder();
+		Folder destinationFolder = params.getStore().getFolder(destinationFolderName);
+		
+		moveMessage(message, inbox, destinationFolder, params, false);
+	}
+	
+	private synchronized void moveMessage(Message message, Folder sourceFolder, Folder destinationFolder, EmailParams params,
+			boolean logout) throws MessagingException {
 		Collection<Message> foundMessages = new ArrayList<Message>(Arrays.asList(params.getMessagesFound()));
 		foundMessages.remove(message);
 		params.setMessagesFound(ArrayUtil.convertListToArray(foundMessages));
 		
-		if (!msgFolder.exists())
-			msgFolder.create(Folder.HOLDS_MESSAGES);
+		if (!destinationFolder.exists())
+			destinationFolder.create(Folder.HOLDS_MESSAGES);
 		
-		inbox.copyMessages(new Message[] {message}, msgFolder);
+		sourceFolder.copyMessages(new Message[] {message}, destinationFolder);
 		message.setFlag(Flags.Flag.DELETED, true);
 		
-		if (ArrayUtil.isEmpty(params.getMessagesFound())) {
+		if (logout && ArrayUtil.isEmpty(params.getMessagesFound())) {
 			logout(params);
 		}
 	}

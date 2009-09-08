@@ -3,12 +3,15 @@ package com.idega.block.email.mailing.list.business;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.client.business.EmailParams;
+import com.idega.block.email.client.business.EmailSubjectPatternFinder;
 import com.idega.block.email.data.MessageHome;
 import com.idega.block.email.mailing.list.data.MailingList;
 import com.idega.block.email.parser.EmailParser;
@@ -35,6 +39,7 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
@@ -52,6 +57,9 @@ public class MailingListMessagesWorker implements Runnable {
 	@Autowired()
 	@Qualifier("defaultEmailsParser")
 	private EmailParser emailParser;
+	
+	@Autowired
+	private EmailSubjectPatternFinder emailsFinder;
 	
 	private Map<String, FoundMessagesInfo> messages;
 	private EmailParams params;
@@ -117,14 +125,38 @@ public class MailingListMessagesWorker implements Runnable {
 			LOGGER.warning("No emails were found for: " + subscribers);
 			return;
 		}
-
+		
+		List<String> validSenders = getEmailAddressForSenders(mailingList);
+		if (validSenders == null) {
+			LOGGER.warning("There are no senders set for mailing list '" + mailingList.getName() + "'. ANYBODY can send messages to this mailing list!");
+		}
+		
 		IWMainApplication.getDefaultIWMainApplication().getMessagingSettings().setEmailingEnabled(Boolean.TRUE);
 		
 		String senderName = mailingList.getSenderName();
 		if (StringUtil.isEmpty(senderName)) {
 			senderName = senderAddress;
 		}
+		
+		IWTimestamp dayBefore = new IWTimestamp(System.currentTimeMillis());
+		dayBefore.setDay(dayBefore.getDay() - 1);
+		
 		for (Message message: messagesInfo.getMessages()) {
+			try {
+				String fromAddress = emailParser.getFromAddress(message);
+				if (!canMessageBeSent(fromAddress, validSenders)) {
+					LOGGER.info("Message from '" + fromAddress + "' can not be sent to mailing list!");
+					if (message.getReceivedDate().before(dayBefore.getDate())) {
+						moveMessageToJunkFolder(message);
+						LOGGER.info("Message '" + message.getSubject() + "' was be moved to junk folder");
+					}	
+					continue;
+				}
+			} catch (MessagingException e) {
+				LOGGER.log(Level.WARNING, "Error resolving if message is valid for mailing list", e);
+				continue;
+			}
+			
 			EmailMessage parsedMessage = null;
 			try {
 				parsedMessage = emailParser.getParsedMessage(message, params);
@@ -154,6 +186,43 @@ public class MailingListMessagesWorker implements Runnable {
 				}
 			}
 		}
+	}
+	
+	private void moveMessageToJunkFolder(Message junkMessage) {		
+		try {
+			emailsFinder.moveMessage(junkMessage, params, "iwlist_junk");
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Some exception occurred while moving message to junk folder", e);
+		}
+	}
+	
+	private boolean canMessageBeSent(String fromAddress, List<String> validSenders) {
+		if (validSenders == null) {
+			return true;	//	Nothing set, ANYBODY can send message
+		}
+		
+		return StringUtil.isEmpty(fromAddress) ? Boolean.FALSE : validSenders.contains(fromAddress);
+	}
+	
+	private List<String> getEmailAddressForSenders(MailingList mailingList) {
+		Collection<User> senders = mailingList.getSenders();
+		if (ListUtil.isEmpty(senders)) {
+			return null;
+		}
+		
+		Collection<Email> emails = getEmailAddresses(senders);
+		if (ListUtil.isEmpty(emails)) {
+			return null;
+		}
+		
+		List<String> addresses = new ArrayList<String>(senders.size());
+		for (Email email: emails) {
+			String emailAddress = email.getEmailAddress();
+			if (!StringUtil.isEmpty(emailAddress) && !addresses.contains(emailAddress)) {
+				addresses.add(emailAddress);
+			}
+		}
+		return addresses;
 	}
 	
 	private void addMessage(MailingList mailingList, EmailMessage emailMessage) throws Exception {

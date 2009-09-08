@@ -10,9 +10,9 @@ public interface MailingListManager {
 	public MailingList createMailingList(String name);
 	
 	public boolean editMailingList(String uniqueId, String name, String senderEmail, String senderName, boolean isPrivate, Collection<User> subscribers,
-			Collection<User> confirmedFromWaitingList);
+			Collection<User> confirmedFromWaitingList, Collection<User> senders);
 	public boolean editMailingList(MailingList mailingList, String name, String senderAddress, String senderName, boolean isPrivate, Collection<User> subscribers,
-			Collection<User> confirmedFromWaitingList);
+			Collection<User> confirmedFromWaitingList, Collection<User> senders);
 	
 	public MailingList getMailingListByUniqueId(String uniqueId);
 	public MailingList getMailingListByNameInLatinLetters(String nameInLatinLetters);
