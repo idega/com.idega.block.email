@@ -77,6 +77,13 @@ public class MailingListManagerImpl implements MailingListManager {
 	}
 	
 	private String getNameInLatinLetters(MailingList mailingList, String name, int reTryId) {
+		if (mailingList != null) {
+			String nameInLatinLetters = mailingList.getNameInLatinLetters();
+			if (!StringUtil.isEmpty(nameInLatinLetters)) {
+				return nameInLatinLetters;
+			}
+		}
+		
 		if (StringUtil.isEmpty(name)) {
 			LOGGER.warning("Can not generate name in Latin letters because provided name is empty!");
 			return null;
