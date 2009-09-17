@@ -42,3 +42,16 @@
 .mailingListMessageAttachmentSize {
 	margin-left: 5px;
 }
+
+img.validationImage {
+	margin-bottom: 5px;
+}
+
+input.validationTextInput {
+	margin-left: 120px;
+}
+
+div.validationTextInputContainer {
+	clear: left;
+	padding-left: 120px;
+}

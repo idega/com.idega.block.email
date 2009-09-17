@@ -12,6 +12,7 @@ import javax.faces.component.UIComponent;
 import com.idega.block.email.EmailConstants;
 import com.idega.block.email.client.business.EmailDaemon;
 import com.idega.block.email.mailing.list.data.MailingList;
+import com.idega.block.web2.presentation.JCaptchaImage;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.data.IDOAddRelationshipException;
@@ -56,6 +57,7 @@ public class MailingListAdministration extends BasicMailingList {
 	private static final String PARAMETER_MAILING_LIST_WAITING_USERS = "mlngLstWaitingUsersConfirmed";
 	private static final String PARAMETER_SENDER_EMAIL = "mlngLstSenderEmailAddress";
 	private static final String PARAMETER_SENDER_NAME = "mlngLstSenderName";
+	private static final String PARAMETER_VALIDATION_IMAGE_VALUE = "mlngLstValidationImageValue";
 	
 	private static final int EDIT_ACTION = 1;
 	private static final int CREATE_MAILING_LIST_ACTION = 5;
@@ -93,6 +95,16 @@ public class MailingListAdministration extends BasicMailingList {
 	@Override
 	protected void doBusiness(IWContext iwc) {
 		if (iwc.isParameterSet(PARAMETER_SAVE_ACTION)) {
+			boolean editingNewMailingList = iwc.isParameterSet(PARAMETER_MAILING_LIST_ID);
+			
+			String validationText = iwc.getParameter(PARAMETER_VALIDATION_IMAGE_VALUE);
+			if (!web2.validateJCaptcha(iwc.getSessionId(), validationText)) {
+				addErrorMessage(editingNewMailingList ?
+						iwrb.getLocalizedString("ml.editing_ml_validation_failed", "Mailing list was not updated - validation failed!") :
+						iwrb.getLocalizedString("ml.new_ml_validation_failed", "Mailing list was not created - validation failed!"));
+				return;
+			}
+			
 			String name = iwc.getParameter(PARAMETER_NAME);
 			String senderEmail = iwc.getParameter(PARAMETER_SENDER_EMAIL);
 			String senderName = iwc.getParameter(PARAMETER_SENDER_NAME);
@@ -101,7 +113,7 @@ public class MailingListAdministration extends BasicMailingList {
 			Collection<User> confirmedFromWaitingList = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_WAITING_USERS));
 			Collection<User> senders = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_VALID_SENDERS));
 			
-			if (iwc.isParameterSet(PARAMETER_MAILING_LIST_ID)) {
+			if (editingNewMailingList) {
 				//	Editing
 				MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
 				if (mailingList == null) {
@@ -281,13 +293,28 @@ public class MailingListAdministration extends BasicMailingList {
 	}
 	
 	private Layer getFormItem(String label, InterfaceObject uiObject) {
+		return getFormItem(label, (UIComponent) uiObject);
+	}
+	
+	private Layer getFormItem(String label, UIComponent uiComponent) {
 		Layer formItem = new Layer();
 		formItem.setStyleClass("formItem");
 		
-		Label labelUI = new Label(label, uiObject);
+		Label labelUI = new Label();
+		labelUI.setLabel(label);
+		labelUI.setFor(uiComponent.getId());
 		
 		formItem.add(labelUI);
-		formItem.add(uiObject);
+		formItem.add(uiComponent);
+		if (uiComponent instanceof JCaptchaImage) {
+			Layer textContainer = new Layer();
+			formItem.add(textContainer);
+			textContainer.setStyleClass("validationTextInputContainer");
+			TextInput validationInput = new TextInput(PARAMETER_VALIDATION_IMAGE_VALUE);
+			validationInput.setStyleClass("validationTextInput");
+			textContainer.add(validationInput);
+			labelUI.setFor(validationInput.getId());
+		}
 		
 		return formItem;
 	}
@@ -320,7 +347,12 @@ public class MailingListAdministration extends BasicMailingList {
 		privateOrNot.addRadioButton(Boolean.TRUE.toString(), new Text(iwrb.getLocalizedString("yes", "Yes")),
 				mailingList == null ? false : mailingList.isPrivate());
 		container.add(getFormItem(iwrb.getLocalizedString("ml.private", "Private"), privateOrNot));
-				
+		
+		//	Confirmation image
+		JCaptchaImage validationImage = new JCaptchaImage();
+		validationImage.setStyleClass("validationImage");
+		container.add(getFormItem(iwrb.getLocalizedString("ml.validation_text", "Validation text"), validationImage));
+		
 		return container;
 	}
 	

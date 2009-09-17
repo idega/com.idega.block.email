@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.email.EmailConstants;
 import com.idega.block.email.mailing.list.business.MailingListManager;
+import com.idega.block.web2.business.Web2Business;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogic;
 import com.idega.idegaweb.IWBundle;
@@ -27,6 +28,9 @@ public abstract class BasicMailingList extends Block {
 	
 	@Autowired
 	MailingListManager mailingListManager;
+	
+	@Autowired
+	Web2Business web2;
 	
 	IWBundle bundle;
 	IWResourceBundle iwrb;
