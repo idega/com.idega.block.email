@@ -60,7 +60,9 @@ public class MailingListAdministration extends BasicMailingList {
 	private static final String PARAMETER_VALIDATION_IMAGE_VALUE = "mlngLstValidationImageValue";
 	
 	private static final int EDIT_ACTION = 1;
-	private static final int CREATE_MAILING_LIST_ACTION = 5;
+	private static final int CREATE_MAILING_LIST_ACTION = 2;
+	
+	private int forcedAction;
 	
 	private List<String> errorMessages;
 	
@@ -102,6 +104,7 @@ public class MailingListAdministration extends BasicMailingList {
 				addErrorMessage(editingNewMailingList ?
 						iwrb.getLocalizedString("ml.editing_ml_validation_failed", "Mailing list was not updated - validation failed!") :
 						iwrb.getLocalizedString("ml.new_ml_validation_failed", "Mailing list was not created - validation failed!"));
+				forcedAction = EDIT_ACTION;
 				return;
 			}
 			
@@ -312,6 +315,8 @@ public class MailingListAdministration extends BasicMailingList {
 			textContainer.setStyleClass("validationTextInputContainer");
 			TextInput validationInput = new TextInput(PARAMETER_VALIDATION_IMAGE_VALUE);
 			validationInput.setStyleClass("validationTextInput");
+			validationInput.setOnKeyUp(new StringBuilder(100).append("MailingListHelper.convertToCapitalLetters('").append(validationInput.getId())
+					.append("');").toString());
 			textContainer.add(validationInput);
 			labelUI.setFor(validationInput.getId());
 		}
@@ -494,7 +499,8 @@ public class MailingListAdministration extends BasicMailingList {
 				e.printStackTrace();
 			}
 		}
-		return 0;
+		
+		return forcedAction > 0 ? forcedAction : 0;
 	}
 
 	@Override

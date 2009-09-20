@@ -1,11 +1,14 @@
 package com.idega.block.email.mailing.list.presentation;
 
+import java.util.Arrays;
+
 import javax.faces.component.UIComponent;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.email.EmailConstants;
 import com.idega.block.email.mailing.list.business.MailingListManager;
+import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogic;
@@ -32,6 +35,9 @@ public abstract class BasicMailingList extends Block {
 	@Autowired
 	Web2Business web2;
 	
+	@Autowired
+	JQuery jQuery;
+	
 	IWBundle bundle;
 	IWResourceBundle iwrb;
 	
@@ -40,7 +46,12 @@ public abstract class BasicMailingList extends Block {
 		ELUtil.getInstance().autowire(this);
 		bundle = getBundle(iwc);
 		iwrb = bundle.getResourceBundle(iwc);
+		
 		PresentationUtil.addStyleSheetToHeader(iwc, bundle.getVirtualPathWithFileNameString("style/mailing_lists.css"));
+		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, Arrays.asList(
+				jQuery.getBundleURIToJQueryLib(),
+				bundle.getVirtualPathWithFileNameString("javascript/MailingListHelper.js")
+		));
 		
 		doBusiness(iwc);
 		present(iwc);
