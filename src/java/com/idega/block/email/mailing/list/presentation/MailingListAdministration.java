@@ -15,7 +15,6 @@ import com.idega.block.email.mailing.list.data.MailingList;
 import com.idega.block.web2.presentation.JCaptchaImage;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
-import com.idega.data.IDOAddRelationshipException;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
 import com.idega.presentation.Table2;
@@ -46,8 +45,9 @@ public class MailingListAdministration extends BasicMailingList {
 	
 	private static final String PARAMETER_ACTION = "mlngLstActn";
 	private static final String PARAMETER_SAVE_ACTION = "mlngLstSaveAction";
+	private static final String PARAMETER_DISABLE_ACTION = "mlngLstDisableAction";
+	private static final String PARAMETER_ENABLE_ACTION = "mlngLstEnableAction";
 	private static final String PARAMETER_DELETE_ACTION = "mlngLstDeleteAction";
-	private static final String PARAMETER_UNDELETE_ACTION = "mlngLstUnDeleteAction";
 	
 	private static final String PARAMETER_MAILING_LIST_ID = "mlngLstId";
 	private static final String PARAMETER_NAME = "mlngLstName";
@@ -65,6 +65,7 @@ public class MailingListAdministration extends BasicMailingList {
 	private int forcedAction;
 	
 	private List<String> errorMessages;
+	private List<String> successMessages;
 	
 	private Form form = null;
 	
@@ -73,8 +74,18 @@ public class MailingListAdministration extends BasicMailingList {
 		form = new Form();
 		add(form);
 		
+		if (!ListUtil.isEmpty(successMessages)) {
+			Layer successMessages = new Layer();
+			successMessages.setStyleClass("successMessages");
+			form.add(successMessages);
+			for (String message: this.successMessages) {
+				successMessages.add(new Heading2(message));
+			}
+		}
+		
 		if (!ListUtil.isEmpty(errorMessages)) {
 			Layer errorMessage = new Layer();
+			errorMessage.setStyleClass("errorMessages");
 			form.add(errorMessage);
 			for (String message: errorMessages) {
 				errorMessage.add(new Heading2(message));
@@ -122,56 +133,48 @@ public class MailingListAdministration extends BasicMailingList {
 				if (mailingList == null) {
 					addErrorMessage(iwrb.getLocalizedString("ml.mailing_list_was_not_found", "Mailing list was not found"));
 				} else {
-					if (!mailingListManager.editMailingList(mailingList, name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList,
+					if (mailingListManager.editMailingList(mailingList, name, senderEmail, senderName, isPrivate, subscribers, confirmedFromWaitingList,
 							senders)) {
+						addSuccessMessage(iwrb.getLocalizedString("ml.success_editing_mailing_list", "Mailing list was successfully updated"));
+					} else {
 						addErrorMessage(iwrb.getLocalizedString("ml.error_editing_mailing_list", "Some error occurred editing mailing list"));
 					}
 				}
 			} else {
 				//	Creating new
-				MailingList newMailingList = mailingListManager.createMailingList(name);
+				MailingList newMailingList = mailingListManager.createMailingList(name, senderName, senderEmail, isPrivate, subscribers, senders);
 				if (newMailingList == null) {
 					addErrorMessage(iwrb.getLocalizedString("ml.error_creating", "Mailing list was not created - some error occurred"));
 				} else {
-					newMailingList.setSenderAddress(senderEmail);
-					newMailingList.setSenderName(senderName);
-					newMailingList.setPrivate(isPrivate);
-					if (!ListUtil.isEmpty(subscribers)) {
-						for (User subscriber: subscribers) {
-							try {
-								newMailingList.addSubscriber(subscriber);
-							} catch (IDOAddRelationshipException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-					if (!ListUtil.isEmpty(senders)) {
-						for (User sender: senders) {
-							try {
-								newMailingList.addSender(sender);
-							} catch (IDOAddRelationshipException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-					newMailingList.store();
+					addSuccessMessage(iwrb.getLocalizedString("ml.success_creating", "New mailing list was created"));
 				}
 			}
-		} else if (iwc.isParameterSet(PARAMETER_DELETE_ACTION)) {
+		} else if (iwc.isParameterSet(PARAMETER_DISABLE_ACTION)) {
 			MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
 			if (mailingList == null) {
-				addErrorMessage(iwrb.getLocalizedString("ml.error_deleting", "Mailing list was not disabled - some error occurred"));
+				addErrorMessage(iwrb.getLocalizedString("ml.error_disabling", "Mailing list was not disabled - some error occurred"));
 			} else {
 				mailingList.setDeleted(Boolean.TRUE);
 				mailingList.store();
+				
+				addSuccessMessage(iwrb.getLocalizedString("ml.success_disabling", "Mailing list was successfully disabled"));
 			}
-		} else if (iwc.isParameterSet(PARAMETER_UNDELETE_ACTION)) {
+		} else if (iwc.isParameterSet(PARAMETER_ENABLE_ACTION)) {
 			MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
 			if (mailingList == null) {
-				addErrorMessage(iwrb.getLocalizedString("ml.error_deleting", "Mailing list was not enabled - some error occurred"));
+				addErrorMessage(iwrb.getLocalizedString("ml.error_enabling", "Mailing list was not enabled - some error occurred"));
 			} else {
 				mailingList.setDeleted(Boolean.FALSE);
 				mailingList.store();
+				
+				addSuccessMessage(iwrb.getLocalizedString("ml.success_enabling", "Mailing list was successfully enabled"));
+			}
+		} else if (iwc.isParameterSet(PARAMETER_DELETE_ACTION)) {
+			MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
+			if (mailingList == null || !mailingListManager.deleteMailingList(mailingList)) {
+				addErrorMessage(iwrb.getLocalizedString("ml.error_deleting", "Mailing list was not deleted - some error occurred"));
+			} else {
+				addSuccessMessage(iwrb.getLocalizedString("ml.success_deleting", "Mailing list was deleted"));
 			}
 		}
 	}
@@ -211,6 +214,13 @@ public class MailingListAdministration extends BasicMailingList {
 		errorMessages.add(message);
 	}
 	
+	private void addSuccessMessage(String message) {
+		if (successMessages == null) {
+			successMessages = new ArrayList<String>();
+		}
+		successMessages.add(message);
+	}
+	
 	private void listMailingLists(IWContext iwc) {
 		Collection<MailingList> lists = mailingListManager.getAllMailingLists();
 		
@@ -220,6 +230,10 @@ public class MailingListAdministration extends BasicMailingList {
 		if (ListUtil.isEmpty(lists)) {
 			container.add(new Heading3(iwrb.getLocalizedString("ml.there_are_no_mailing_lists", "There are no mailing lists yet")));
 		} else {
+			String uriToMailingListViewerPage = getUriToMailingListViewer(iwc);
+			
+			String confirmMessage = iwrb.getLocalizedString("ml.are_you_sure", "Are you sure?");
+			
 			Table2 table = new Table2();
 			container.add(table);
 			TableHeaderRowGroup headerRows = table.createHeaderRowGroup();
@@ -229,6 +243,7 @@ public class MailingListAdministration extends BasicMailingList {
 			addCell(headerRow, iwrb.getLocalizedString("ml.private", "Private"));
 			addCell(headerRow, iwrb.getLocalizedString("ml.edit", "Edit"));
 			addCell(headerRow, iwrb.getLocalizedString("ml.disable_enable", "Disable/enable"));
+			addCell(headerRow, iwrb.getLocalizedString("ml.delete", "Delete"));
 			addCell(headerRow, iwrb.getLocalizedString("ml.create_new_message", "Create new message"));
 			
 			int index = 1;
@@ -241,31 +256,51 @@ public class MailingListAdministration extends BasicMailingList {
 				}
 				
 				addCell(bodyRow, String.valueOf(index));
-				addCell(bodyRow, getLink(mailingList.getName(),
-						new AdvancedProperty(PARAMETER_ACTION, String.valueOf(EDIT_ACTION)),
-						new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
+				addCell(bodyRow, StringUtil.isEmpty(uriToMailingListViewerPage) ?
+						getLink(mailingList.getName(),
+								new AdvancedProperty(PARAMETER_ACTION, String.valueOf(EDIT_ACTION)),
+								new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
+						) :
+						getLink(mailingList.getName(), uriToMailingListViewerPage, CoreConstants.EMPTY,
+								new AdvancedProperty(MailingListViewer.PARAMETER_MAILING_LIST_UNIQUE_ID, uniqueId)
 				));
 				addCell(bodyRow, mailingList.isPrivate() ? iwrb.getLocalizedString("yes", "Yes") : iwrb.getLocalizedString("no", "No"));
 				addCell(bodyRow, getLink(iwrb.getLocalizedString("edit", "Edit"), bundle.getVirtualPathWithFileNameString("images/edit.png"),
 						new AdvancedProperty(PARAMETER_ACTION, String.valueOf(EDIT_ACTION)),
 						new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
 				));
-				if (mailingList.isDeleted()) {
+				
+				boolean deleted = mailingList.isDeleted();
+				if (deleted) {
 					addCell(bodyRow, getLink(iwrb.getLocalizedString("ml.enable", "Enable"),
-							bundle.getVirtualPathWithFileNameString("images/undelete.png"),
-							new AdvancedProperty(PARAMETER_UNDELETE_ACTION, Boolean.TRUE.toString()),
+							bundle.getVirtualPathWithFileNameString("images/enable.png"),
+							new AdvancedProperty(PARAMETER_ENABLE_ACTION, Boolean.TRUE.toString()),
 							new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
 					));
+				} else {
+					addCell(bodyRow, getLink(iwrb.getLocalizedString("disable", "Disable"), bundle.getVirtualPathWithFileNameString("images/disable.png"),
+							new AdvancedProperty(PARAMETER_DISABLE_ACTION, Boolean.TRUE.toString()),
+							new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
+					));
+					
+				}
+				
+				Link removeMailingList = getLink(iwrb.getLocalizedString("ml.delete", "Delete"), bundle.getVirtualPathWithFileNameString("images/delete.png"),
+						new AdvancedProperty(PARAMETER_DELETE_ACTION, Boolean.TRUE.toString()),
+						new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
+				);
+				String uri = removeMailingList.getFinalUrl(iwc);
+				removeMailingList.setURL("javascript:void(0);");
+				removeMailingList.setOnClick(new StringBuilder(300).append("MailingListHelper.confirmMailingListToBeDeleted('").append(confirmMessage)
+						.append("', '").append(uri).append("');").toString());
+				addCell(bodyRow, removeMailingList);
+				
+				if (deleted) {
 					addCell(bodyRow, iwrb.getLocalizedString("ml.unable_to_create_new_message_for_disabled_mailing_list", "Impossible"));
 				} else {
-					addCell(bodyRow, getLink(iwrb.getLocalizedString("disable", "Disable"), bundle.getVirtualPathWithFileNameString("images/delete.png"),
-							new AdvancedProperty(PARAMETER_DELETE_ACTION, Boolean.TRUE.toString()),
-							new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
-					));
 					UIComponent newMessageUI = getNewMessageButton(iwc, mailingList, Link.class, iwrb.getLocalizedString("ml.new_message", "New message"));
 					newMessageUI = newMessageUI == null ?
-							new Text(iwrb.getLocalizedString("ml.unable_to_create_new_message_for_mailing_list", "Impossible")) :
-								newMessageUI;
+							new Text(iwrb.getLocalizedString("ml.unable_to_create_new_message_for_mailing_list", "Impossible")) : newMessageUI;
 					addCell(bodyRow, newMessageUI);
 				}
 				

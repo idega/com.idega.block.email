@@ -24,6 +24,7 @@ import com.idega.presentation.text.Heading3;
 import com.idega.presentation.text.ListItem;
 import com.idega.presentation.text.Lists;
 import com.idega.presentation.text.Text;
+import com.idega.presentation.ui.BackButton;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.FileUtil;
@@ -145,6 +146,12 @@ public class MailingListViewer extends BasicMailingList {
 				PresentationUtil.addJavaScriptActionToBody(iwc, action);
 			}
 		}
+		
+		Layer buttonsContainer = new Layer();
+		container.add(buttonsContainer);
+		buttonsContainer.setStyleClass("buttons");
+		BackButton back = new BackButton(iwrb.getLocalizedString("ml.navigate_back", "Back"));
+		buttonsContainer.add(back);
 	}
 
 	public String getMailingListUniqueId() {

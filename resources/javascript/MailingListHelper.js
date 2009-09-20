@@ -5,3 +5,11 @@ MailingListHelper.convertToCapitalLetters = function(inputId) {
 	value = value.toUpperCase();
 	jQuery('#' + inputId).attr('value', value);
 }
+
+MailingListHelper.confirmMailingListToBeDeleted = function(message, uri) {
+	if (window.confirm(message)) {
+		window.location.href = uri;
+	} else {
+		return false;
+	}
+}

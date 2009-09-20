@@ -7,11 +7,11 @@ import java.util.logging.Logger;
 
 import javax.ejb.CreateException;
 import javax.ejb.FinderException;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.email.data.Message;
 import com.idega.block.email.mailing.list.data.MailingList;
 import com.idega.block.email.mailing.list.data.MailingListHome;
 import com.idega.business.IBOLookup;
@@ -66,6 +66,39 @@ public class MailingListManagerImpl implements MailingListManager {
 		mailingList.setNameInLatinLetters(nameInLatinLetters);
 		mailingList.store();
 		return mailingList;
+	}
+	
+	public MailingList createMailingList(String name, String senderName, String senderEmail, boolean privateList, Collection<User> subscribers,
+			Collection<User> senders) {
+		MailingList newMailingList = createMailingList(name);
+		if (newMailingList == null) {
+			return null;
+		}
+		
+		newMailingList.setSenderAddress(senderEmail);
+		newMailingList.setSenderName(senderName);
+		newMailingList.setPrivate(privateList);
+		if (!ListUtil.isEmpty(subscribers)) {
+			for (User subscriber: subscribers) {
+				try {
+					newMailingList.addSubscriber(subscriber);
+				} catch (IDOAddRelationshipException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		if (!ListUtil.isEmpty(senders)) {
+			for (User sender: senders) {
+				try {
+					newMailingList.addSender(sender);
+				} catch (IDOAddRelationshipException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		newMailingList.store();
+		
+		return newMailingList;
 	}
 	
 	private String getNameInLatinLetters(String name) {
@@ -533,5 +566,31 @@ public class MailingListManagerImpl implements MailingListManager {
 		
 		return null;
 	}
-	
+
+	public boolean deleteMailingList(MailingList mailingList) {
+		if (mailingList == null) {
+			return false;
+		}
+		
+		Collection<Message> messages = mailingList.getMessages();
+		if (!ListUtil.isEmpty(messages)) {
+			for (Message message: messages) {
+				try {
+					message.remove();
+				} catch (Exception e) {
+					LOGGER.log(Level.WARNING, "Error removing message: " + message.getPrimaryKey(), e);
+					return false;
+				}
+			}
+		}
+		
+		try {
+			mailingList.remove();
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error removing mailing list '"+mailingList+"': " + mailingList.getPrimaryKey(), e);
+			return false;
+		}
+		
+		return true;
+	}
 }

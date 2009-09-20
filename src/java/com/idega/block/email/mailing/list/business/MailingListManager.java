@@ -8,6 +8,8 @@ import com.idega.user.data.User;
 public interface MailingListManager {
 
 	public MailingList createMailingList(String name);
+	public MailingList createMailingList(String name, String senderName, String senderEmail, boolean privateList, Collection<User> subscribers,
+			Collection<User> senders);
 	
 	public boolean editMailingList(String uniqueId, String name, String senderEmail, String senderName, boolean isPrivate, Collection<User> subscribers,
 			Collection<User> confirmedFromWaitingList, Collection<User> senders);
@@ -36,4 +38,6 @@ public interface MailingListManager {
 	public Collection<MailingList> getAllMailingListsUserIsNotInvolved(User user);
 	
 	public Collection<MailingList> getMailingLists(String[] ids);
+	
+	public boolean deleteMailingList(MailingList mailingList);
 }
