@@ -28,6 +28,7 @@ import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.client.business.EmailSubjectPatternFinder;
+import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
@@ -150,12 +151,12 @@ public abstract class DefaultMessageParser implements EmailParser {
 			Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
 			msgAndAttachments[1] = attachemntMap;
 			msgAndAttachments[0] = messageTxt;
-			if (msg.isMimeType(CoreConstants.MAIL_TEXT_PLAIN_TYPE)) {
+			if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 				
 				if (content instanceof String)
 					msgAndAttachments[0] = parsePlainTextMessage((String) content);
 				
-			} else if (msg.isMimeType(CoreConstants.MAIL_TEXT_HTML_TYPE)) {
+			} else if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
 				
 				if (content instanceof String)
 					msgAndAttachments[0] = parseHTMLMessage((String) content);
@@ -223,7 +224,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 				attachemntMap.put(fileName, streamFromMemory);
 				// It's a message body
 			} else if (messagePart.getContent() instanceof String) {
-				if (messagePart.isMimeType(CoreConstants.MAIL_TEXT_HTML_TYPE))
+				if (messagePart.isMimeType(MimeTypeUtil.MIME_TYPE_HTML))
 					msg += parseHTMLMessage((String) messagePart.getContent());
 				else
 					// it's plain text
@@ -257,12 +258,12 @@ public abstract class DefaultMessageParser implements EmailParser {
 		Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
 		msgAndAttachements[1] = attachemntMap;
 		
-		if (part.isMimeType(CoreConstants.MAIL_TEXT_PLAIN_TYPE)) {
+		if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 			//	Plain text
 			if (part.getContent() instanceof String)
 				msg += parsePlainTextMessage((String) part.getContent());
 			msgAndAttachements[0] = msg;
-		} else if (part.isMimeType(CoreConstants.MAIL_TEXT_HTML_TYPE)) {
+		} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
 			//	HTML
 			if (part.getContent() instanceof String)
 				msg += parseHTMLMessage((String) part.getContent());
@@ -296,9 +297,9 @@ public abstract class DefaultMessageParser implements EmailParser {
 		String returnStr = null;
 		for (int i = 0; i < multipart.getCount(); i++) {
 			Part part = multipart.getBodyPart(i);
-			if (part.isMimeType(CoreConstants.MAIL_TEXT_HTML_TYPE)) {
+			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
 				return parseHTMLMessage((String) part.getContent());
-			} else if (part.isMimeType(CoreConstants.MAIL_TEXT_PLAIN_TYPE)) {
+			} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 				returnStr = parsePlainTextMessage((String) part.getContent());
 			}
 		}
@@ -312,12 +313,12 @@ public abstract class DefaultMessageParser implements EmailParser {
 		
 		for (int i = 0; i < multipart.getCount(); i++) {
 			BodyPart part = multipart.getBodyPart(i);
-			if (part.isMimeType(CoreConstants.MAIL_TEXT_HTML_TYPE)) {
+			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
 				content = parseHTMLMessage((String) part.getContent());
 				if (content != null) {
 					return content;
 				}
-			/*} else if (part.isMimeType(CoreConstants.MAIL_TEXT_PLAIN_TYPE)) {
+			/*} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 				content = parsePlainTextMessage((String) part.getContent());
 				if (content != null) {
 					return content;

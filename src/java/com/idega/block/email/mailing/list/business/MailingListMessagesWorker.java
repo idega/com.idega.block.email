@@ -172,7 +172,7 @@ public class MailingListMessagesWorker implements Runnable {
 			parsedMessage.setSubject(StringUtil.isEmpty(messagesInfo.getIdentifier()) ?
 					parsedMessage.getSubject() : StringHandler.replace(parsedMessage.getSubject(), messagesInfo.getIdentifier(), CoreConstants.EMPTY).trim());
 			parsedMessage.setMailServer(mailServer);
-			parsedMessage.setMailType(CoreConstants.MAIL_TEXT_HTML_TYPE);
+			parsedMessage.setMailType(MimeTypeUtil.MIME_TYPE_HTML);
 			
 			for (Email email: emails) {
 				try {
