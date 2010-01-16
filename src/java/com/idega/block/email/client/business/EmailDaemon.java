@@ -94,7 +94,8 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 							return;
 						}
 						if (StringUtil.isEmpty(accountName) || StringUtil.isEmpty(protocol) || StringUtil.isEmpty(password)) {
-							LOGGER.log(Level.WARNING, "Mail properties are empty");
+							LOGGER.warning("Mail properties are empty: either account name (" + accountName + ") or email protocol (" + protocol +
+									") or password for the mailbox ("+password+") are not known!");
 							return;
 						}
 
