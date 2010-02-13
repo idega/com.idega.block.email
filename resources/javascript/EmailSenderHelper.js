@@ -112,7 +112,9 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	EmailSender.sendMessage(EmailSenderHelper.getMessageParametersObject(from, replyTo, recipientTo, recipientCc, recipientBcc, subject, message, attachment), {
 		callback: function(result) {
 			closeAllLoadingMessages();
-			if (result == null || result == 'false') {
+			
+			result += '';
+			if (result == 'false') {
 				humanMsg.displayMsg(EmailSenderHelper.localizations.error);
 				return;
 			}
