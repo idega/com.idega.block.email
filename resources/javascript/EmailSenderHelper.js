@@ -126,7 +126,7 @@ EmailSenderHelper.proceedSendingMessage = function() {
 			humanMsg.displayMsg(EmailSenderHelper.localizations.success, {
 				callback: function() {
 					try {
-						window.parent.jQuery.fn.fancybox.close();
+						window.parent.jQuery.fancybox.close();
 					} catch(e) {}
 				},
 				timeout: 1500
