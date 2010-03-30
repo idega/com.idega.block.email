@@ -2,6 +2,7 @@ package com.idega.block.email.client.business;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -111,6 +112,8 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 						} else {
 							emailFinder.logout(params);
 						}
+					} catch (UnknownHostException e) {
+						LOGGER.warning(e.getMessage());
 					} finally {
 						lock.unlock();
 					}
