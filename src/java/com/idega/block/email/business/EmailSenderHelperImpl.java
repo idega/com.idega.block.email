@@ -29,6 +29,7 @@ import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.SendMail;
 import com.idega.util.StringHandler;
+import com.idega.util.StringUtil;
 
 /**
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
@@ -97,17 +98,21 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		context.publishEvent(event);
 	}
 	
-	private File getFileToAttach(List<String> filesInSlide, String subject) {
+	public File getFileToAttach(List<String> filesInSlide) {
+		return getFileToAttach(filesInSlide, null);
+	}
+	
+	public File getFileToAttach(List<String> filesInSlide, String fileName) {
 		if (ListUtil.isEmpty(filesInSlide)) {
 			return null;
 		}
 		
-		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, subject);
+		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, fileName);
 		
 		return attachment;
 	}
 	
-	private File getZippedFiles(List<String> filesInSlide, String subject) {
+	private File getZippedFiles(List<String> filesInSlide, String name) {
 		if (ListUtil.isEmpty(filesInSlide)) {
 			return null;
 		}
@@ -123,10 +128,11 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			return null;
 		}
 		
+		String fileName = StringUtil.isEmpty(name) ? "Attachments" : "Attachment_for_".concat(
+				StringHandler.stripNonRomanCharacters(name, new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}));
+		fileName = fileName.concat(".zip");
 		try {
-			return FileUtil.getZippedFiles(filesToZip, new StringBuilder("Attachment_for_")
-				.append(StringHandler.stripNonRomanCharacters(subject, new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}))
-				.append(".zip").toString());
+			return FileUtil.getZippedFiles(filesToZip, fileName);
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInSlide);
 		}

@@ -1,5 +1,8 @@
 package com.idega.block.email.business;
 
+import java.io.File;
+import java.util.List;
+
 import com.idega.block.email.bean.MessageParameters;
 import com.idega.dwr.business.DWRAnnotationPersistance;
 
@@ -17,4 +20,7 @@ public interface EmailSenderHelper extends DWRAnnotationPersistance {
 	
 	public boolean sendMessage(MessageParameters parameters);
 	
+	public File getFileToAttach(List<String> filesInSlide);
+	
+	public File getFileToAttach(List<String> filesInSlide, String fileName);
 }
