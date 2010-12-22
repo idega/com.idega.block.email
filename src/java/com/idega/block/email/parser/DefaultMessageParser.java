@@ -142,7 +142,6 @@ public abstract class DefaultMessageParser implements EmailParser {
 	}
 
 	private Object[] parseContent(Message msg) {
-		
 		String messageTxt = "";
 		
 		Object[] msgAndAttachments = new Object[2];
@@ -170,22 +169,30 @@ public abstract class DefaultMessageParser implements EmailParser {
 				msgAndAttachments = parseRFC822(nestedMessage);
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 				msgAndAttachments[0] = parseMultipartRelated((MimeMultipart) msg.getContent());
+			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
+				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +
+						") is signed! Parsing may be incorrect");
+				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent());
 			} else {
 				LOGGER.warning("There is no content parser for MIME type ('" + msg.getContentType() + "') message: " + msg + ", subject: " + msg.getSubject());
 				return null;
 			}
-			
 		} catch (MessagingException e) {
 			LOGGER.log(Level.SEVERE, "Exception while resolving content text from email msg", e);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+		} catch (Exception e) {
+			
 		}
 		return msgAndAttachments;
 	}
 	
+	private Object[] getParsedMultipart(Multipart mp) throws MessagingException, IOException {
+		return parseMultipartMixed(mp);
+	}
+	
 	@SuppressWarnings("unchecked")
 	private Object[] parseMultipartMixed(Multipart messageMultipart) throws MessagingException, IOException {
-		
 		String msg = "";
 		Object[] msgAndAttachements = new Object[2];
 		Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
@@ -251,12 +258,11 @@ public abstract class DefaultMessageParser implements EmailParser {
 	
 	@SuppressWarnings("unchecked")
 	private Object[] parseRFC822(IMAPNestedMessage part) throws MessagingException, IOException {
-		
 		String msg = "";
 		
 		Object[] msgAndAttachements = new Object[2];
-		Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
-		msgAndAttachements[1] = attachemntMap;
+		Map<String, InputStream> attachmentMap = new HashMap<String, InputStream>();
+		msgAndAttachements[1] = attachmentMap;
 		
 		if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 			//	Plain text
@@ -286,14 +292,13 @@ public abstract class DefaultMessageParser implements EmailParser {
 			Object[] parsedMsg = parseRFC822(nestedMessage);
 			msg += parsedMsg[0];
 			
-			attachemntMap.putAll((Map) parsedMsg[1]);
+			attachmentMap.putAll((Map) parsedMsg[1]);
 		}
 		
 		return msgAndAttachements;
 	}
 	
 	private String parseMultipartAlternative(MimeMultipart multipart) throws MessagingException, IOException {
-		
 		String returnStr = null;
 		for (int i = 0; i < multipart.getCount(); i++) {
 			Part part = multipart.getBodyPart(i);
