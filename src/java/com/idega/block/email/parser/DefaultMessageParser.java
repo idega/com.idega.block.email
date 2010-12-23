@@ -110,10 +110,10 @@ public abstract class DefaultMessageParser implements EmailParser {
 				return parsedMessage;
 			}
 			
-			String body = (String) msgAndAttachments[0];
+			Object body = msgAndAttachments[0];
 			if (body == null)
 				body = CoreConstants.EMPTY;
-			parsedMessage.setBody(body);
+			parsedMessage.setBody(body instanceof String ? (String) body : body.toString());
 			
 			String fromAddress = getFromAddress(message);
 			
@@ -171,7 +171,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 				msgAndAttachments[0] = parseMultipartRelated((MimeMultipart) msg.getContent());
 			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
 				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +
-						") is signed! Parsing may be incorrect");
+						") is signed! Parsing may be incorrect!");
 				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent());
 			} else {
 				LOGGER.warning("There is no content parser for MIME type ('" + msg.getContentType() + "') message: " + msg + ", subject: " + msg.getSubject());
