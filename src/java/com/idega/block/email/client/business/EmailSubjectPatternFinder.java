@@ -87,7 +87,6 @@ public class EmailSubjectPatternFinder {
 	 * Returns message map
 	 */
 	public Map<String, FoundMessagesInfo> getMessageMap(EmailParams params) throws MessagingException {
-		
 		Collection<Message> foundMessages = new ArrayList<Message>();
 		Map<String, FoundMessagesInfo> allMessages = new HashMap<String, FoundMessagesInfo>();
 		

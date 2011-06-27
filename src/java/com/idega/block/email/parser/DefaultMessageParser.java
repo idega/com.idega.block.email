@@ -35,6 +35,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.SendMail;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.sun.mail.imap.IMAPNestedMessage;
@@ -99,9 +100,38 @@ public abstract class DefaultMessageParser implements EmailParser {
 		return new EmailMessage();
 	}
 	
+	protected boolean isValidEmail(Message message) {
+		if (message == null)
+			return false;
+		
+		return !doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") && !doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk");
+	}
+	
+	private boolean doExistHeaderFlag(Message message, String headerFlag, String headerFlagValue) {
+		String[] flags = null;
+		try {
+			flags = message.getHeader(headerFlag);
+		} catch (MessagingException e) {
+			LOGGER.log(Level.WARNING, "Error getting header flag: " + headerFlag, e);
+		}
+		if (ArrayUtil.isEmpty(flags))
+			return false;
+		
+		for (String flag: flags) {
+			if (headerFlagValue.equals(flag))
+				return true;
+		}
+		
+		return false;
+	}
+	
 	public synchronized EmailMessage getParsedMessage(Message message, EmailParams params) throws Exception {
-		EmailMessage parsedMessage = getNewMessage();
-		try {			
+		EmailMessage parsedMessage = null;
+		if (!isValidEmail(message))
+			return null;
+		
+		parsedMessage = getNewMessage();
+		try {
 			parsedMessage.setSubject(message.getSubject());
 			
 			Object[] msgAndAttachments = parseContent(message);
@@ -142,7 +172,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 	}
 
 	private Object[] parseContent(Message msg) {
-		String messageTxt = "";
+		String messageTxt = CoreConstants.EMPTY;
 		
 		Object[] msgAndAttachments = new Object[2];
 		try {
@@ -170,8 +200,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 				msgAndAttachments[0] = parseMultipartRelated((MimeMultipart) msg.getContent());
 			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
-				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +
-						") is signed! Parsing may be incorrect!");
+				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +	") is signed! Parsing may be incorrect!");
 				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent());
 			} else {
 				LOGGER.warning("There is no content parser for MIME type ('" + msg.getContentType() + "') message: " + msg + ", subject: " + msg.getSubject());
@@ -248,8 +277,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 				Object[] parsedMsg = parseRFC822(nestedMessage);
 				
 				msg += parsedMsg[0];
-				attachemntMap.putAll((Map) parsedMsg[1]);
-				
+				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 			}
 		}
 		msgAndAttachements[0] = msg;
@@ -292,7 +320,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 			Object[] parsedMsg = parseRFC822(nestedMessage);
 			msg += parsedMsg[0];
 			
-			attachmentMap.putAll((Map) parsedMsg[1]);
+			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 		}
 		
 		return msgAndAttachements;

@@ -3,9 +3,14 @@ package com.idega.block.email.business;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.mail.Message;
 
 import org.directwebremoting.annotations.Param;
 import org.directwebremoting.annotations.RemoteMethod;
@@ -17,7 +22,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParameters;
+import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.business.IBOLookup;
 import com.idega.idegaweb.IWMainApplication;
@@ -67,17 +74,19 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		
 		File attachedFile = getFileToAttach(parameters.getAttachments(), parameters.getSubject());
 		
-		boolean success = true;
+		Message mail = null;
+		boolean success = false;
 		try {
-			SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
+			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
 					host, parameters.getSubject(), parameters.getMessage(), attachedFile);
-			return Boolean.TRUE;
+			success = mail != null;
+			return success;
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error sending mail: " + parameters, e);
 			success = false;
 		} finally {
-			if (success) {
-				publishEvent(parameters, attachedFile);
+			if (success && mail != null) {
+				publishEvent(mail, parameters, attachedFile);
 			} else {
 				//	Attached file will be deleted by published event's handler
 				if (attachedFile != null) {
@@ -89,9 +98,14 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		return Boolean.FALSE;
 	}
 	
-	private void publishEvent(MessageParameters parameters, File attachedFile) {
+	private void publishEvent(Message mail, MessageParameters parameters, File attachedFile) {
 		ApplicationEmailEvent event = new ApplicationEmailEvent(this);
 		
+		if (mail != null) {
+			Map<String, FoundMessagesInfo> messages = new HashMap<String, FoundMessagesInfo>();
+			messages.put(mail.toString(), new FoundMessagesInfo(Arrays.asList(mail), MessageParserType.MANUAL));
+			event.setMessages(messages);
+		}
 		parameters.setAttachment(attachedFile);
 		event.setParameters(parameters);
 		
