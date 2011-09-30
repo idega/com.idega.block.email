@@ -268,7 +268,11 @@ public abstract class DefaultMessageParser implements EmailParser {
 				
 				// "multipart/Mixed" can have multipart/alternative sub type.
 			} else if (messagePart.getContent() instanceof MimeMultipart && messagePart.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
-				msg += parseMultipartAlternative((MimeMultipart) messagePart.getContent());
+				Object[] parsedMsg = parseMultipartMixed((MimeMultipart) messagePart.getContent());
+				msg += parsedMsg[0];
+				
+				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
+				//msg += parseMultipartAlternative((MimeMultipart) messagePart.getContent());
 			} else if (messagePart.getContent() instanceof MimeMultipart && messagePart.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 				msg += parseMultipartRelated((MimeMultipart) messagePart.getContent());
 			} else if (messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
@@ -307,7 +311,12 @@ public abstract class DefaultMessageParser implements EmailParser {
 			msgAndAttachements = parseMultipartMixed((Multipart) part.getContent());
 		} else if (part.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
 			//	Multipart alternative
-			msg += parseMultipartAlternative((MimeMultipart) part.getContent());
+			Object[] parsedMsg = parseMultipartMixed((MimeMultipart) part.getContent());
+			msg += parsedMsg[0];
+			
+			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
+
+			//msg += parseMultipartAlternative((MimeMultipart) part.getContent());
 			msgAndAttachements[0] = msg;
 		} else if (part.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 			//	Multipart related
