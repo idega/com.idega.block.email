@@ -100,11 +100,24 @@ public abstract class DefaultMessageParser implements EmailParser {
 		return new EmailMessage();
 	}
 	
-	protected boolean isValidEmail(Message message) {
+	protected boolean isValidEmail(Message message) throws MessagingException {
 		if (message == null)
 			return false;
 		
-		return !doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") && !doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk");
+		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") && !doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk")) {
+			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ") is auto generated, skipping it");
+			return false;
+		}
+		
+		String subject = message.getSubject();
+		if (!StringUtil.isEmpty(subject)) {
+			if (subject.toLowerCase().indexOf("[autoreply]") != -1) {
+				LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ") is a result of auto reply, skipping it");
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	private boolean doExistHeaderFlag(Message message, String headerFlag, String headerFlagValue) {
