@@ -104,17 +104,28 @@ public abstract class DefaultMessageParser implements EmailParser {
 		if (message == null)
 			return false;
 		
+		//	Checking if mail is auto generated
 		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") && !doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk")) {
-			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ") is auto generated, skipping it");
+			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
+					") is auto generated, skipping it");
 			return false;
 		}
 		
+		//	Checking if mail is auto reply
 		String subject = message.getSubject();
 		if (!StringUtil.isEmpty(subject)) {
 			if (subject.toLowerCase().indexOf("[autoreply]") != -1) {
-				LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ") is a result of auto reply, skipping it");
+				LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
+						") is a result of auto reply, skipping it");
 				return false;
 			}
+		}
+		
+		//	Checking if mail is report type
+		if (message.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
+			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
+					") is a report, skipping it");
+			return false;
 		}
 		
 		return true;
@@ -194,15 +205,11 @@ public abstract class DefaultMessageParser implements EmailParser {
 			msgAndAttachments[1] = attachemntMap;
 			msgAndAttachments[0] = messageTxt;
 			if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
-				
 				if (content instanceof String)
 					msgAndAttachments[0] = parsePlainTextMessage((String) content);
-				
 			} else if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
-				
 				if (content instanceof String)
 					msgAndAttachments[0] = parseHTMLMessage((String) content);
-				
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
 				msgAndAttachments = parseMultipartMixed((Multipart) content);
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
@@ -214,6 +221,8 @@ public abstract class DefaultMessageParser implements EmailParser {
 				msgAndAttachments[0] = parseMultipartRelated((MimeMultipart) msg.getContent());
 			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
 				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +	") is signed! Parsing may be incorrect!");
+				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent());
+			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
 				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent());
 			} else {
 				LOGGER.warning("There is no content parser for MIME type ('" + msg.getContentType() + "') message: " + msg + ", subject: " + msg.getSubject());
@@ -285,7 +294,6 @@ public abstract class DefaultMessageParser implements EmailParser {
 				msg += parsedMsg[0];
 				
 				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
-				//msg += parseMultipartAlternative((MimeMultipart) messagePart.getContent());
 			} else if (messagePart.getContent() instanceof MimeMultipart && messagePart.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 				msg += parseMultipartRelated((MimeMultipart) messagePart.getContent());
 			} else if (messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
@@ -348,6 +356,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 		return msgAndAttachements;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Object[] parseMultipartAlternative(MimeMultipart multipart) throws MessagingException, IOException {
 		String msg = "";
 		
