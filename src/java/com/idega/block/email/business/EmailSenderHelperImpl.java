@@ -40,7 +40,7 @@ import com.idega.util.StringUtil;
 
 /**
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
- * 
+ *
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
  * @version $Revision: 1.4 $
  *
@@ -57,28 +57,29 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 	static final String BEAN_NAME = "emailSenderBean";
 	private static final Logger LOGGER = Logger.getLogger(EmailSenderHelperImpl.class.getName());
-	
+
 	private IWSlideService slide;
-	
+
 	@Autowired
 	private ApplicationContext context;
-	
+
+	@Override
 	@RemoteMethod
 	public boolean sendMessage(MessageParameters parameters) {
 		if (parameters == null) {
 			return Boolean.FALSE;
 		}
-		
+
 		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 		String host = settings.getProperty(CoreConstants.PROP_SYSTEM_SMTP_MAILSERVER);
-		
+
 		File attachedFile = getFileToAttach(parameters.getAttachments(), parameters.getSubject());
-		
+
 		Message mail = null;
 		boolean success = false;
 		try {
 			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
-					host, parameters.getSubject(), parameters.getMessage(), attachedFile);
+					host, parameters.getSubject(), parameters.getMessage(), false, false, attachedFile);
 			success = mail != null;
 			return success;
 		} catch(Exception e) {
@@ -94,13 +95,13 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 				}
 			}
 		}
-		
+
 		return Boolean.FALSE;
 	}
-	
+
 	private void publishEvent(Message mail, MessageParameters parameters, File attachedFile) {
 		ApplicationEmailEvent event = new ApplicationEmailEvent(this);
-		
+
 		if (mail != null) {
 			Map<String, FoundMessagesInfo> messages = new HashMap<String, FoundMessagesInfo>();
 			messages.put(mail.toString(), new FoundMessagesInfo(Arrays.asList(mail), MessageParserType.MANUAL));
@@ -108,29 +109,30 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		}
 		parameters.setAttachment(attachedFile);
 		event.setParameters(parameters);
-		
+
 		context.publishEvent(event);
 	}
-	
+
+	@Override
 	public File getFileToAttach(List<String> filesInSlide) {
 		return getFileToAttach(filesInSlide, null);
 	}
-	
+
+	@Override
 	public File getFileToAttach(List<String> filesInSlide, String fileName) {
-		if (ListUtil.isEmpty(filesInSlide)) {
+		if (ListUtil.isEmpty(filesInSlide))
 			return null;
-		}
-		
+
 		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, fileName);
-		
+
 		return attachment;
 	}
-	
+
 	private File getZippedFiles(List<String> filesInSlide, String name) {
 		if (ListUtil.isEmpty(filesInSlide)) {
 			return null;
 		}
-		
+
 		List<File> filesToZip = new ArrayList<File>(filesInSlide.size());
 		for (String pathInSlide: filesInSlide) {
 			File file = getResource(pathInSlide);
@@ -141,7 +143,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		if (ListUtil.isEmpty(filesToZip)) {
 			return null;
 		}
-		
+
 		String fileName = StringUtil.isEmpty(name) ? "Attachments" : "Attachment_for_".concat(
 				StringHandler.stripNonRomanCharacters(name, new char[] {'-', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}));
 		fileName = fileName.concat(".zip");
@@ -150,20 +152,20 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInSlide);
 		}
-		
+
 		return null;
 	}
-	
+
 	private File getResource(String pathInSlide) {
 		if (!pathInSlide.startsWith(CoreConstants.WEBDAV_SERVLET_URI)) {
 			pathInSlide = new StringBuilder(CoreConstants.WEBDAV_SERVLET_URI).append(pathInSlide).toString();
 		}
-		
+
 		IWSlideService slide = getSlideService();
 		if (slide == null) {
 			return null;
 		}
-		
+
 		InputStream stream = null;
 		try {
 			stream = slide.getInputStream(pathInSlide);
@@ -173,7 +175,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		if (stream == null) {
 			return null;
 		}
-		
+
 		String fileName = pathInSlide;
 		int index = fileName.lastIndexOf(CoreConstants.SLASH);
 		if (index != -1) {
@@ -187,10 +189,10 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		} finally {
 			IOUtil.closeInputStream(stream);
 		}
-		
+
 		return file;
 	}
-	
+
 	private IWSlideService getSlideService() {
 		if (slide == null) {
 			try {

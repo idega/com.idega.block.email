@@ -30,7 +30,7 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * Simple e-mail form
- * 
+ *
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
  * @version $Revision: 1.7 $
  *
@@ -45,21 +45,21 @@ public class EmailSender extends IWBaseComponent {
 	public static final String RECIPIENT_BCC_PARAMETER = "recipientBcc";
 	public static final String SUBJECT_PARAMETER = "subject";
 	public static final String MESSAGE_PARAMETER = "message";
-	
+
 	public static final String EXTERNAL_PARAMETERS = "externalParameters";
 	public static final String NAMES_FOR_EXTERNAL_PARAMETERS = "namesForExternalParameters";
-	
+
 	public static final String ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER = "allowChangeRecipientAddress";
-	
+
 	@Autowired
 	private EmailSenderStateBean emailSender;
-	
+
 	@Autowired
 	private JQuery jQuery;
-	
+
 	@Autowired
 	private Web2Business web2;
-	
+
 	private String from;
 	private String replyTo;
 	private String recipientTo;
@@ -67,21 +67,21 @@ public class EmailSender extends IWBaseComponent {
 	private String recipientBcc;
 	private String subject;
 	private String message;
-	
+
 	private List<String> namesForExternalParameters;
 	private List<String> externalParameters;
-	
+
 	private boolean allowChangeRecipientAddress = true;
-	
+
 	@Override
 	protected void initializeComponent(FacesContext context) {
 		ELUtil.getInstance().autowire(this);
-		
+
 		IWContext iwc = IWContext.getIWContext(context);
 		FaceletComponent facelet = (FaceletComponent) context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI(iwc.getIWMainApplication().getBundle(EmailConstants.IW_BUNDLE_IDENTIFIER).getFaceletURI("emailSender.xhtml"));
 		getChildren().add(facelet);
-		
+
 		IWBundle coreBundle = CoreUtil.getCoreBundle();
 		IWBundle bundle = getBundle(context, EmailConstants.IW_BUNDLE_IDENTIFIER);
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
@@ -96,12 +96,12 @@ public class EmailSender extends IWBaseComponent {
 				CoreConstants.DWR_UTIL_SCRIPT,
 				CoreConstants.DWR_ENGINE_SCRIPT,
 				new StringBuilder("/dwr/interface/").append(EmailSenderHelper.DWR_OBJECT).append(".js").toString(),
-				
+
 				jQuery.getBundleURIToJQueryLib(),
 				web2.getBundleUriToHumanizedMessagesScript()
 		));
-		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation(Boolean.FALSE));
-		
+		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation(false));
+
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
 		}
@@ -132,7 +132,7 @@ public class EmailSender extends IWBaseComponent {
 		if (iwc.isParameterSet(ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER)) {
 			setAllowChangeRecipientAddress(Boolean.valueOf(iwc.getParameter(ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER)));
 		}
-		
+
 		setNamesForExternalParameters(getValues(iwc, NAMES_FOR_EXTERNAL_PARAMETERS));
 		setExternalParameters(getValues(iwc, EXTERNAL_PARAMETERS));
 
@@ -143,16 +143,16 @@ public class EmailSender extends IWBaseComponent {
 		getEmailSender().setRecipientBcc(getRecipientBcc());
 		getEmailSender().setSubject(getSubject());
 		getEmailSender().setMessage(getMessage());
-		
+
 		if (iwc.isLoggedOn()) {
 			getEmailSender().setCurrentUser(iwc.getCurrentUser());
 		}
-		
+
 		getEmailSender().setNamesForExternalParameters(getNamesForExternalParameters());
 		getEmailSender().setExternalParameters(getExternalParameters());
-		
+
 		getEmailSender().setAllowChangeRecipientAddress(isAllowChangeRecipientAddress());
-		
+
 		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
 			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
 			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occurred while sending email...")).append("', success: '")
@@ -169,19 +169,19 @@ public class EmailSender extends IWBaseComponent {
 		}
 		PresentationUtil.addJavaScriptActionToBody(iwc, initAction);
 	}
-	
+
 	private String getProperties() {
 		if (ListUtil.isEmpty(externalParameters)) {
 			return "null";
 		}
-		
+
 		StringBuilder properties = new StringBuilder("[");
-		
+
 		if (ListUtil.isEmpty(namesForExternalParameters) || externalParameters.size() != namesForExternalParameters.size()) {
 			String unkownName = "unkown";
 			for (Iterator<String> valuesIter = externalParameters.iterator(); valuesIter.hasNext();) {
 				properties.append(getProperty(unkownName, valuesIter.next()));
-				
+
 				if (valuesIter.hasNext()) {
 					properties.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 				}
@@ -190,33 +190,33 @@ public class EmailSender extends IWBaseComponent {
 		else {
 			for (int i = 0; i < externalParameters.size(); i++) {
 				properties.append(getProperty(namesForExternalParameters.get(i), externalParameters.get(i)));
-				
+
 				if ((i + 1) < externalParameters.size()) {
 					properties.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 				}
 			}
 		}
-		
+
 		properties.append("]");
 		return properties.toString();
 	}
-	
+
 	private String getProperty(String name, String value) {
 		return new StringBuilder("{").append("id: '").append(name).append(CoreConstants.QOUTE_SINGLE_MARK).append(CoreConstants.COMMA).append(" value: ")
 			.append(CoreConstants.QOUTE_SINGLE_MARK).append(value).append(CoreConstants.QOUTE_SINGLE_MARK).append("}")
 		.toString();
 	}
-	
+
 	private List<String> getValues(IWContext iwc, String parameterName) {
 		if (!iwc.isParameterSet(parameterName)) {
 			return null;
 		}
-		
+
 		String[] values = iwc.getParameterValues(parameterName);
 		if (ArrayUtil.isEmpty(values)) {
 			return null;
 		}
-		
+
 		return Arrays.asList(values);
 	}
 
@@ -333,5 +333,5 @@ public class EmailSender extends IWBaseComponent {
 	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
 		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
 	}
-	
+
 }
