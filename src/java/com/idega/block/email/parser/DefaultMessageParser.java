@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -43,44 +44,46 @@ import com.sun.mail.imap.IMAPNestedMessage;
 public abstract class DefaultMessageParser implements EmailParser {
 
 	private static final Logger LOGGER = Logger.getLogger(DefaultMessageParser.class.getName());
-	
+
 	@Autowired
 	private EmailSubjectPatternFinder emailsFinder;
-	
+
+	@Override
 	public Map<String, Collection<? extends EmailMessage>> getParsedMessages(Map<String, FoundMessagesInfo> messages, EmailParams params) {
 		if (messages == null || messages.isEmpty()) {
 			return null;
 		}
-		
+
 		Map<String, Collection<? extends EmailMessage>> parsedMessages = new HashMap<String, Collection<? extends EmailMessage>>();
-		
+
 		for (String key: messages.keySet()) {
 			Collection<Message> messagesByKey = messages.get(key).getMessages();
 			parsedMessages.put(key, getParsedMessages(messagesByKey, params));
 		}
-		
+
 		return parsedMessages;
 	}
-	
+
+	@Override
 	public Collection<? extends EmailMessage> getParsedMessagesCollection(Map<String, FoundMessagesInfo> messages, EmailParams params) {
 		Map<String, Collection<? extends EmailMessage>> parsedMessages = getParsedMessages(messages, params);
 		if (parsedMessages == null || parsedMessages.isEmpty()) {
 			return null;
 		}
-		
+
 		Collection<EmailMessage> allParsedMessages = new ArrayList<EmailMessage>();
 		for (Collection<? extends EmailMessage> parsedMessagesByCategory: parsedMessages.values()) {
 			allParsedMessages.addAll(parsedMessagesByCategory);
 		}
 		return allParsedMessages;
 	}
-	
+
 	private Collection<EmailMessage> getParsedMessages(Collection<Message> messages, EmailParams params) {
 		Collection<EmailMessage> emailMessages = new ArrayList<EmailMessage>();
 		if (ListUtil.isEmpty(messages)) {
 			return emailMessages;
 		}
-		
+
 		for (Message message: messages) {
 			EmailMessage parsedMessage = null;
 			try {
@@ -92,45 +95,81 @@ public abstract class DefaultMessageParser implements EmailParser {
 				emailMessages.add(parsedMessage);
 			}
 		}
-		
+
 		return emailMessages;
 	}
-	
+
 	protected EmailMessage getNewMessage() {
 		return new EmailMessage();
 	}
-	
+
 	protected boolean isValidEmail(Message message) throws MessagingException {
 		if (message == null)
 			return false;
-		
+
+		String subject = null;
+		try {
+			subject = message.getSubject();
+		} catch (MessagingException e) {
+			LOGGER.warning("Error getting subject for message " + message);
+		}
+		Date sentDate = null;
+		try {
+			sentDate = message.getSentDate();
+		} catch (MessagingException e) {
+			LOGGER.warning("Error getting sent date for message " + message);
+		}
+		String contentType = null;
+		try {
+			contentType = message.getContentType();
+		} catch (MessagingException e) {
+			LOGGER.warning("Error getting content type for message " + message);
+		}
+
 		//	Checking if mail is auto generated
-		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") && !doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk")) {
-			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
+		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") &&
+				!doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk")) {
+			LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
 					") is auto generated, skipping it");
 			return false;
 		}
-		
+
 		//	Checking if mail is auto reply
-		String subject = message.getSubject();
 		if (!StringUtil.isEmpty(subject)) {
 			if (subject.toLowerCase().indexOf("[autoreply]") != -1) {
-				LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
+				LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
 						") is a result of auto reply, skipping it");
 				return false;
 			}
 		}
-		
+
 		//	Checking if mail is report type
-		if (message.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
-			LOGGER.warning("Message (subject: " + message.getSubject() + ", sent: " + message.getSentDate() + ", content type: " + message.getContentType() +
-					") is a report, skipping it");
-			return false;
+		try {
+			if (message.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
+				LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
+						") is a report, skipping it");
+				return false;
+			}
+		} catch (MessagingException e) {
+			LOGGER.warning("Error resolving mime type for message with subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType);
 		}
-		
+
+		if (subject == null) {
+			//	Will check if content is provided
+			Object content = null;
+			try {
+				content = message.getContent();
+			} catch (Exception e) {
+				LOGGER.warning("Error resolving content for message with subject: " + subject + ", sent: " + sentDate + ", content type: " +
+						contentType + ". Marking this message as invalid and skipping");
+			}
+			if (content == null)
+				return false;
+		}
+
 		return true;
 	}
-	
+
 	private boolean doExistHeaderFlag(Message message, String headerFlag, String headerFlagValue) {
 		String[] flags = null;
 		try {
@@ -140,37 +179,38 @@ public abstract class DefaultMessageParser implements EmailParser {
 		}
 		if (ArrayUtil.isEmpty(flags))
 			return false;
-		
+
 		for (String flag: flags) {
 			if (headerFlagValue.equals(flag))
 				return true;
 		}
-		
+
 		return false;
 	}
-	
+
+	@Override
 	public synchronized EmailMessage getParsedMessage(Message message, EmailParams params) throws Exception {
 		EmailMessage parsedMessage = null;
 		if (!isValidEmail(message))
 			return null;
-		
+
 		parsedMessage = getNewMessage();
 		try {
 			parsedMessage.setSubject(message.getSubject());
-			
+
 			Object[] msgAndAttachments = parseContent(message);
 			if (ArrayUtil.isEmpty(msgAndAttachments)) {
 				parsedMessage = null;
 				return parsedMessage;
 			}
-			
+
 			Object body = msgAndAttachments[0];
 			if (body == null)
 				body = CoreConstants.EMPTY;
 			parsedMessage.setBody(body instanceof String ? (String) body : body.toString());
-			
+
 			String fromAddress = getFromAddress(message);
-			
+
 			Address[] froms = message.getFrom();
 			String senderName = null;
 			for (Address address : froms) {
@@ -182,11 +222,11 @@ public abstract class DefaultMessageParser implements EmailParser {
 			}
 			parsedMessage.setSenderName(senderName);
 			parsedMessage.setFromAddress(fromAddress);
-			
+
 			@SuppressWarnings("unchecked")
 			Map<String, InputStream> files = (Map<String, InputStream>) msgAndAttachments[1];
 			parsedMessage.setAttachments(files);
-			
+
 			return parsedMessage;
 		} finally {
 			if (parsedMessage != null) {
@@ -197,7 +237,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 
 	private Object[] parseContent(Message msg) {
 		String messageTxt = CoreConstants.EMPTY;
-		
+
 		Object[] msgAndAttachments = new Object[2];
 		try {
 			Object content = msg.getContent();
@@ -233,15 +273,15 @@ public abstract class DefaultMessageParser implements EmailParser {
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "Exception while resolving content text from email msg", e);
 		} catch (Exception e) {
-			
+
 		}
 		return msgAndAttachments;
 	}
-	
+
 	private Object[] getParsedMultipart(Multipart mp) throws MessagingException, IOException {
 		return parseMultipartMixed(mp);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private Object[] parseMultipartMixed(Multipart messageMultipart) throws MessagingException, IOException {
 		String msg = "";
@@ -249,7 +289,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 		Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
 		msgAndAttachements[1] = attachemntMap;
 		for (int i = 0; i < messageMultipart.getCount(); i++) {
-			
+
 			Part messagePart = messageMultipart.getBodyPart(i);
 			String disposition = messagePart.getDisposition();
 			// it is attachment
@@ -262,7 +302,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 				InputStream streamFromMemory = new ByteArrayInputStream(memory.toByteArray());
 				IOUtil.closeInputStream(input);
 				IOUtil.closeOutputStream(memory);
-				
+
 				String fileName = messagePart.getFileName();
 				if (fileName != null) {
 					fileName = MimeUtility.decodeText(fileName);
@@ -274,7 +314,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 					// maybe we are lucky to decode it, if not, well
 					// better something then nothing.
 					fileName = MimeUtility.decodeText(fileName);
-					
+
 				} else {
 					// well not much can be done then can it?:)
 					fileName = "UnknownFile";
@@ -287,20 +327,20 @@ public abstract class DefaultMessageParser implements EmailParser {
 				else
 					// it's plain text
 					msg += (String) messagePart.getContent();
-				
+
 				// "multipart/Mixed" can have multipart/alternative sub type.
 			} else if (messagePart.getContent() instanceof MimeMultipart && messagePart.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
 				Object[] parsedMsg = parseMultipartMixed((MimeMultipart) messagePart.getContent());
 				msg += parsedMsg[0];
-				
-				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
+
+				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 			} else if (messagePart.getContent() instanceof MimeMultipart && messagePart.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
 				msg += parseMultipartRelated((MimeMultipart) messagePart.getContent());
 			} else if (messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
 				IMAPNestedMessage nestedMessage = (IMAPNestedMessage) messagePart.getContent();
-				
+
 				Object[] parsedMsg = parseRFC822(nestedMessage);
-				
+
 				msg += parsedMsg[0];
 				attachemntMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 			}
@@ -308,15 +348,15 @@ public abstract class DefaultMessageParser implements EmailParser {
 		msgAndAttachements[0] = msg;
 		return msgAndAttachements;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private Object[] parseRFC822(IMAPNestedMessage part) throws MessagingException, IOException {
 		String msg = "";
-		
+
 		Object[] msgAndAttachements = new Object[2];
 		Map<String, InputStream> attachmentMap = new HashMap<String, InputStream>();
 		msgAndAttachements[1] = attachmentMap;
-		
+
 		if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 			//	Plain text
 			if (part.getContent() instanceof String)
@@ -334,8 +374,8 @@ public abstract class DefaultMessageParser implements EmailParser {
 			//	Multipart alternative
 			Object[] parsedMsg = parseMultipartMixed((MimeMultipart) part.getContent());
 			msg += parsedMsg[0];
-			
-			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
+
+			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 
 			//msg += parseMultipartAlternative((MimeMultipart) part.getContent());
 			msgAndAttachements[0] = msg;
@@ -346,24 +386,24 @@ public abstract class DefaultMessageParser implements EmailParser {
 		} else if (part.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
 			//	RCF822
 			IMAPNestedMessage nestedMessage = (IMAPNestedMessage) part.getContent();
-			
+
 			Object[] parsedMsg = parseRFC822(nestedMessage);
 			msg += parsedMsg[0];
-			
+
 			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 		}
-		
+
 		return msgAndAttachements;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private Object[] parseMultipartAlternative(MimeMultipart multipart) throws MessagingException, IOException {
 		String msg = "";
-		
+
 		Object[] msgAndAttachements = new Object[2];
 		Map<String, InputStream> attachmentMap = new HashMap<String, InputStream>();
 		msgAndAttachements[1] = attachmentMap;
-		
+
 		for (int i = 0; i < multipart.getCount(); i++) {
 			Part part = multipart.getBodyPart(i);
 			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
@@ -375,18 +415,18 @@ public abstract class DefaultMessageParser implements EmailParser {
 			} else if (part.getContent() instanceof MimeMultipart && part.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
 				Object[] parsedMsg = parseMultipartMixed((MimeMultipart) part.getContent());
 				msg += parsedMsg[0];
-				
-				attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);				
+
+				attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 			}
 		}
-		
+
 		return msgAndAttachements;
 	}
-	
+
 	private String parseMultipartRelated(MimeMultipart multipart) throws MessagingException, IOException {
 		String content = null;
 		StringBuffer allContent = new StringBuffer();
-		
+
 		for (int i = 0; i < multipart.getCount(); i++) {
 			BodyPart part = multipart.getBodyPart(i);
 			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
@@ -411,14 +451,14 @@ public abstract class DefaultMessageParser implements EmailParser {
 				}
 			}
 		}
-		
+
 		return content == null ? allContent.toString() : content;
 	}
-	
+
 	private String parseHTMLMessage(String message) {
 		return message;// "<[!CDATA ["+ message+"]]>";
 	}
-	
+
 	private String parsePlainTextMessage(String message) {
 		String msgWithEscapedHTMLChars = StringUtil.escapeHTMLSpecialChars(message);
 		// replacing all new line characktes to <br/> so it will
@@ -437,11 +477,13 @@ public abstract class DefaultMessageParser implements EmailParser {
 		this.emailsFinder = emailsFinder;
 	}
 
+	@Override
 	public Collection<? extends EmailMessage> getParsedMessages(ApplicationEmailEvent emailEvent) {
 		LOGGER.warning("This method is not implemented!");
 		return null;
 	}
 
+	@Override
 	public String getFromAddress(Message message) throws MessagingException {
 		Address[] froms = message.getFrom();
 		for (Address address : froms) {
@@ -450,7 +492,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 				return iaddr.getAddress();
 			}
 		}
-		
+
 		return null;
 	}
 }
