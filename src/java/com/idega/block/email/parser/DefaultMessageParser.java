@@ -110,21 +110,15 @@ public abstract class DefaultMessageParser implements EmailParser {
 		String subject = null;
 		try {
 			subject = message.getSubject();
-		} catch (MessagingException e) {
-			LOGGER.warning("Error getting subject for message " + message);
-		}
+		} catch (MessagingException e) {}
 		Date sentDate = null;
 		try {
 			sentDate = message.getSentDate();
-		} catch (MessagingException e) {
-			LOGGER.warning("Error getting sent date for message " + message);
-		}
+		} catch (MessagingException e) {}
 		String contentType = null;
 		try {
 			contentType = message.getContentType();
-		} catch (MessagingException e) {
-			LOGGER.warning("Error getting content type for message " + message);
-		}
+		} catch (MessagingException e) {}
 
 		//	Checking if mail is auto generated
 		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") &&
