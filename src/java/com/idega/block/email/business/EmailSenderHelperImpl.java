@@ -79,7 +79,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		boolean success = false;
 		try {
 			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
-					host, parameters.getSubject(), parameters.getMessage(), attachedFile);
+					host, parameters.getSubject(), parameters.getMessage(), false, false, attachedFile);
 			success = mail != null;
 			return success;
 		} catch(Exception e) {
@@ -120,9 +120,8 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 	@Override
 	public File getFileToAttach(List<String> filesInSlide, String fileName) {
-		if (ListUtil.isEmpty(filesInSlide)) {
+		if (ListUtil.isEmpty(filesInSlide))
 			return null;
-		}
 
 		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, fileName);
 
