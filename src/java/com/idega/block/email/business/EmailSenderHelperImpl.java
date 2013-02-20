@@ -114,28 +114,28 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	}
 
 	@Override
-	public File getFileToAttach(List<String> filesInSlide) {
-		return getFileToAttach(filesInSlide, null);
+	public File getFileToAttach(List<String> filesInRepository) {
+		return getFileToAttach(filesInRepository, null);
 	}
 
 	@Override
-	public File getFileToAttach(List<String> filesInSlide, String fileName) {
-		if (ListUtil.isEmpty(filesInSlide))
+	public File getFileToAttach(List<String> filesInRepository, String fileName) {
+		if (ListUtil.isEmpty(filesInRepository))
 			return null;
 
-		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, fileName);
+		File attachment = filesInRepository.size() == 1 ? getResource(filesInRepository.iterator().next()) : getZippedFiles(filesInRepository, fileName);
 
 		return attachment;
 	}
 
-	private File getZippedFiles(List<String> filesInSlide, String name) {
-		if (ListUtil.isEmpty(filesInSlide)) {
+	private File getZippedFiles(List<String> filesInRepository, String name) {
+		if (ListUtil.isEmpty(filesInRepository)) {
 			return null;
 		}
 
-		List<File> filesToZip = new ArrayList<File>(filesInSlide.size());
-		for (String pathInSlide: filesInSlide) {
-			File file = getResource(pathInSlide);
+		List<File> filesToZip = new ArrayList<File>(filesInRepository.size());
+		for (String pathInRepository: filesInRepository) {
+			File file = getResource(pathInRepository);
 			if (file != null) {
 				filesToZip.add(file);
 			}
@@ -150,37 +150,37 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		try {
 			return FileUtil.getZippedFiles(filesToZip, fileName);
 		} catch(Exception e) {
-			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInSlide);
+			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInRepository);
 		}
 
 		return null;
 	}
 
-	private File getResource(String pathInSlide) {
-		if (!pathInSlide.startsWith(CoreConstants.WEBDAV_SERVLET_URI)) {
-			pathInSlide = new StringBuilder(CoreConstants.WEBDAV_SERVLET_URI).append(pathInSlide).toString();
+	private File getResource(String pathInRepository) {
+		if (!pathInRepository.startsWith(CoreConstants.WEBDAV_SERVLET_URI)) {
+			pathInRepository = new StringBuilder(CoreConstants.WEBDAV_SERVLET_URI).append(pathInRepository).toString();
 		}
 
 		InputStream stream = null;
 		try {
-			stream = repository.getInputStream(pathInSlide);
+			stream = repository.getInputStream(pathInRepository);
 		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "Error getting InputStream for: " + pathInSlide, e);
+			LOGGER.log(Level.SEVERE, "Error getting InputStream for: " + pathInRepository, e);
 		}
 		if (stream == null) {
 			return null;
 		}
 
-		String fileName = pathInSlide;
+		String fileName = pathInRepository;
 		int index = fileName.lastIndexOf(CoreConstants.SLASH);
 		if (index != -1) {
-			fileName = pathInSlide.substring(index + 1);
+			fileName = pathInRepository.substring(index + 1);
 		}
 		File file = new File(fileName);
 		try {
 			FileUtil.streamToFile(stream, file);
 		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "Error streaming from " + pathInSlide + " to file: " + file.getName(), e);
+			LOGGER.log(Level.SEVERE, "Error streaming from " + pathInRepository + " to file: " + file.getName(), e);
 		} finally {
 			IOUtil.closeInputStream(stream);
 		}

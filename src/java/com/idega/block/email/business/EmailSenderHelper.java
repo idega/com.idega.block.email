@@ -8,7 +8,7 @@ import com.idega.dwr.business.DWRAnnotationPersistance;
 
 /**
  * Helper interface for sending e-mails
- * 
+ *
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
  * @version $Revision: 1.1 $
  *
@@ -17,10 +17,10 @@ import com.idega.dwr.business.DWRAnnotationPersistance;
 public interface EmailSenderHelper extends DWRAnnotationPersistance {
 
 	public static final String DWR_OBJECT = "EmailSender";
-	
+
 	public boolean sendMessage(MessageParameters parameters);
-	
-	public File getFileToAttach(List<String> filesInSlide);
-	
-	public File getFileToAttach(List<String> filesInSlide, String fileName);
+
+	public File getFileToAttach(List<String> filesInRepository);
+
+	public File getFileToAttach(List<String> filesInRepository, String fileName);
 }
