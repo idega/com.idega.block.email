@@ -30,17 +30,17 @@ import com.idega.util.StringUtil;
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
  * @version $Revision: 1.13 $
- * 
+ *
  * Last modified: $Date: 2009/01/28 12:19:01 $ by $Author: juozas $
  */
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class EmailDaemon implements ApplicationContextAware, ApplicationListener, ActionListener {
+public class EmailDaemon implements ApplicationContextAware, ApplicationListener<ApplicationEvent>, ActionListener {
 
 	private static final Logger LOGGER = Logger.getLogger(EmailDaemon.class.getName());
 	public static final String THREAD_NAME = "email_daemon";
-	
+
 	private EventTimer emailTimer;
 	private final ReentrantLock lock = new ReentrantLock();
 
@@ -75,6 +75,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		}
 	}
 
+	@Override
 	public void actionPerformed(ActionEvent event) {
 		try {
 
@@ -135,6 +136,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 
 	}
 
+	@Override
 	public void onApplicationEvent(ApplicationEvent applicationevent) {
 
 		if (applicationevent instanceof IWMainApplicationStartedEvent) {
@@ -145,6 +147,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 		}
 	}
 
+	@Override
 	public void setApplicationContext(ApplicationContext applicationcontext)
 			throws BeansException {
 		ctx = applicationcontext;
