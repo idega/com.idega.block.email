@@ -32,16 +32,16 @@ import com.idega.util.ListUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(EmailSubjectPatternFinder.BEAN_IDENTIFIER)
 public class EmailSubjectPatternFinder {
-	
+
 	public static final String BEAN_IDENTIFIER = "email_EmailSubjectPatternFinder";
 	private static final String DEFAULT_PROTOCOL = "pop3";
 	private static final String DEFAULT_FOLDER = "Inbox";
 	private static final String MSGS_FOLDER = "ReadMessages";
-	
+
 	private Collection<EmailSubjectSearchable> emailSubjectSearchers;
-	
+
 	public EmailSubjectPatternFinder() {}
-	
+
 	/**
 	 * move all messages from folder to new or existing folder
 	 */
@@ -49,59 +49,59 @@ public class EmailSubjectPatternFinder {
 		Folder msgFolder = params.getStore().getFolder(MSGS_FOLDER);
 		Folder inbox = params.getFolder();
 		Message[] msgs = params.getMessagesFound();
-		
+
 		for (Message msg: msgs) {
 			moveMessage(msg, inbox, msgFolder, params, true);
 		}
 	}
-	
+
 	public void moveMessage(Message message, EmailParams params) throws MessagingException {
 		moveMessage(message, params.getFolder(), params.getStore().getFolder(MSGS_FOLDER), params, true);
 	}
-	
-	public void moveMessage(Message message, EmailParams params, String destinationFolderName) throws MessagingException {		
+
+	public void moveMessage(Message message, EmailParams params, String destinationFolderName) throws MessagingException {
 		Folder inbox = params.getFolder();
 		Folder destinationFolder = params.getStore().getFolder(destinationFolderName);
-		
+
 		moveMessage(message, inbox, destinationFolder, params, false);
 	}
-	
+
 	private synchronized void moveMessage(Message message, Folder sourceFolder, Folder destinationFolder, EmailParams params,
 			boolean logout) throws MessagingException {
 		Collection<Message> foundMessages = new ArrayList<Message>(Arrays.asList(params.getMessagesFound()));
 		foundMessages.remove(message);
 		params.setMessagesFound(ArrayUtil.convertListToArray(foundMessages));
-		
+
 		if (!destinationFolder.exists())
 			destinationFolder.create(Folder.HOLDS_MESSAGES);
-		
+
 		sourceFolder.copyMessages(new Message[] {message}, destinationFolder);
 		message.setFlag(Flags.Flag.DELETED, true);
-		
+
 		if (logout && ArrayUtil.isEmpty(params.getMessagesFound())) {
 			logout(params);
 		}
 	}
-	
+
 	/**
 	 * Returns message map
 	 */
 	public Map<String, FoundMessagesInfo> getMessageMap(EmailParams params) throws MessagingException {
 		Collection<Message> foundMessages = new ArrayList<Message>();
 		Map<String, FoundMessagesInfo> allMessages = new HashMap<String, FoundMessagesInfo>();
-		
+
 		for (EmailSubjectSearchable emailSearcher: getEmailSubjectSearchers()) {
 			Map<String, FoundMessagesInfo> messages = emailSearcher.getSearchResultsFormatted(params);
 			if (messages == null || messages.isEmpty()) {
 				continue;
 			}
-			
+
 			for (String identifier: messages.keySet()) {
 				FoundMessagesInfo messagesByIdentifier = messages.get(identifier);
 				if (messagesByIdentifier == null || ListUtil.isEmpty(messagesByIdentifier.getMessages())) {
 					continue;
 				}
-				
+
 				FoundMessagesInfo formattedMessages = allMessages.get(identifier);
 				if (formattedMessages == null) {
 					formattedMessages = new FoundMessagesInfo(messagesByIdentifier.getMessages(), messagesByIdentifier.getParserType());
@@ -121,53 +121,53 @@ public class EmailSubjectPatternFinder {
 			foundMessages.addAll(messageInfo.getMessages());
 		}
 		params.setMessagesFound(ListUtil.isEmpty(foundMessages) ? new Message[] {} : ArrayUtil.convertListToArray(foundMessages));
-			
+
 		return allMessages;
 	}
-	
+
 	/**
 	 * Method used to login to the mail inbox.
 	 */
 	public void login(EmailParams params) throws Exception {
-		
+
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 		params.setSession(session);
 		final Store store;
-		
+
 		if (CoreConstants.EMPTY.equals(params.getProtocol())) {
 			store = session.getStore(DEFAULT_PROTOCOL);
 		} else {
 			store = session.getStore(params.getProtocol());
 		}
-		
+
 		params.setStore(store);
-		
+
 		store.connect(params.getHostname(), params.getUsername(), params
 		        .getPassword());
-		
+
 		Folder folder = store.getFolder(DEFAULT_FOLDER);
 		params.setFolder(folder);
 		folder.open(Folder.READ_WRITE);
 	}
-	
+
 	/**
 	 * Method used to login to the mail inbox.
 	 */
 	public EmailParams login(String hostname, String username, String password,
 	        String protocol) throws Exception {
-		
+
 		EmailParams params = new EmailParams();
 		params.setProtocol(protocol);
 		params.setHostname(hostname);
 		params.setUsername(username);
 		params.setPassword(password);
-		
+
 		login(params);
-		
+
 		return params;
 	}
-	
+
 	/**
 	 * Method used to logout from the mail host.
 	 */
@@ -175,13 +175,12 @@ public class EmailSubjectPatternFinder {
 		if (params.isLoggedOut()) {
 			return;
 		}
-		
+
 		params.getFolder().close(true);
 		params.getStore().close();
 		params.setLoggedOut(true);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Collection<EmailSubjectSearchable> getEmailSubjectSearchers() {
 		if (ListUtil.isEmpty(emailSubjectSearchers)) {
 			Map<String, ? extends EmailSubjectSearchable> beans = WebApplicationContextUtils
@@ -189,13 +188,13 @@ public class EmailSubjectPatternFinder {
 			if (beans == null || beans.isEmpty()) {
 				return null;
 			}
-			
+
 			emailSubjectSearchers = new ArrayList<EmailSubjectSearchable>(beans.size());
 			for (EmailSubjectSearchable searcher: beans.values()) {
 				addEmailSubjectSearcher(searcher);
 			}
 		}
-		
+
 		return emailSubjectSearchers;
 	}
 
@@ -203,11 +202,11 @@ public class EmailSubjectPatternFinder {
 		if (emailSubjectSearchers == null) {
 			emailSubjectSearchers = new ArrayList<EmailSubjectSearchable>();
 		}
-		
+
 		if (emailSubjectSearchers.contains(emailSubjectSearcher)) {
 			return;
 		}
 		emailSubjectSearchers.add(emailSubjectSearcher);
 	}
-	
+
 }
