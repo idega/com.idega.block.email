@@ -25,11 +25,11 @@ public class MessageBMPBean extends TreeableEntityBMPBean implements Message {
 
 	public static final String TABLE_NAME = "MAIL_MESSAGE";
 	
-	private static final String COLUMN_CONTENT = "CONTENT";
-	private static final String COLUMN_RECEIVED = "RECEIVED";
-	private static final String COLUMN_DELETED = "DELETED";
-	private static final String COLUMN_SENDER = "SENDER";
-	private static final String COLUMN_SUBJECT = "SUBJECT";
+	public static final String COLUMN_CONTENT = "CONTENT";
+	public static final String COLUMN_RECEIVED = "RECEIVED";
+	public static final String COLUMN_DELETED = "DELETED";
+	public static final String COLUMN_SENDER = "SENDER";
+	public static final String COLUMN_SUBJECT = "SUBJECT";
 	
 	private static final String MESSAGE_ATTACHMENTS = TABLE_NAME + "_ATTACHMENTS";
 	
