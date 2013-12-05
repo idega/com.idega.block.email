@@ -1,11 +1,12 @@
 package com.idega.block.email.business;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
 
 import javax.mail.Address;
 import javax.mail.FetchProfile;
@@ -19,8 +20,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-
 import com.idega.core.contact.data.EmailDataView;
+import com.idega.util.ArrayUtil;
 
 /**
 
@@ -116,17 +117,16 @@ public class ListServer {
 		}
 		// Read in email list file into java.util.Vector
 		//
-		Vector vList = new Vector(10);
+		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
 		BufferedReader listFile = new BufferedReader(new FileReader(emailListFile));
 		String line = null;
 		while ((line = listFile.readLine()) != null) {
-			vList.addElement(new InternetAddress(line));
+			addresses.add(new InternetAddress(line));
 		}
 		listFile.close();
-		debugMsg("Found " + vList.size() + " email ids in list");
-		this._toList = new InternetAddress[vList.size()];
-		vList.copyInto(this._toList);
-		vList = null;
+		debugMsg("Found " + addresses.size() + " email ids in list");
+		this._toList = ArrayUtil.convertListToArray(addresses);
+		addresses = null;
 		//
 		// Get individual emails and broadcast them to all email ids
 		//
@@ -292,7 +292,7 @@ public class ListServer {
 		transport.sendMessage(newMessage, this._toList);
 	}
 	/**
-	
+
 	 * @param  s  Description of the Parameter
 	 * @todo      Description of the Method
 	 */
@@ -316,20 +316,20 @@ public class ListServer {
 	 * @param  smtp    Description of the Parameter
 	 * @param  emails  Description of the Parameter
 	 */
-	public void sendMailLetter(EmailLetter letter, EmailAccount smtp, Collection emails) {
+	public void sendMailLetter(EmailLetter letter, EmailAccount smtp, Collection<EmailDataView> emails) {
 		try {
 			this._smtpHost = smtp.getHost();
 			this._user = smtp.getUser();
 			this._password = smtp.getPassword();
 			this._fromName = letter.getFromName();
 			this._toList = new InternetAddress[emails.size()];
-			Iterator iter = emails.iterator();
-			Vector vList = new Vector(10);
+			Iterator<EmailDataView> iter = emails.iterator();
+			List<InternetAddress> addresses = new ArrayList<InternetAddress>();
 			while (iter.hasNext()) {
-				vList.addElement(new InternetAddress(((EmailDataView) iter.next()).getEmailAddress()));
+				addresses.add(new InternetAddress(iter.next().getEmailAddress()));
 			}
-			vList.copyInto(this._toList);
-			vList = null;
+			this._toList = ArrayUtil.convertListToArray(addresses);
+			addresses = null;
 			sendMsg(
 				letter.getFromAddress(),
 				new Date(),

@@ -18,21 +18,25 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return MailingList.class;
 	}
 
+	@Override
 	public MailingList create() throws CreateException {
 		return (MailingList) super.createIDO();
 	}
 
+	@Override
 	public MailingList findByPrimaryKey(Object key) throws FinderException {
 		return (MailingList) super.findByPrimaryKeyIDO(key);
 	}
 
+	@Override
 	public MailingList findByName(String name) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Integer pk = ((MailingListBMPBean) entity).ejbFindByName(name);
 		this.idoCheckInPooledEntity(entity);
 		return this.findByPrimaryKey(pk);
 	}
-	
+
+	@Override
 	public MailingList findByNameInLatinLetters(String nameInLatinLetters) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Integer pk = ((MailingListBMPBean) entity).ejbFindByNameInLatinLetters(nameInLatinLetters);
@@ -40,6 +44,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKey(pk);
 	}
 
+	@Override
 	public MailingList findByUniqueId(String uniqueId) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Integer pk = ((MailingListBMPBean) entity).ejbFindByUniqueId(uniqueId);
@@ -47,7 +52,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKey(pk);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<MailingList> findAll() throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Collection<Integer> ids = ((MailingListBMPBean) entity).ejbFindAll();
@@ -55,7 +60,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKeyCollection(ids);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<MailingList> findAllByUser(User user) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Collection<Integer> ids = ((MailingListBMPBean) entity).ejbFindAllByUser(user);
@@ -63,7 +68,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKeyCollection(ids);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<MailingList> findAllUserIsWaitingToBeConfirmed(User user) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Collection<Integer> ids = ((MailingListBMPBean) entity).ejbFindAllUserIsWaitingToBeConfirmed(user);
@@ -71,7 +76,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKeyCollection(ids);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<MailingList> findAllListsUserIsNotInvolved(User user) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Collection<Integer> ids = ((MailingListBMPBean) entity).ejbFindAllListsUserIsNotInvolved(user);
@@ -79,7 +84,7 @@ public class MailingListHomeImpl extends IDOFactory implements MailingListHome {
 		return this.findByPrimaryKeyCollection(ids);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<MailingList> findMailingListsByIds(String[] ids) throws FinderException {
 		IDOEntity entity = this.idoCheckOutPooledEntity();
 		Collection<Integer> IDs = ((MailingListBMPBean) entity).ejbFindMailingListsByIds(ids);

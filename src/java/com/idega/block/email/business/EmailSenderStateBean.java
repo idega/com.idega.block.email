@@ -18,7 +18,7 @@ import com.idega.util.StringUtil;
 
 /**
  * State bean for {@link EmailSender}
- * 
+ *
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
  * @version $Revision: 1.4 $
  *
@@ -30,7 +30,7 @@ import com.idega.util.StringUtil;
 public class EmailSenderStateBean {
 
 	public static final String BEAN_IDENTIFIER = "emailSenderStateBean";
-	
+
 	private String from;
 	private String replyTo;
 	private String recipientTo;
@@ -38,15 +38,15 @@ public class EmailSenderStateBean {
 	private String recipientBcc;
 	private String subject;
 	private String message;
-	
+
 	private User currentUser;
 	private String currentUserEmail;
-	
+
 	private List<String> namesForExternalParameters;
 	private List<String> externalParameters;
-	
+
 	private boolean allowChangeRecipientAddress = true;
-	
+
 	public String getFrom() {
 		if (from == null) {
 			from = getCurrentUserEmail();
@@ -86,8 +86,7 @@ public class EmailSenderStateBean {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	private String getCurrentUserEmail() {
 		if (currentUserEmail == null) {
 			User currentUser = getCurrentUser();
@@ -96,18 +95,18 @@ public class EmailSenderStateBean {
 				if (!iwc.isLoggedOn()) {
 					return null;
 				}
-				
+
 				currentUser = iwc.getCurrentUser();
 			}
 			if (currentUser == null) {
 				return null;
 			}
-			
+
 			Collection<Email> emails = currentUser.getEmails();
 			if (ListUtil.isEmpty(emails)) {
 				return null;
 			}
-			
+
 			EmailType mailType = null;
 			for (Email mail: emails) {
 				mailType = mail.getEmailType();
@@ -115,28 +114,28 @@ public class EmailSenderStateBean {
 					currentUserEmail = mail.getEmailAddress();
 				}
 			}
-			
+
 			if (StringUtil.isEmpty(currentUserEmail)) {
 				currentUserEmail = emails.iterator().next().getEmailAddress();
 			}
 		}
 		return currentUserEmail;
 	}
-	
+
 	public List<String> getExternalParameters() {
 		return externalParameters;
 	}
 	public void setExternalParameters(List<String> externalParameters) {
 		this.externalParameters = externalParameters;
 	}
-	
+
 	public User getCurrentUser() {
 		return currentUser;
 	}
 	public void setCurrentUser(User currentUser) {
 		this.currentUser = currentUser;
 	}
-	
+
 	public List<String> getNamesForExternalParameters() {
 		return namesForExternalParameters;
 	}
@@ -150,12 +149,12 @@ public class EmailSenderStateBean {
 	public void setReplyTo(String replyTo) {
 		this.replyTo = replyTo;
 	}
-	
+
 	public boolean isAllowChangeRecipientAddress() {
 		return allowChangeRecipientAddress;
 	}
 	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
 		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
 	}
-	
+
 }
