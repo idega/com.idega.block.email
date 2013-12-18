@@ -269,7 +269,7 @@ public class MailBusiness {
       //ex.printStackTrace();
     }
   }
-  
+
   public void removeEmailFromLists(String email, int[] ListIds) {
     try {
 
@@ -290,7 +290,7 @@ public class MailBusiness {
       }
 
     } catch (Exception ex) {
-      
+
     }
   }
 
@@ -432,11 +432,11 @@ public class MailBusiness {
   }
 
   public void sendLetter(EmailLetter letter, MailTopic topic, Email email)throws RemoteException{
-	 Collection accounts = MailFinder.getInstance().getTopicAccounts(((Integer)topic.getPrimaryKey()).intValue(), MailProtocol.SMTP);
+	 Collection<MailAccount> accounts = MailFinder.getInstance().getTopicAccounts(((Integer)topic.getPrimaryKey()).intValue(), MailProtocol.SMTP);
 	 if (accounts != null && accounts.size() > 0) {
-	   Collection emails = new java.util.ArrayList(1);
+	   Collection<Email> emails = new java.util.ArrayList<Email>(1);
 	   emails.add(email);
-	   Iterator iter = accounts.iterator();
+	   Iterator<MailAccount> iter = accounts.iterator();
 	   EmailAccount account = iter.hasNext() ? ((EmailAccount) iter.next()) : null;
 	   if (account != null) {
 	   	 sendMailLetter(letter, account, emails);

@@ -84,7 +84,7 @@ public class MailFinder {
     catch(Exception ex){}
     return null;
   }
-  
+
   public Collection getEmailLetters(int topicId,int type){
   	try {
   	StringBuffer sql = new StringBuffer("select l.* from ");
@@ -101,7 +101,7 @@ public class MailFinder {
     catch(Exception ex){}
     return null;
   }
-  
+
 
 
   /**
@@ -160,9 +160,9 @@ public class MailFinder {
    * @param  TopicId  Description of the Parameter
    * @return          The topic accounts value
    */
-  public Collection getTopicAccounts(int TopicId) {
+  public Collection<MailAccount> getTopicAccounts(int TopicId) {
     try {
-      Collection c = EntityFinder.getInstance().findRelated(GenericEntity.getEntityInstance(MailTopic.class, TopicId), MailAccount.class);
+      Collection<MailAccount> c = EntityFinder.getInstance().findRelated(GenericEntity.getEntityInstance(MailTopic.class, TopicId), MailAccount.class);
       return c;
     } catch (IDOFinderException ex) {
 
@@ -178,8 +178,8 @@ public class MailFinder {
    * @param  protocol  Description of the Parameter
    * @return           The topic accounts value
    */
-  public Collection getTopicAccounts(int TopicId, int protocol) {
-    Collection accounts = getTopicAccounts(TopicId);
+  public Collection<MailAccount> getTopicAccounts(int TopicId, int protocol) {
+    Collection<MailAccount> accounts = getTopicAccounts(TopicId);
     if (accounts != null && accounts.size() > 0) {
       Iterator iter = accounts.iterator();
       MailAccount ma;
@@ -267,7 +267,7 @@ public class MailFinder {
     }
     return null;
   }
-  
+
   public int getListEmailsCount(int listId){
   	try{
   	return GenericEntity.getEntityInstance(MailList.class, listId).getNumberOfRecordsRelated((IDOLegacyEntity)GenericEntity.getEntityInstance(Email.class));
