@@ -441,7 +441,7 @@ public abstract class DefaultMessageParser implements EmailParser {
 						allContent.append(partContent);
 					}
 				} else {
-					LOGGER.warning("Unhandled content: " + contentObject);
+					LOGGER.warning("Unhandled content: " + multipart.getContentType());
 				}
 			}
 		}
