@@ -3,6 +3,8 @@ package com.idega.block.email.client.presentation;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.faces.component.UIComponent;
+
 import com.idega.block.email.EmailConstants;
 import com.idega.block.email.business.EmailAccount;
 import com.idega.block.email.client.business.EmailParams;
@@ -12,7 +14,6 @@ import com.idega.block.email.client.business.MessageInfo;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
-import com.idega.presentation.PresentationObject;
 import com.idega.presentation.Table;
 import com.idega.presentation.text.Link;
 import com.idega.presentation.ui.Form;
@@ -22,7 +23,7 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * Title: Description: Copyright: Copyright (c) 2001 Company:
- * 
+ *
  * @author <br>
  *         <a href="mailto:aron@idega.is">Aron Birkir</a><br>
  * @version 1.0
@@ -36,7 +37,7 @@ public class MailClient extends Block {
 
 	// /private EmailSubjectPatternFinder mailuser;
 	private EmailParams emailParams;
-	private Map messagesMap;
+	private Map<Integer, MessageInfo> messagesMap;
 	private EmailAccount mailaccount;
 
 	private IWResourceBundle iwrb;
@@ -73,32 +74,33 @@ public class MailClient extends Block {
 		add(f);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void initAccount(IWContext iwc) throws Exception {
 		if (iwc.getSessionAttribute(prmSessionParams) != null) {
 			emailParams = (EmailParams) iwc.getSessionAttribute(prmSessionParams);
-			this.messagesMap = (Map) iwc.getSessionAttribute(prmSessionUserMsgs);
+			this.messagesMap = (Map<Integer, MessageInfo>) iwc.getSessionAttribute(prmSessionUserMsgs);
 		} else {
 			if (this.mailaccount != null) {
-				
+
 				emailParams = new EmailParams();
 				//this.mailuser = new EmailSubjectPatternFinder();
 				emailParams.setHostname(mailaccount.getHost());
 				emailParams.setPassword(mailaccount.getPassword());
 				emailParams.setProtocol(mailaccount.getProtocolName());
 				emailParams.setUsername(mailaccount.getUser());
-				
+
 			} else if ("login".equals(iwc.getParameter(prmAction))) {
 				//this.mailuser = new EmailSubjectPatternFinder();
 				String host = iwc.getParameter("host");
 				String pass = iwc.getParameter("pass");
 				String prot = iwc.getParameter("prot");
 				String user = iwc.getParameter("user");
-				
+
 //				this.mailuser.setHostname(host);
 //				this.mailuser.setPassword(pass);
 //				this.mailuser.setProtocol(prot);
 //				this.mailuser.setUsername(user);
-				
+
 				emailParams = new EmailParams();
 				//this.mailuser = new EmailSubjectPatternFinder();
 				emailParams.setHostname(host);
@@ -108,7 +110,7 @@ public class MailClient extends Block {
 			}
 
 			if (emailParams != null) {
-				
+
 				EmailSubjectPatternFinder emailFinder = ELUtil.getInstance().getBean(EmailSubjectPatternFinder.BEAN_IDENTIFIER);
 				emailFinder.login(emailParams);
 				this.messagesMap = MessageFinder
@@ -123,7 +125,7 @@ public class MailClient extends Block {
 
 	}
 
-	public PresentationObject getLogin(IWContext iwc) {
+	public UIComponent getLogin(IWContext iwc) {
 		Table T = new Table();
 
 		T.add(this.iwrb.getLocalizedString("client.user", "User"), 1, 1);
@@ -146,7 +148,7 @@ public class MailClient extends Block {
 		return T;
 	}
 
-	public PresentationObject getListMessages(IWContext iwc) {
+	public UIComponent getListMessages(IWContext iwc) {
 		Table T = new Table();
 		int row = 1;
 		T.add(this.iwrb.getLocalizedString("client.from", "From"), 1, row);
@@ -157,10 +159,10 @@ public class MailClient extends Block {
 		row++;
 		try {
 			if (this.messagesMap != null && this.messagesMap.size() > 0) {
-				Iterator iter = this.messagesMap.values().iterator();
+				Iterator<MessageInfo> iter = this.messagesMap.values().iterator();
 				MessageInfo m;
 				while (iter.hasNext()) {
-					m = (MessageInfo) iter.next();
+					m = iter.next();
 					Link l = new Link(m.getSubject());
 					l.addParameter(prmMsgNum, m.getNum());
 					T.add(m.getFrom(), 1, row);
@@ -177,11 +179,11 @@ public class MailClient extends Block {
 		return T;
 	}
 
-	public PresentationObject getMessage(IWContext iwc) throws Exception {
+	public UIComponent getMessage(IWContext iwc) throws Exception {
 		Table T = new Table(2, 5);
 		String num = iwc.getParameter(prmMsgNum);
 		if (num != null) {
-			MessageInfo m = (MessageInfo) this.messagesMap
+			MessageInfo m = this.messagesMap
 					.get(new Integer(num));
 			if (m != null) {
 				T

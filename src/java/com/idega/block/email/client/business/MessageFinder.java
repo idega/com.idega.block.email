@@ -27,12 +27,12 @@ public class MessageFinder {
   public MessageFinder() {
   }
 
-  public static List getMessagesInfo(EmailParams params) {
+  public static List<MessageInfo> getMessagesInfo(EmailParams params) {
 		try{
       FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.DELETED), false);
       Folder f = params.getFolder();
       Message[] msgs = f.search(ft);
-      List l = new ArrayList();
+      List<MessageInfo> l = new ArrayList<MessageInfo>();
       MessageInfo mi;
       for (int i = 0; i < msgs.length; i++) {
         mi = new MessageInfo();
@@ -49,17 +49,17 @@ public class MessageFinder {
     return null;
   }
 
-  public static Map getMappedMessagesInfo(EmailParams params){
+  public static Map<Integer, MessageInfo> getMappedMessagesInfo(EmailParams params){
     return getMappedMessagesInfo(getMessagesInfo(params));
 
   }
 
-  public static SortedMap getMappedMessagesInfo(List messagesInfo){
-    TreeMap m = new TreeMap();
+  public static SortedMap<Integer, MessageInfo> getMappedMessagesInfo(List<MessageInfo> messagesInfo){
+    TreeMap<Integer, MessageInfo> m = new TreeMap<Integer, MessageInfo>();
     if(messagesInfo!=null && messagesInfo.size()>0){
-      Iterator iter = messagesInfo.iterator();
+      Iterator<MessageInfo> iter = messagesInfo.iterator();
       while (iter.hasNext()) {
-        MessageInfo mi = (MessageInfo) iter.next();
+        MessageInfo mi = iter.next();
         m.put(new Integer(mi.getNum()),mi);
       }
     }

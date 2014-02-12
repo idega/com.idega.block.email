@@ -42,13 +42,13 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
 public class MailingListAdministration extends BasicMailingList {
-	
+
 	private static final String PARAMETER_ACTION = "mlngLstActn";
 	private static final String PARAMETER_SAVE_ACTION = "mlngLstSaveAction";
 	private static final String PARAMETER_DISABLE_ACTION = "mlngLstDisableAction";
 	private static final String PARAMETER_ENABLE_ACTION = "mlngLstEnableAction";
 	private static final String PARAMETER_DELETE_ACTION = "mlngLstDeleteAction";
-	
+
 	private static final String PARAMETER_MAILING_LIST_ID = "mlngLstId";
 	private static final String PARAMETER_NAME = "mlngLstName";
 	private static final String PARAMETER_PRIVATE_OR_NOT = "mlngLstPrivateOrNot";
@@ -58,22 +58,22 @@ public class MailingListAdministration extends BasicMailingList {
 	private static final String PARAMETER_SENDER_EMAIL = "mlngLstSenderEmailAddress";
 	private static final String PARAMETER_SENDER_NAME = "mlngLstSenderName";
 	private static final String PARAMETER_VALIDATION_IMAGE_VALUE = "mlngLstValidationImageValue";
-	
+
 	private static final int EDIT_ACTION = 1;
 	private static final int CREATE_MAILING_LIST_ACTION = 2;
-	
+
 	private int forcedAction;
-	
+
 	private List<String> errorMessages;
 	private List<String> successMessages;
-	
+
 	private Form form = null;
-	
+
 	@Override
 	public void present(IWContext iwc) throws Exception {
 		form = new Form();
 		add(form);
-		
+
 		if (!ListUtil.isEmpty(successMessages)) {
 			Layer successMessages = new Layer();
 			successMessages.setStyleClass("successMessages");
@@ -82,7 +82,7 @@ public class MailingListAdministration extends BasicMailingList {
 				successMessages.add(new Heading2(message));
 			}
 		}
-		
+
 		if (!ListUtil.isEmpty(errorMessages)) {
 			Layer errorMessage = new Layer();
 			errorMessage.setStyleClass("errorMessages");
@@ -91,7 +91,7 @@ public class MailingListAdministration extends BasicMailingList {
 				errorMessage.add(new Heading2(message));
 			}
 		}
-		
+
 		switch(resolveAction(iwc)) {
 			case EDIT_ACTION:
 				editMailingList(iwc);
@@ -104,12 +104,12 @@ public class MailingListAdministration extends BasicMailingList {
 				break;
 		}
 	}
-	
+
 	@Override
 	protected void doBusiness(IWContext iwc) {
 		if (iwc.isParameterSet(PARAMETER_SAVE_ACTION)) {
 			boolean editingNewMailingList = iwc.isParameterSet(PARAMETER_MAILING_LIST_ID);
-			
+
 			String validationText = iwc.getParameter(PARAMETER_VALIDATION_IMAGE_VALUE);
 			if (!web2.validateJCaptcha(iwc.getSessionId(), validationText)) {
 				addErrorMessage(editingNewMailingList ?
@@ -118,7 +118,7 @@ public class MailingListAdministration extends BasicMailingList {
 				forcedAction = EDIT_ACTION;
 				return;
 			}
-			
+
 			String name = iwc.getParameter(PARAMETER_NAME);
 			String senderEmail = iwc.getParameter(PARAMETER_SENDER_EMAIL);
 			String senderName = iwc.getParameter(PARAMETER_SENDER_NAME);
@@ -126,7 +126,7 @@ public class MailingListAdministration extends BasicMailingList {
 			Collection<User> subscribers = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_SUBSCRIBERS));
 			Collection<User> confirmedFromWaitingList = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_WAITING_USERS));
 			Collection<User> senders = getUsers(iwc.getParameterValues(PARAMETER_MAILING_LIST_VALID_SENDERS));
-			
+
 			if (editingNewMailingList) {
 				//	Editing
 				MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
@@ -156,7 +156,7 @@ public class MailingListAdministration extends BasicMailingList {
 			} else {
 				mailingList.setDeleted(Boolean.TRUE);
 				mailingList.store();
-				
+
 				addSuccessMessage(iwrb.getLocalizedString("ml.success_disabling", "Mailing list was successfully disabled"));
 			}
 		} else if (iwc.isParameterSet(PARAMETER_ENABLE_ACTION)) {
@@ -166,7 +166,7 @@ public class MailingListAdministration extends BasicMailingList {
 			} else {
 				mailingList.setDeleted(Boolean.FALSE);
 				mailingList.store();
-				
+
 				addSuccessMessage(iwrb.getLocalizedString("ml.success_enabling", "Mailing list was successfully enabled"));
 			}
 		} else if (iwc.isParameterSet(PARAMETER_DELETE_ACTION)) {
@@ -178,13 +178,12 @@ public class MailingListAdministration extends BasicMailingList {
 			}
 		}
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	private Collection<User> getUsers(String[] ids) {
 		if (ArrayUtil.isEmpty(ids)) {
 			return null;
 		}
-		
+
 		UserBusiness userBusiness = null;
 		try {
 			userBusiness = IBOLookup.getServiceInstance(getIWApplicationContext(), UserBusiness.class);
@@ -194,7 +193,7 @@ public class MailingListAdministration extends BasicMailingList {
 		if (userBusiness == null) {
 			return null;
 		}
-		
+
 		Collection<User> users = null;
 		try {
 			users = userBusiness.getUsers(ids);
@@ -203,37 +202,37 @@ public class MailingListAdministration extends BasicMailingList {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
-		
+
 		return users;
 	}
-	
+
 	private void addErrorMessage(String message) {
 		if (errorMessages == null) {
 			errorMessages = new ArrayList<String>();
 		}
 		errorMessages.add(message);
 	}
-	
+
 	private void addSuccessMessage(String message) {
 		if (successMessages == null) {
 			successMessages = new ArrayList<String>();
 		}
 		successMessages.add(message);
 	}
-	
+
 	private void listMailingLists(IWContext iwc) {
 		Collection<MailingList> lists = mailingListManager.getAllMailingLists();
-		
+
 		Layer container = new Layer();
 		form.add(container);
-		
+
 		if (ListUtil.isEmpty(lists)) {
 			container.add(new Heading3(iwrb.getLocalizedString("ml.there_are_no_mailing_lists", "There are no mailing lists yet")));
 		} else {
 			String uriToMailingListViewerPage = getUriToMailingListViewer(iwc);
-			
+
 			String confirmMessage = iwrb.getLocalizedString("ml.are_you_sure", "Are you sure?");
-			
+
 			Table2 table = new Table2();
 			container.add(table);
 			TableHeaderRowGroup headerRows = table.createHeaderRowGroup();
@@ -245,7 +244,7 @@ public class MailingListAdministration extends BasicMailingList {
 			addCell(headerRow, iwrb.getLocalizedString("ml.disable_enable", "Disable/enable"));
 			addCell(headerRow, iwrb.getLocalizedString("ml.delete", "Delete"));
 			addCell(headerRow, iwrb.getLocalizedString("ml.create_new_message", "Create new message"));
-			
+
 			int index = 1;
 			TableBodyRowGroup bodyRows = table.createBodyRowGroup();
 			for (MailingList mailingList: lists) {
@@ -254,7 +253,7 @@ public class MailingListAdministration extends BasicMailingList {
 				if (StringUtil.isEmpty(uniqueId)) {
 					continue;
 				}
-				
+
 				addCell(bodyRow, String.valueOf(index));
 				addCell(bodyRow, StringUtil.isEmpty(uriToMailingListViewerPage) ?
 						getLink(mailingList.getName(),
@@ -269,7 +268,7 @@ public class MailingListAdministration extends BasicMailingList {
 						new AdvancedProperty(PARAMETER_ACTION, String.valueOf(EDIT_ACTION)),
 						new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
 				));
-				
+
 				boolean deleted = mailingList.isDeleted();
 				if (deleted) {
 					addCell(bodyRow, getLink(iwrb.getLocalizedString("ml.enable", "Enable"),
@@ -282,9 +281,9 @@ public class MailingListAdministration extends BasicMailingList {
 							new AdvancedProperty(PARAMETER_DISABLE_ACTION, Boolean.TRUE.toString()),
 							new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
 					));
-					
+
 				}
-				
+
 				Link removeMailingList = getLink(iwrb.getLocalizedString("ml.delete", "Delete"), bundle.getVirtualPathWithFileNameString("images/delete.png"),
 						new AdvancedProperty(PARAMETER_DELETE_ACTION, Boolean.TRUE.toString()),
 						new AdvancedProperty(PARAMETER_MAILING_LIST_ID, uniqueId)
@@ -294,7 +293,7 @@ public class MailingListAdministration extends BasicMailingList {
 				removeMailingList.setOnClick(new StringBuilder(300).append("MailingListHelper.confirmMailingListToBeDeleted('").append(confirmMessage)
 						.append("', '").append(uri).append("');").toString());
 				addCell(bodyRow, removeMailingList);
-				
+
 				if (deleted) {
 					addCell(bodyRow, iwrb.getLocalizedString("ml.unable_to_create_new_message_for_disabled_mailing_list", "Impossible"));
 				} else {
@@ -303,22 +302,22 @@ public class MailingListAdministration extends BasicMailingList {
 							new Text(iwrb.getLocalizedString("ml.unable_to_create_new_message_for_mailing_list", "Impossible")) : newMessageUI;
 					addCell(bodyRow, newMessageUI);
 				}
-				
+
 				index++;
 			}
 		}
-		
+
 		Layer buttons = new Layer();
 		form.add(buttons);
 		SubmitButton createNew = new SubmitButton(iwrb.getLocalizedString("ml.create_new_mailing_list", "Create new mailing list"), PARAMETER_ACTION,
 				String.valueOf(CREATE_MAILING_LIST_ACTION));
 		buttons.add(createNew);
 	}
-	
+
 	private Layer getFormItem(String label, String inputName, String value) {
 		return getFormItem(label, inputName, value, false);
 	}
-	
+
 	private Layer getFormItem(String label, String inputName, String value, boolean disabled) {
 		TextInput input = new TextInput(inputName);
 		if (!StringUtil.isEmpty(value)) {
@@ -329,19 +328,19 @@ public class MailingListAdministration extends BasicMailingList {
 		}
 		return getFormItem(label, input);
 	}
-	
+
 	private Layer getFormItem(String label, InterfaceObject uiObject) {
 		return getFormItem(label, (UIComponent) uiObject);
 	}
-	
+
 	private Layer getFormItem(String label, UIComponent uiComponent) {
 		Layer formItem = new Layer();
 		formItem.setStyleClass("formItem");
-		
+
 		Label labelUI = new Label();
 		labelUI.setLabel(label);
 		labelUI.setFor(uiComponent.getId());
-		
+
 		formItem.add(labelUI);
 		formItem.add(uiComponent);
 		if (uiComponent instanceof JCaptchaImage) {
@@ -355,31 +354,31 @@ public class MailingListAdministration extends BasicMailingList {
 			textContainer.add(validationInput);
 			labelUI.setFor(validationInput.getId());
 		}
-		
+
 		return formItem;
 	}
-	
+
 	private Layer getBasicMailingListForm(IWContext iwc, MailingList mailingList) {
 		Layer container = new Layer();
 		container.setStyleClass("formSection");
-		
+
 		//	Name
 		container.add(getFormItem(iwrb.getLocalizedString("ml.name", "Name"), PARAMETER_NAME, mailingList == null ? CoreConstants.EMPTY : mailingList.getName()));
-		
+
 		String nameInLatinLetters = mailingList == null ? null : mailingList.getNameInLatinLetters();
 		if (!StringUtil.isEmpty(nameInLatinLetters)) {
 			container.add(getFormItem(iwrb.getLocalizedString("ml.name_in_latin_letters", "Name in Latin letters"), "mlngLstNameInLatin", nameInLatinLetters,
 					Boolean.TRUE));
 		}
-		
+
 		//	Sender e-mail's address
 		container.add(getFormItem(iwrb.getLocalizedString("ml.sender_email", "Sender e-mail's address"), PARAMETER_SENDER_EMAIL,
 				mailingList == null ? CoreConstants.EMPTY : mailingList.getSenderAddress()));
-		
+
 		//	Sender's name
 		container.add(getFormItem(iwrb.getLocalizedString("ml.sender_name", "Sender's name"), PARAMETER_SENDER_NAME,
 				mailingList == null ? CoreConstants.EMPTY : mailingList.getSenderName()));
-		
+
 		//	Private or not
 		RadioGroup privateOrNot = new RadioGroup(PARAMETER_PRIVATE_OR_NOT);
 		privateOrNot.addRadioButton(Boolean.FALSE.toString(), new Text(iwrb.getLocalizedString("no", "No")),
@@ -387,25 +386,25 @@ public class MailingListAdministration extends BasicMailingList {
 		privateOrNot.addRadioButton(Boolean.TRUE.toString(), new Text(iwrb.getLocalizedString("yes", "Yes")),
 				mailingList == null ? false : mailingList.isPrivate());
 		container.add(getFormItem(iwrb.getLocalizedString("ml.private", "Private"), privateOrNot));
-		
+
 		//	Confirmation image
 		JCaptchaImage validationImage = new JCaptchaImage();
 		validationImage.setStyleClass("validationImage");
 		container.add(getFormItem(iwrb.getLocalizedString("ml.validation_text", "Validation text"), validationImage));
-		
+
 		return container;
 	}
-	
+
 	private void createNewMailingList(IWContext iwc) {
 		Layer formSection = getBasicMailingListForm(iwc, null);
 		form.add(formSection);
-		
+
 		formSection.add(getUsersFilterContainer(null, PARAMETER_MAILING_LIST_VALID_SENDERS,
 				new StringBuilder(iwrb.getLocalizedString("ml.set_senders", "Set senders")).append(CoreConstants.SPACE)
 				.append(iwrb.getLocalizedString("ml_senders_warning", "WARNING: if no senders are set when ANYBODY can send mails to mailing list!"))
 				.toString(), true));
 		formSection.add(getUsersFilterContainer(null, PARAMETER_MAILING_LIST_SUBSCRIBERS, iwrb.getLocalizedString("ml.set_subscribers", "Set subscribers"), true));
-		
+
 		Layer buttons = new Layer();
 		form.add(buttons);
 		BackButton back = new BackButton(iwrb.getLocalizedString("back", "Back"));
@@ -413,29 +412,29 @@ public class MailingListAdministration extends BasicMailingList {
 		SubmitButton save = new SubmitButton(iwrb.getLocalizedString("save", "Save"), PARAMETER_SAVE_ACTION, Boolean.TRUE.toString());
 		buttons.add(save);
 	}
-	
+
 	private List<String> getSubscribersIds(Collection<User> subscribers) {
 		if (ListUtil.isEmpty(subscribers)) {
 			return null;
 		}
-		
+
 		List<String> ids = new ArrayList<String>(subscribers.size());
 		for (User subscriber: subscribers) {
 			ids.add(subscriber.getId());
 		}
-		
+
 		return ids;
 	}
-	
+
 	private void editMailingList(IWContext iwc) {
 		MailingList mailingList = mailingListManager.getMailingListByUniqueId(iwc.getParameter(PARAMETER_MAILING_LIST_ID));
 		if (mailingList == null) {
 			form.add(new Heading2(iwrb.getLocalizedString("ml.mailing_list_was_not_found", "Mailing list was not found")));
 			return;
 		}
-		
+
 		form.addParameter(PARAMETER_MAILING_LIST_ID, "-1");
-		
+
 		Layer container = getBasicMailingListForm(iwc, mailingList);
 		form.add(container);
 
@@ -444,17 +443,17 @@ public class MailingListAdministration extends BasicMailingList {
 				new StringBuilder(iwrb.getLocalizedString("ml.set_senders", "Set senders")).append(CoreConstants.SPACE)
 				.append(iwrb.getLocalizedString("ml_senders_warning", "WARNING: if no senders are set when ANYBODY can send mails to mailing list!")).toString(),
 				true));
-		
+
 		//	Subscribers
 		container.add(getUsersFilterContainer(mailingList.getSubscribers(), PARAMETER_MAILING_LIST_SUBSCRIBERS,
 				iwrb.getLocalizedString("ml.set_subscribers", "Set subscribers"), true));
-		
+
 		//	Waiting list
 		if (mailingList.isPrivate()) {
 			container.add(getUsersFilterContainer(mailingList.getWaitingList(), PARAMETER_MAILING_LIST_WAITING_USERS,
 					iwrb.getLocalizedString("ml.confirm_waiting_users", "Confirm users from waiting list as subscribers"), false));
 		}
-		
+
 		Layer buttons = new Layer();
 		form.add(buttons);
 		BackButton back = new BackButton(iwrb.getLocalizedString("back", "Back"));
@@ -467,7 +466,7 @@ public class MailingListAdministration extends BasicMailingList {
 			buttons.add(newMessage);
 		}
 	}
-	
+
 	private UIComponent getNewMessageButton(IWContext iwc, MailingList mailingList, Class<? extends UIComponent> componentType, String label) {
 		UIComponent component = null;
 		try {
@@ -482,7 +481,7 @@ public class MailingListAdministration extends BasicMailingList {
 		if (component == null) {
 			return null;
 		}
-		
+
 		String mailToMailingList = iwc.getApplicationSettings().getProperty(EmailConstants.MAILING_LIST_MESSAGE_RECEIVER);
 		if (StringUtil.isEmpty(mailToMailingList)) {
 			Logger.getLogger(MailingListAdministration.class.getName()).warning("There is no mailing list message receiver (e-mail address) defined! Check " +
@@ -495,10 +494,10 @@ public class MailingListAdministration extends BasicMailingList {
 					"' doesn't have name in Latin letters. Please update mailing list!");
 			return null;
 		}
-		
+
 		String mailTo = new StringBuilder("mailto:").append(mailToMailingList).append("?subject=[").append(nameInLatinLetters)
 			.append(EmailConstants.IW_MAILING_LIST).append("]").toString();
-		
+
 		if (component instanceof GenericButton) {
 			((GenericButton) component).setContent(label);
 			((GenericButton) component).setOnClick(new StringBuilder("window.location.href='").append(mailTo).append("';").toString());
@@ -506,14 +505,14 @@ public class MailingListAdministration extends BasicMailingList {
 			((Link) component).setText(label);
 			((Link) component).setURL(mailTo);
 		}
-		
+
 		return component;
 	}
-	
+
 	private Layer getUsersFilterContainer(Collection<User> users, String inputName, String label, boolean showGroupChooser) {
 		Layer usersFilterContainer = new Layer();
 		usersFilterContainer.setStyleClass("formItem");
-		
+
 		UsersFilter usersFilter = new UsersFilter();
 		usersFilter.setAddLabel(false);
 		usersFilter.setShowGroupChooser(showGroupChooser);
@@ -522,10 +521,10 @@ public class MailingListAdministration extends BasicMailingList {
 		Label usersFilterLabel = new Label(label, usersFilter);
 		usersFilterContainer.add(usersFilterLabel);
 		usersFilterContainer.add(usersFilter);
-		
+
 		return usersFilterContainer;
 	}
-	
+
 	private int resolveAction(IWContext iwc) {
 		if (iwc.isParameterSet(PARAMETER_ACTION)) {
 			try {
@@ -534,7 +533,7 @@ public class MailingListAdministration extends BasicMailingList {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return forcedAction > 0 ? forcedAction : 0;
 	}
 
