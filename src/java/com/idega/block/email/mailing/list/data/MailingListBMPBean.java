@@ -19,7 +19,7 @@ import com.idega.data.query.SelectQuery;
 import com.idega.data.query.Table;
 import com.idega.user.data.User;
 
-public class MailingListBMPBean extends TreeableEntityBMPBean implements MailingList {
+public class MailingListBMPBean extends TreeableEntityBMPBean<MailingList> implements MailingList {
 
 	private static final long serialVersionUID = -5748549253502076077L;
 
