@@ -100,14 +100,11 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 							return;
 						}
 
-						LOGGER.info("Will scan " + accountName + " for new emails");
-
 						EmailSubjectPatternFinder emailFinder = getEmailFinder();
 						EmailParams params = emailFinder.login(host, accountName, password, protocol);
 						// Getting message map
 						Map<String, FoundMessagesInfo> messages = emailFinder.getMessageMap(params);
 						if (MapUtil.isEmpty(messages)) {
-							LOGGER.info("No new emails found at " + accountName);
 							emailFinder.logout(params);
 						} else {
 							LOGGER.info("Found " + messages.size() + " new emails at " + accountName + ". Keys: " + messages.keySet());

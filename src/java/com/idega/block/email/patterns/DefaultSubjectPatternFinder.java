@@ -14,10 +14,11 @@ import javax.mail.search.SearchTerm;
 
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.client.business.EmailParams;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.util.ArrayUtil;
 import com.idega.util.ListUtil;
 
-public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearchable {
+public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean implements EmailSubjectSearchable {
 
 	private static final long serialVersionUID = -6607788445744465098L;
 
@@ -107,6 +108,11 @@ public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearcha
 
 	public List<Pattern> getPatterns() {
 		return patterns;
+	}
+
+	@Override
+	public String getFixedIdentifier(String identifier) {
+		return identifier;
 	}
 
 }

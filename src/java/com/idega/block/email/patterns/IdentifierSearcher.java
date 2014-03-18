@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.client.business.EmailParams;
+import com.idega.util.StringUtil;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -40,4 +41,22 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 	public MessageParserType getParserType() {
 		return MessageParserType.BPM;
 	}
+
+	@Override
+	public String getFixedIdentifier(String identifier) {
+		if (StringUtil.isEmpty(identifier)) {
+			return identifier;
+		}
+
+		if (getApplication().getSettings().getBoolean("bpm.email_identifier_fix", true)) {
+			String changedIdentifier = identifier.toUpperCase();
+			if (!changedIdentifier.equals(identifier)) {
+				getLogger().info("Changed original identifier '" + identifier + "' to '" + changedIdentifier + "'");
+			}
+			return changedIdentifier;
+		}
+
+		return identifier;
+	}
+
 }

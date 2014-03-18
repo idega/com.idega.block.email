@@ -100,7 +100,6 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 		for (EmailSubjectSearchable emailSearcher: emailsSearchers) {
 			Map<String, FoundMessagesInfo> messages = emailSearcher.getSearchResultsFormatted(params);
 			if (MapUtil.isEmpty(messages)) {
-				getLogger().info("Email searcher " + emailSearcher.getClass().getName() + " did not find any new email");
 				continue;
 			}
 
