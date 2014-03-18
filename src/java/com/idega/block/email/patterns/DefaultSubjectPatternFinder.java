@@ -87,13 +87,14 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 				continue;
 			}
 
-			String indentifier = message.getSubject().substring(matcher.start(), matcher.end());
-			if (messagesMap.get(indentifier) == null) {
+			String identifier = message.getSubject().substring(matcher.start(), matcher.end());
+			identifier = getFixedIdentifier(identifier);
+			if (messagesMap.get(identifier) == null) {
 				FoundMessagesInfo messagesInfo = new FoundMessagesInfo(getParserType());
 				messagesInfo.addMessage(message);
-				messagesMap.put(indentifier, messagesInfo);
+				messagesMap.put(identifier, messagesInfo);
 			} else {
-				messagesMap.get(indentifier).addMessage(message);
+				messagesMap.get(identifier).addMessage(message);
 			}
 		}
 
