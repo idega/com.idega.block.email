@@ -89,7 +89,7 @@ public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearcha
 
 	public void addPattern(Pattern pattern) {
 		if (!patterns.contains(pattern)) {
-			addPattern(pattern);
+			patterns.add(pattern);
 		}
 	}
 
