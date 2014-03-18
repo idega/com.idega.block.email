@@ -27,37 +27,38 @@ import com.idega.util.StringUtil;
 public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 
 	private static final long serialVersionUID = -339350300052921900L;
-	
+
 	private static final String MAILING_LIST_REGULAR_EXPRESSION = "\\[.*" + EmailConstants.IW_MAILING_LIST + "\\]";
 	private static final Pattern MAILING_LIST_REGULAR_EXPRESSION_PATTERN = Pattern.compile(MAILING_LIST_REGULAR_EXPRESSION);
-	
+
 	@Autowired
 	private MailingListManager mailingListManager;
-	
+
 	public MailingListMessageSearcher() {
 		super();
-		
-		setSubjectPattern(MAILING_LIST_REGULAR_EXPRESSION_PATTERN);
+
+		addPattern(MAILING_LIST_REGULAR_EXPRESSION_PATTERN);
 	}
-	
+
+	@Override
 	public Map<String, FoundMessagesInfo> getSearchResultsFormatted(EmailParams params) throws MessagingException {
 		Message[] messages = getMessages(params);
-		
+
 		Map<String, FoundMessagesInfo> mailingListsMessages = new HashMap<String, FoundMessagesInfo>();
-		
+
 		for (Message message: messages) {
 			String subject = message.getSubject();
 			if (StringUtil.isEmpty(subject)) {
 				continue;
 			}
-			
-			Matcher subjectMatcher = getSubjectPattern().matcher(subject);
+
+			Matcher subjectMatcher = getPatterns().get(0).matcher(subject);
 			subjectMatcher.find();
 			String mailingListIdentifier = subject.substring(subjectMatcher.start(), subjectMatcher.end());
 			if (StringUtil.isEmpty(mailingListIdentifier)) {
 				continue;
 			}
-			
+
 			String mailingListNameInLatinLetters = mailingListIdentifier.substring(1);
 			mailingListNameInLatinLetters = mailingListNameInLatinLetters.replace(EmailConstants.IW_MAILING_LIST, CoreConstants.EMPTY);
 			mailingListNameInLatinLetters = mailingListNameInLatinLetters.substring(0, mailingListNameInLatinLetters.length() - 1);
@@ -65,7 +66,7 @@ public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 			if (mailingList == null) {
 				continue;
 			}
-			
+
 			FoundMessagesInfo messagesForMailingList = mailingListsMessages.get(mailingListNameInLatinLetters);
 			if (messagesForMailingList == null) {
 				messagesForMailingList = new FoundMessagesInfo(mailingListIdentifier, getParserType());
@@ -75,10 +76,11 @@ public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 				messagesForMailingList.addMessage(message);
 			}
 		}
-		
+
 		return mailingListsMessages;
 	}
 
+	@Override
 	public MessageParserType getParserType() {
 		return MessageParserType.MAILING_LIST;
 	}

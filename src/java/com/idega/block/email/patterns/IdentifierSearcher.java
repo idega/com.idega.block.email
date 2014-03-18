@@ -27,7 +27,7 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 	public IdentifierSearcher() {
 		super();
 
-		setSubjectPattern(IDENTIFIER_PATTERN);
+		addPattern(IDENTIFIER_PATTERN);
 		addPattern(LOWER_CASE_IDENTIFIER_PATTERN);
 	}
 

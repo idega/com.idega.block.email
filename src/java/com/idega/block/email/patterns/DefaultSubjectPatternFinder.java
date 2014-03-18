@@ -15,12 +15,11 @@ import javax.mail.search.SearchTerm;
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.util.ArrayUtil;
+import com.idega.util.ListUtil;
 
 public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearchable {
 
 	private static final long serialVersionUID = -6607788445744465098L;
-
-	private Pattern subjectPattern;
 
 	private List<Pattern> patterns = new ArrayList<Pattern>();
 
@@ -29,8 +28,8 @@ public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearcha
 	 */
 	@Override
 	public Message[] getMessages(EmailParams params) throws MessagingException {
-		if (getSubjectPattern() == null) {
-			Logger.getLogger(DefaultSubjectPatternFinder.class.getName()).warning("Pattern is not defined!");
+		if (ListUtil.isEmpty(patterns)) {
+			Logger.getLogger(DefaultSubjectPatternFinder.class.getName()).warning("Patterns are not defined!");
 			return new Message[] {};
 		}
 
@@ -71,10 +70,23 @@ public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearcha
 		}
 
 		for (Message message: messages) {
-			Matcher subjectMatcher = getSubjectPattern().matcher(message.getSubject());
-			subjectMatcher.find();
+			Matcher matcher = null;
+			for (Pattern pattern: patterns) {
+				try {
+					matcher = pattern.matcher(message.getSubject());
+					if (!matcher.find()) {
+						matcher = null;
+					}
+				} catch (Exception e) {
+					matcher = null;
+				}
+			}
 
-			String indentifier = message.getSubject().substring(subjectMatcher.start(), subjectMatcher.end());
+			if (matcher == null) {
+				continue;
+			}
+
+			String indentifier = message.getSubject().substring(matcher.start(), matcher.end());
 			if (messagesMap.get(indentifier) == null) {
 				FoundMessagesInfo messagesInfo = new FoundMessagesInfo(getParserType());
 				messagesInfo.addMessage(message);
@@ -93,13 +105,8 @@ public abstract class DefaultSubjectPatternFinder implements EmailSubjectSearcha
 		}
 	}
 
-	public Pattern getSubjectPattern() {
-		return subjectPattern;
-	}
-
-	public void setSubjectPattern(Pattern subjectPattern) {
-		this.subjectPattern = subjectPattern;
-		addPattern(subjectPattern);
+	public List<Pattern> getPatterns() {
+		return patterns;
 	}
 
 }
