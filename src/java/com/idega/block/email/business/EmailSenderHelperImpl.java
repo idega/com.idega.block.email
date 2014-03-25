@@ -157,6 +157,9 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	}
 
 	private File getResource(String pathInSlide) {
+		if (StringUtil.isEmpty(pathInSlide)) {
+			return null;
+		}
 		if (!pathInSlide.startsWith(CoreConstants.WEBDAV_SERVLET_URI)) {
 			pathInSlide = new StringBuilder(CoreConstants.WEBDAV_SERVLET_URI).append(pathInSlide).toString();
 		}
