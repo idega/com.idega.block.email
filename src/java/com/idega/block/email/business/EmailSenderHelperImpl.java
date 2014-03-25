@@ -157,13 +157,16 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	}
 
 	private File getResource(String pathInRepository) {
+		if (StringUtil.isEmpty(pathInRepository)) {
+			return null;
+		}
 		if (!pathInRepository.startsWith(CoreConstants.WEBDAV_SERVLET_URI)) {
 			pathInRepository = new StringBuilder(CoreConstants.WEBDAV_SERVLET_URI).append(pathInRepository).toString();
 		}
 
 		InputStream stream = null;
 		try {
-			stream = repository.getInputStream(pathInRepository);
+			stream = repository.getInputStreamAsRoot(pathInRepository);
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error getting InputStream for: " + pathInRepository, e);
 		}

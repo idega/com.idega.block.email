@@ -2,7 +2,6 @@ package com.idega.block.email.client.business;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -26,6 +25,7 @@ import com.idega.idegaweb.IWMainApplicationStartedEvent;
 import com.idega.util.CoreConstants;
 import com.idega.util.EventTimer;
 import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
@@ -77,18 +77,17 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		String accountName = null;
 		try {
-
 			if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
-
 				if (!lock.isLocked()) {
-//					locking for long running checks in the inbox (lots of messages). skipping processing, if it's already under processing (locked)
+					//	Locking for long running checks in the inbox (lots of messages). skipping processing, if it's already under processing (locked)
 					lock.lock();
 
 					try {
 						IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 						String host = settings.getProperty(PROP_MAIL_HOST, CoreConstants.EMPTY);
-						String accountName = settings.getProperty(CoreConstants.PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
+						accountName = settings.getProperty(CoreConstants.PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 						String protocol = settings.getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 						String password = settings.getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
 
@@ -105,24 +104,24 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 						EmailParams params = emailFinder.login(host, accountName, password, protocol);
 						// Getting message map
 						Map<String, FoundMessagesInfo> messages = emailFinder.getMessageMap(params);
-						if ((messages != null) && (!messages.isEmpty())) {
+						if (MapUtil.isEmpty(messages)) {
+							emailFinder.logout(params);
+						} else {
+							LOGGER.info("Found " + messages.size() + " new emails at " + accountName + ". Keys: " + messages.keySet());
 							ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
 							eventEmail.setMessages(messages);
 							eventEmail.setEmailParams(params);
 							ctx.publishEvent(eventEmail);
-						} else {
-							emailFinder.logout(params);
 						}
-					} catch (UnknownHostException e) {
-						LOGGER.warning(e.getMessage());
+					} catch (Exception e) {
+						LOGGER.log(Level.WARNING, "Error scanning " + accountName + " for new emails", e);
 					} finally {
 						lock.unlock();
 					}
 				}
 			}
-
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Exception while processing emails found in the inbox", e);
+			LOGGER.log(Level.SEVERE, "Exception while processing emails found in " + accountName, e);
 		}
 
 	}

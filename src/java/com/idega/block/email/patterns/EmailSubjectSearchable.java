@@ -13,8 +13,11 @@ import com.idega.block.email.client.business.EmailParams;
 public interface EmailSubjectSearchable extends Serializable {
 
 	public abstract Message[] getMessages(EmailParams params) throws MessagingException;
-	
+
 	public abstract Map<String, FoundMessagesInfo> getSearchResultsFormatted(EmailParams params) throws MessagingException;
-	
+
 	public abstract MessageParserType getParserType();
+
+	public String getFixedIdentifier(String identifier);
+
 }

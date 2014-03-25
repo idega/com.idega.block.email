@@ -21,17 +21,19 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.patterns.EmailSubjectSearchable;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * This JavaBean is used to store mail user information.
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(EmailSubjectPatternFinder.BEAN_IDENTIFIER)
-public class EmailSubjectPatternFinder {
+public class EmailSubjectPatternFinder extends DefaultSpringBean {
 
 	public static final String BEAN_IDENTIFIER = "email_EmailSubjectPatternFinder";
 	private static final String DEFAULT_PROTOCOL = "pop3";
@@ -66,8 +68,7 @@ public class EmailSubjectPatternFinder {
 		moveMessage(message, inbox, destinationFolder, params, false);
 	}
 
-	private synchronized void moveMessage(Message message, Folder sourceFolder, Folder destinationFolder, EmailParams params,
-			boolean logout) throws MessagingException {
+	private synchronized void moveMessage(Message message, Folder sourceFolder, Folder destinationFolder, EmailParams params, boolean logout) throws MessagingException {
 		Collection<Message> foundMessages = new ArrayList<Message>(Arrays.asList(params.getMessagesFound()));
 		foundMessages.remove(message);
 		params.setMessagesFound(ArrayUtil.convertListToArray(foundMessages));
@@ -90,15 +91,22 @@ public class EmailSubjectPatternFinder {
 		Collection<Message> foundMessages = new ArrayList<Message>();
 		Map<String, FoundMessagesInfo> allMessages = new HashMap<String, FoundMessagesInfo>();
 
-		for (EmailSubjectSearchable emailSearcher: getEmailSubjectSearchers()) {
+		Collection<EmailSubjectSearchable> emailsSearchers = getEmailSubjectSearchers();
+		if (ListUtil.isEmpty(emailsSearchers)) {
+			getLogger().warning("No emails searcher are loaded");
+			return allMessages;
+		}
+
+		for (EmailSubjectSearchable emailSearcher: emailsSearchers) {
 			Map<String, FoundMessagesInfo> messages = emailSearcher.getSearchResultsFormatted(params);
-			if (messages == null || messages.isEmpty()) {
+			if (MapUtil.isEmpty(messages)) {
 				continue;
 			}
 
 			for (String identifier: messages.keySet()) {
 				FoundMessagesInfo messagesByIdentifier = messages.get(identifier);
 				if (messagesByIdentifier == null || ListUtil.isEmpty(messagesByIdentifier.getMessages())) {
+					getLogger().warning("No messages found by identifer: " + identifier + ". Emails searcher: " + emailSearcher.getClass().getName() + ". All messages:\n" + messages.keySet());
 					continue;
 				}
 
@@ -129,12 +137,11 @@ public class EmailSubjectPatternFinder {
 	 * Method used to login to the mail inbox.
 	 */
 	public void login(EmailParams params) throws Exception {
-
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 		params.setSession(session);
-		final Store store;
 
+		final Store store;
 		if (CoreConstants.EMPTY.equals(params.getProtocol())) {
 			store = session.getStore(DEFAULT_PROTOCOL);
 		} else {
@@ -143,10 +150,13 @@ public class EmailSubjectPatternFinder {
 
 		params.setStore(store);
 
-		store.connect(params.getHostname(), params.getUsername(), params
-		        .getPassword());
+		store.connect(params.getHostname(), params.getUsername(), params.getPassword());
 
-		Folder folder = store.getFolder(DEFAULT_FOLDER);
+		String folderName = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty("mail_inbox_folder", DEFAULT_FOLDER);
+		Folder folder = store.getFolder(folderName);
+		if (folder == null || !folder.exists()) {
+			getLogger().warning("Folder with name '" + folderName + "' does not exist!");
+		}
 		params.setFolder(folder);
 		folder.open(Folder.READ_WRITE);
 	}
@@ -154,8 +164,7 @@ public class EmailSubjectPatternFinder {
 	/**
 	 * Method used to login to the mail inbox.
 	 */
-	public EmailParams login(String hostname, String username, String password,
-	        String protocol) throws Exception {
+	public EmailParams login(String hostname, String username, String password,  String protocol) throws Exception {
 
 		EmailParams params = new EmailParams();
 		params.setProtocol(protocol);
