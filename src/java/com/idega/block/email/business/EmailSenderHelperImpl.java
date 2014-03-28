@@ -120,8 +120,9 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 	@Override
 	public File getFileToAttach(List<String> filesInSlide, String fileName) {
-		if (ListUtil.isEmpty(filesInSlide))
+		if (ListUtil.isEmpty(filesInSlide)) {
 			return null;
+		}
 
 		File attachment = filesInSlide.size() == 1 ? getResource(filesInSlide.iterator().next()) : getZippedFiles(filesInSlide, fileName);
 
