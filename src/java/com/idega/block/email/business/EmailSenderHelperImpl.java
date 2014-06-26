@@ -114,11 +114,6 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	}
 
 	@Override
-	public File getFileToAttach(List<String> filesInRepository) {
-		return getFileToAttach(filesInRepository, null);
-	}
-
-	@Override
 	public File getFileToAttach(List<String> filesInRepository, String fileName) {
 		if (ListUtil.isEmpty(filesInRepository)) {
 			return null;

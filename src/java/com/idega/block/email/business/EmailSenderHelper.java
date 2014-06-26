@@ -20,7 +20,6 @@ public interface EmailSenderHelper extends DWRAnnotationPersistance {
 
 	public boolean sendMessage(MessageParameters parameters);
 
-	public File getFileToAttach(List<String> filesInRepository);
-
 	public File getFileToAttach(List<String> filesInRepository, String fileName);
+
 }
