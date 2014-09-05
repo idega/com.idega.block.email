@@ -3,5 +3,9 @@ target
 .DS_Store
 .classpath
 .project
+<<<<<<< HEAD
 
 .classpath
+=======
+bin/
+>>>>>>> FETCH_HEAD
