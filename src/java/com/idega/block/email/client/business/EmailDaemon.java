@@ -78,6 +78,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		String accountName = null;
+		EmailParams params = null;
 		try {
 			if (event.getActionCommand().equalsIgnoreCase(THREAD_NAME)) {
 				if (!lock.isLocked()) {
@@ -101,10 +102,11 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 						}
 
 						EmailSubjectPatternFinder emailFinder = getEmailFinder();
-						EmailParams params = emailFinder.login(host, accountName, password, protocol);
+						params = emailFinder.login(host, accountName, password, protocol);
 						// Getting message map
 						Map<String, FoundMessagesInfo> messages = emailFinder.getMessageMap(params);
 						if (MapUtil.isEmpty(messages)) {
+							LOGGER.info("No new messages were found at " + accountName + ". Parameters: " + params);
 							emailFinder.logout(params);
 						} else {
 							LOGGER.info("Found " + messages.size() + " new emails at " + accountName + ". Keys: " + messages.keySet());
@@ -114,14 +116,14 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 							ctx.publishEvent(eventEmail);
 						}
 					} catch (Exception e) {
-						LOGGER.log(Level.WARNING, "Error scanning " + accountName + " for new emails", e);
+						LOGGER.log(Level.WARNING, "Error scanning " + accountName + " for new emails. Parameters: " + params, e);
 					} finally {
 						lock.unlock();
 					}
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Exception while processing emails found in " + accountName, e);
+			LOGGER.log(Level.WARNING, "Exception while processing emails found in " + accountName + ". Parameters: " + params, e);
 		}
 
 	}
