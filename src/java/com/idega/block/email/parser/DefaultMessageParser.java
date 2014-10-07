@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
@@ -168,7 +169,8 @@ public abstract class DefaultMessageParser implements EmailParser {
 		String[] flags = null;
 		try {
 			flags = message.getHeader(headerFlag);
-		} catch (MessagingException e) {
+		} catch (MessageRemovedException e) {
+		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting header flag: " + headerFlag, e);
 		}
 		if (ArrayUtil.isEmpty(flags))
