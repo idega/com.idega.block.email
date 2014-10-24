@@ -71,7 +71,8 @@ public class EmailSender extends IWBaseComponent {
 	private List<String> namesForExternalParameters;
 	private List<String> externalParameters;
 
-	private boolean allowChangeRecipientAddress = true;
+	private boolean allowChangeRecipientAddress = true,
+					useRichTextEditor = false;
 
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -101,6 +102,15 @@ public class EmailSender extends IWBaseComponent {
 				web2.getBundleUriToHumanizedMessagesScript()
 		));
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation(false));
+
+		//	TinyMCE
+		if (isUseRichTextEditor()) {
+			PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, web2.getScriptsForTinyMCE());
+			PresentationUtil.addJavaScriptSourceLineToHeader(iwc, bundle.getVirtualPathWithFileNameString("javascript/TinyMCEInit.js"));
+			//List<String> tinyMceFiles = Arrays.asList("tiny_mce.js");
+			//PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, web2.getBundleUrisToTinyMceScriptFiles("3.5b3", tinyMceFiles));
+		}
+
 
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
@@ -332,6 +342,14 @@ public class EmailSender extends IWBaseComponent {
 
 	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
 		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
+	}
+
+	public boolean isUseRichTextEditor() {
+		return useRichTextEditor;
+	}
+
+	public void setUseRichTextEditor(boolean useRichTextEditor) {
+		this.useRichTextEditor = useRichTextEditor;
 	}
 
 }

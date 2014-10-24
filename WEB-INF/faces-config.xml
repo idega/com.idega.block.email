@@ -38,6 +38,11 @@ version="1.2">
 			<property-name>message</property-name>
 			<property-class>java.lang.String</property-class>
 		</property>
+		<property>
+			<display-name>Use rich text editor?</display-name>
+			<property-name>useRichTextEditor</property-name>
+			<property-class>java.lang.Boolean</property-class>
+		</property>
 		<component-extension>
 			<idegaweb-info>
 				<builder-visible>true</builder-visible>

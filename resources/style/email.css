@@ -71,3 +71,9 @@ span.requiredField {
 	text-transform: capitalize !important;
 	padding: 3px 5px;
 }
+
+.wysiwyg-textarea{
+	display:none;
+}
+
+
