@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,14 +33,16 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 	@Override
 	public Message[] getMessages(EmailParams params) throws MessagingException {
 		if (ListUtil.isEmpty(patterns)) {
-			Logger.getLogger(DefaultSubjectPatternFinder.class.getName()).warning("Patterns are not defined!");
+			getLogger().warning("Patterns are not defined!");
 			return new Message[] {};
 		}
 
 		Folder folder = params.getFolder();
 		int totalMessages = folder.getMessageCount();
 		int newMessages = folder.getNewMessageCount();
-		getLogger().info("Total messages in folder " + folder + ": " + totalMessages + ", new messages: " + newMessages + ". Params: " + params);
+		if (totalMessages > 0 && newMessages > 0) {
+			getLogger().info("Total messages in folder " + folder + ": " + totalMessages + ", new messages: " + newMessages + ". Params: " + params);
+		}
 
 		Message[] messages = folder.search(
 			new SearchTerm() {
