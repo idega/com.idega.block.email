@@ -2,12 +2,14 @@ package com.idega.block.email.patterns;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.search.SearchTerm;
@@ -17,6 +19,7 @@ import com.idega.block.email.client.business.EmailParams;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.util.ArrayUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 
 public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean implements EmailSubjectSearchable {
 
@@ -30,11 +33,18 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 	@Override
 	public Message[] getMessages(EmailParams params) throws MessagingException {
 		if (ListUtil.isEmpty(patterns)) {
-			Logger.getLogger(DefaultSubjectPatternFinder.class.getName()).warning("Patterns are not defined!");
+			getLogger().warning("Patterns are not defined!");
 			return new Message[] {};
 		}
 
-		Message[] messages = params.getFolder().search(
+		Folder folder = params.getFolder();
+		int totalMessages = folder.getMessageCount();
+		int newMessages = folder.getNewMessageCount();
+		if (totalMessages > 0 && newMessages > 0) {
+			getLogger().info("Total messages in folder " + folder + ": " + totalMessages + ", new messages: " + newMessages + ". Params: " + params);
+		}
+
+		Message[] messages = folder.search(
 			new SearchTerm() {
 				private static final long serialVersionUID = 5298994639594655420L;
 
@@ -43,6 +53,7 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 					try {
 						String subject = message.getSubject();
 						if (subject == null) {
+							getLogger().warning("Subject is not defined for message received at " + message.getReceivedDate());
 							return false;
 						}
 
@@ -71,30 +82,36 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 		}
 
 		for (Message message: messages) {
+			String subject = message.getSubject();
+			if (StringUtil.isEmpty(subject)) {
+				continue;
+			}
+
 			Matcher matcher = null;
-			for (Pattern pattern: patterns) {
+			for (Iterator<Pattern> patternsIter = patterns.iterator(); (patternsIter.hasNext() && matcher == null);) {
+				Pattern pattern = patternsIter.next();
 				try {
-					matcher = pattern.matcher(message.getSubject());
+					matcher = pattern.matcher(subject);
 					if (!matcher.find()) {
 						matcher = null;
 					}
 				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error trying to match subject '" + subject + "' with pattern " + pattern, e);
 					matcher = null;
 				}
 			}
-
 			if (matcher == null) {
 				continue;
 			}
 
-			String identifier = message.getSubject().substring(matcher.start(), matcher.end());
-			identifier = getFixedIdentifier(identifier);
-			if (messagesMap.get(identifier) == null) {
+			String identifier = subject.substring(matcher.start(), matcher.end());
+			String fixedIdentifier = getFixedIdentifier(identifier);
+			if (messagesMap.get(fixedIdentifier) == null) {
 				FoundMessagesInfo messagesInfo = new FoundMessagesInfo(getParserType());
 				messagesInfo.addMessage(message);
-				messagesMap.put(identifier, messagesInfo);
+				messagesMap.put(fixedIdentifier, messagesInfo);
 			} else {
-				messagesMap.get(identifier).addMessage(message);
+				messagesMap.get(fixedIdentifier).addMessage(message);
 			}
 		}
 

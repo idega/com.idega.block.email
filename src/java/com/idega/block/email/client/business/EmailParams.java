@@ -22,9 +22,9 @@ public class EmailParams {
 	private Store store;
 	private String protocol;
 	private Message[] messagesFound;
-	
+
 	private boolean loggedOut;
-	
+
 	public Message[] getMessagesFound() {
 		return messagesFound;
 	}
@@ -79,5 +79,10 @@ public class EmailParams {
 	public void setLoggedOut(boolean loggedOut) {
 		this.loggedOut = loggedOut;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Hostname: " + getHostname() + ", protocol: " + getProtocol() + ", user name: " + getUsername() + ", password: " +
+				getPassword() + ", session: " + getSession() + ", store: " + getStore() + ", folder: " + getFolder();
+	}
 }
