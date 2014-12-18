@@ -36,6 +36,12 @@ EmailSenderHelper.init = function(){
 		relative_urls: false
 
 	});
+	
+}
+
+function onLoad() { 
+	var textAreaValue = EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'textAreaValue\']', jQuery('#emailSenderFormId'));
+	tinyMCE.get('emailSenderMessage').setContent(textAreaValue);
 }
 
 //EmailSenderHelper.openFileBrowser = function(field_name, url, type, win) {
@@ -142,7 +148,11 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	var recipientBcc = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderBcc\']', container);;
 	
 	var subject = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderSubject\']', container);
+	
 	var message = EmailSenderHelper.getValueFromInput('textarea[name=\'emailSenderMessage\']', container);
+	if (message == null) {
+		message = tinyMCE.get('emailSenderMessage').getContent();
+	}
 	
 	var attachment = null;
 	
@@ -195,7 +205,9 @@ EmailSenderHelper.getMessageParametersObject = function(from, replyTo, recipient
 		message: message || null,
 	
 		attachments: FileUploadHelper.allUploadedFiles || null,
-		properties: EmailSenderHelper.properties
+		properties: EmailSenderHelper.properties,
+		
+		saveMessageIntoDB: EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'saveMessageIntoDB\']', jQuery('#emailSenderFormId'))
 	}
 	return parameters;
 }

@@ -47,6 +47,8 @@ public class EmailSenderStateBean {
 
 	private boolean allowChangeRecipientAddress = true;
 
+	private boolean saveMessageIntoDB = false;
+
 	public String getFrom() {
 		if (from == null) {
 			from = getCurrentUserEmail();
@@ -156,5 +158,12 @@ public class EmailSenderStateBean {
 	public void setAllowChangeRecipientAddress(boolean allowChangeRecipientAddress) {
 		this.allowChangeRecipientAddress = allowChangeRecipientAddress;
 	}
+	public boolean isSaveMessageIntoDB() {
+		return saveMessageIntoDB;
+	}
+	public void setSaveMessageIntoDB(boolean saveMessageIntoDB) {
+		this.saveMessageIntoDB = saveMessageIntoDB;
+	}
+
 
 }

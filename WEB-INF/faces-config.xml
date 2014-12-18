@@ -43,6 +43,11 @@ version="1.2">
 			<property-name>useRichTextEditor</property-name>
 			<property-class>java.lang.Boolean</property-class>
 		</property>
+		<property>
+			<display-name>Save email message into DB?</display-name>
+			<property-name>saveMessageIntoDB</property-name>
+			<property-class>java.lang.Boolean</property-class>
+		</property>
 		<component-extension>
 			<idegaweb-info>
 				<builder-visible>true</builder-visible>

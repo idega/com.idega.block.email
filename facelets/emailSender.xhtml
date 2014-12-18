@@ -14,10 +14,12 @@ xmlns="http://www.w3.org/1999/xhtml">
 		</script> 
  -->	</head>
 	
-	<body>
+	<body onload="onLoad();">
 		<form class="emailSenderForm" id="emailSenderFormId">
 			<input type="hidden" name="emailSenderFullName" value="#{emailSenderStateBean.currentUser.name}" />
 			<input type="hidden" name="allowChangeRecipientAddress" value="#{emailSenderStateBean.allowChangeRecipientAddress}" />
+			<input type="hidden" name="saveMessageIntoDB" value="#{emailSenderStateBean.saveMessageIntoDB}" />
+			<input type="hidden" name="textAreaValue" value="#{emailSenderStateBean.message}" />
 		
 			<div class="emailSenderFormItem">
 				<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:

@@ -72,7 +72,8 @@ public class EmailSender extends IWBaseComponent {
 	private List<String> externalParameters;
 
 	private boolean allowChangeRecipientAddress = true,
-					useRichTextEditor = false;
+					useRichTextEditor = false,
+					saveMessageIntoDB = false;
 
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -153,6 +154,7 @@ public class EmailSender extends IWBaseComponent {
 		getEmailSender().setRecipientBcc(getRecipientBcc());
 		getEmailSender().setSubject(getSubject());
 		getEmailSender().setMessage(getMessage());
+		getEmailSender().setSaveMessageIntoDB(isSaveMessageIntoDB());
 
 		if (iwc.isLoggedOn()) {
 			getEmailSender().setCurrentUser(iwc.getCurrentUser());
@@ -351,5 +353,14 @@ public class EmailSender extends IWBaseComponent {
 	public void setUseRichTextEditor(boolean useRichTextEditor) {
 		this.useRichTextEditor = useRichTextEditor;
 	}
+
+	public boolean isSaveMessageIntoDB() {
+		return saveMessageIntoDB;
+	}
+
+	public void setSaveMessageIntoDB(boolean saveMessageIntoDB) {
+		this.saveMessageIntoDB = saveMessageIntoDB;
+	}
+
 
 }

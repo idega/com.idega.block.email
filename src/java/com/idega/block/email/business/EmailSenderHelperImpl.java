@@ -1,9 +1,12 @@
 package com.idega.block.email.business;
 
+import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +15,7 @@ import java.util.logging.Logger;
 
 import javax.mail.Message;
 
+import org.apache.commons.lang.StringUtils;
 import org.directwebremoting.annotations.Param;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
@@ -26,10 +30,18 @@ import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParameters;
 import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.repository.RepositoryService;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
+import com.idega.util.EmailValidator;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
@@ -63,6 +75,9 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	@Autowired
 	private ApplicationContext context;
 
+//	@Autowired
+//	private CommuneMessageBusiness communeMessageBusiness;
+
 	@Override
 	@RemoteMethod
 	public boolean sendMessage(MessageParameters parameters) {
@@ -81,6 +96,12 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
 					host, parameters.getSubject(), parameters.getMessage(), false, false, attachedFile);
 			success = mail != null;
+
+			if (parameters.isSaveMessageIntoDB()) {
+				//Saving email message into DB
+				saveEmailIntoDB(parameters);
+			}
+
 			return success;
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error sending mail: " + parameters, e);
@@ -185,5 +206,121 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		}
 
 		return file;
+	}
+
+	/**
+	 * Saving emails into DB
+	 * @param parameters
+	 */
+	private void saveEmailIntoDB(MessageParameters parameters) {
+		IWApplicationContext iwac = IWMainApplication.getDefaultIWApplicationContext();
+		if (iwac != null) {
+			//Getting the sender user
+			UserBusiness userBusiness = getUserBusiness(iwac);
+			User sender = getUserByEmail(userBusiness, parameters.getFrom());
+			//Getting the receivers and saving the emails
+			CommuneMessageBusiness communeMessageBusiness = getCommuneMessageBusiness(iwac);
+			if (communeMessageBusiness != null && sender != null) {
+				List<String> receiversList = new ArrayList<String>();
+				//Adding to the receivers list recipients to
+				addRecipients(receiversList, parameters.getRecipientTo());
+				//Adding to the receivers list  recipients cc
+				addRecipients(receiversList, parameters.getRecipientCc());
+				//Adding to the receivers list  recipients bcc
+				addRecipients(receiversList, parameters.getRecipientBcc());
+				//Saving the emails into DB
+				if (!receiversList.isEmpty()) {
+					for (String receiversEmail : receiversList) {
+						User receiver = getUserByEmail(userBusiness, receiversEmail);
+						if (receiver != null) {
+							try {
+								getCommuneMessageBusiness(iwac).createUserMessage(receiver, parameters.getSubject(), parameters.getMessage(), sender, false);
+							} catch (Exception e) {
+								LOGGER.warning("Could not save the email message: " + e.getLocalizedMessage());
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Get user by the email
+	 * @param userBusiness UserBusiness
+	 * @param email Email
+	 * @return User
+	 */
+	private User getUserByEmail(UserBusiness userBusiness, String email) {
+		User user = null;
+		try {
+			if (userBusiness != null && StringUtils.isNotBlank(email)) {
+				Collection<User> senderUsersCol = userBusiness.getUsersByEmail(email);
+				if (senderUsersCol != null && !senderUsersCol.isEmpty()) {
+					user = senderUsersCol.iterator().next();
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.warning("Could not get user by email: " + email + ". Error occured: " + e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+		return user;
+	}
+
+	/**
+	 * Adding recipients into the list
+	 * @param addressesList List of recipients
+	 * @param addresses Addresses to be added
+	 */
+	private void addRecipients(List<String> addressesList, String addresses) {
+		if (StringUtils.isNotBlank(addresses)) {
+			String fixedAddresses = StringHandler.replace(addresses, CoreConstants.SEMICOLON, CoreConstants.COMMA).trim();
+			if (doValidateAddresses(fixedAddresses)) {
+				addressesList.addAll(Arrays.asList(StringUtils.split(fixedAddresses, CoreConstants.COMMA)));
+			}
+		}
+	}
+
+	/**
+	 * Validate email addresses
+	 * @param addresses
+	 * @return
+	 */
+	private static boolean doValidateAddresses(String addresses) {
+		if (StringUtil.isEmpty(addresses))
+			return false;
+
+		String[] emails = addresses.split(CoreConstants.COMMA);
+		if (ArrayUtil.isEmpty(emails))
+			return false;
+
+		for (String email: emails) {
+			if (!EmailValidator.getInstance().validateEmail(email))
+				return false;
+		}
+
+		return true;
+	}
+
+
+
+	private CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
+		try {
+			return IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+
+	private UserBusiness getUserBusiness(IWApplicationContext iwac) {
+		try {
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
 	}
 }
