@@ -48,6 +48,11 @@ version="1.2">
 			<property-name>saveMessageIntoDB</property-name>
 			<property-class>java.lang.Boolean</property-class>
 		</property>
+		<property>
+			<display-name>Set address FROM as READ-ONLY?</display-name>
+			<property-name>addressFromReadOnly</property-name>
+			<property-class>java.lang.Boolean</property-class>
+		</property> 
 		<component-extension>
 			<idegaweb-info>
 				<builder-visible>true</builder-visible>

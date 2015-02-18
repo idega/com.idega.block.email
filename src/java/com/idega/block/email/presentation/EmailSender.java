@@ -5,9 +5,11 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.faces.context.FacesContext;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.email.EmailConstants;
@@ -15,11 +17,15 @@ import com.idega.block.email.business.EmailSenderHelper;
 import com.idega.block.email.business.EmailSenderStateBean;
 import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
+import com.idega.core.contact.data.Email;
 import com.idega.facelets.ui.FaceletComponent;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -60,6 +66,8 @@ public class EmailSender extends IWBaseComponent {
 	@Autowired
 	private Web2Business web2;
 
+	private UserBusiness userBiz;
+
 	private String from;
 	private String replyTo;
 	private String recipientTo;
@@ -74,6 +82,8 @@ public class EmailSender extends IWBaseComponent {
 	private boolean allowChangeRecipientAddress = true,
 					useRichTextEditor = false,
 					saveMessageIntoDB = false;
+
+	private boolean addressFromReadOnly = false;
 
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -115,6 +125,18 @@ public class EmailSender extends IWBaseComponent {
 
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
+		} else {
+			User currentUser = iwc.getCurrentUser();
+			if (currentUser != null && getUserBusiness(iwc) != null) {
+				try {
+					Email email = getUserBusiness(iwc).getUserMail(currentUser);
+					if (email != null && StringUtils.isNotBlank(email.getEmailAddress())) {
+						setFrom(email.getEmailAddress());
+					}
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Could not get the user email: " + e.getLocalizedMessage(), e);
+				}
+			}
 		}
 		if (iwc.isParameterSet(REPLY_TO_PARAMETER)) {
 			setReplyTo(iwc.getParameter(REPLY_TO_PARAMETER));
@@ -155,6 +177,11 @@ public class EmailSender extends IWBaseComponent {
 		getEmailSender().setSubject(getSubject());
 		getEmailSender().setMessage(getMessage());
 		getEmailSender().setSaveMessageIntoDB(isSaveMessageIntoDB());
+		if (StringUtils.isNotBlank(getFrom())) {
+			getEmailSender().setAddressFromReadOnly(isAddressFromReadOnly());
+		} else {
+			getEmailSender().setAddressFromReadOnly(false);
+		}
 
 		if (iwc.isLoggedOn()) {
 			getEmailSender().setCurrentUser(iwc.getCurrentUser());
@@ -360,6 +387,24 @@ public class EmailSender extends IWBaseComponent {
 
 	public void setSaveMessageIntoDB(boolean saveMessageIntoDB) {
 		this.saveMessageIntoDB = saveMessageIntoDB;
+	}
+	public boolean isAddressFromReadOnly() {
+		return addressFromReadOnly;
+	}
+	public void setAddressFromReadOnly(boolean addressFromReadOnly) {
+		this.addressFromReadOnly = addressFromReadOnly;
+	}
+
+	public UserBusiness getUserBusiness(IWApplicationContext iwc) {
+		if (this.userBiz == null) {
+			try {
+				this.userBiz = (UserBusiness) com.idega.business.IBOLookup.getServiceInstance(iwc, UserBusiness.class);
+			}
+			catch (java.rmi.RemoteException rme) {
+				throw new RuntimeException(rme.getMessage());
+			}
+		}
+		return this.userBiz;
 	}
 
 

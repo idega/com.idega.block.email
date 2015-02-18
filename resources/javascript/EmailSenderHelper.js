@@ -24,20 +24,43 @@ EmailSenderHelper.init = function(){
 		theme : "advanced",
 		plugins : "autolink,lists,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,inlinepopups,autosave",
 
-		theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,styleselect,formatselect,fontselect,fontsizeselect,cut,copy,paste,pastetext,pasteword,|,search,replace",
-		theme_advanced_buttons2 :"bullist,numlist,|,outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate, inserttime,preview,|,forecolor,backcolor,tablecontrols,|",
+		theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,fontselect,fontsizeselect,cut,copy,paste,pastetext,pasteword,|,search,replace,|,bullist,numlist",
+		theme_advanced_buttons2 :"outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate, inserttime,preview,|,forecolor,backcolor,tablecontrols,|",
 		theme_advanced_buttons3 : "hr,removeformat,visualaid,|,sub,sup,|,charmap,emotions,iespell,media,advhr,|,print,|,ltr,rtl,|,fullscreen,insertlayer,moveforward,movebackward,absolute,|,styleprops,|,cite,abbr,acronym,del,ins,attribs,|,visualchars,nonbreaking,template,pagebreak,restoredraft",
 		theme_advanced_toolbar_location : "top",
 		theme_advanced_toolbar_align : "left",
 		theme_advanced_statusbar_location : "bottom",
-		width : "100%",
-		height : "200px",
+		width : "500px",
+		height : "300px",
 		//file_browser_callback : 'EmailSenderHelper.openFileBrowser',
 		relative_urls: false
 
 	});
 	
 }
+
+
+//EmailSenderHelper.init = function(){
+//	tinyMCE.init({
+//		// General options
+//		mode : "textareas",
+//		theme : "advanced",
+//		plugins : "autolink,lists,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,inlinepopups,autosave",
+//
+//		theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,styleselect,formatselect,fontselect,fontsizeselect,cut,copy,paste,pastetext,pasteword,|,search,replace",
+//		theme_advanced_buttons2 :"bullist,numlist,|,outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate, inserttime,preview,|,forecolor,backcolor,tablecontrols,|",
+//		theme_advanced_buttons3 : "hr,removeformat,visualaid,|,sub,sup,|,charmap,emotions,iespell,media,advhr,|,print,|,ltr,rtl,|,fullscreen,insertlayer,moveforward,movebackward,absolute,|,styleprops,|,cite,abbr,acronym,del,ins,attribs,|,visualchars,nonbreaking,template,pagebreak,restoredraft",
+//		theme_advanced_toolbar_location : "top",
+//		theme_advanced_toolbar_align : "left",
+//		theme_advanced_statusbar_location : "bottom",
+//		width : "100%",
+//		height : "200px",
+//		//file_browser_callback : 'EmailSenderHelper.openFileBrowser',
+//		relative_urls: false
+//
+//	});
+//	
+//}
 
 function onLoad() { 
 	var textAreaValue = EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'textAreaValue\']', jQuery('#emailSenderFormId'));
@@ -140,6 +163,9 @@ EmailSenderHelper.proceedSendingMessage = function() {
 	var container = jQuery('#emailSenderFormId');
 	
 	var from = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderFrom\']', container);
+	if (from == null) {
+		from = EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'emailSenderFrom\']', container);
+	}
 	
 	var replyTo = EmailSenderHelper.getValueFromInput('input[type=\'text\'][name=\'emailSenderReplyTo\']', container);
 	

@@ -34,6 +34,10 @@ span.requiredField {
 }
 
 .emailSenderFormItem input, textarea, ul {
+	float: none;
+	width: auto !important;
+	
+	/*
 	float: left;
 	width: 300px !important;
 	margin: 0 !important;
@@ -41,6 +45,7 @@ span.requiredField {
 	font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 	font-size: 11px;
 	color: #1f1f1f;
+	*/
 }
 
 .fileUploadViewerUploadedFilesContainerStyle ul {

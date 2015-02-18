@@ -33,6 +33,7 @@ import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
@@ -94,7 +95,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		boolean success = false;
 		try {
 			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
-					host, parameters.getSubject(), parameters.getMessage(), false, false, attachedFile);
+					host, parameters.getSubject(), parameters.getMessage(), MimeTypeUtil.MIME_TYPE_HTML, null, false, false, attachedFile);
 			success = mail != null;
 
 			if (parameters.isSaveMessageIntoDB()) {

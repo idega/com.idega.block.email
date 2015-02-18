@@ -22,10 +22,17 @@ xmlns="http://www.w3.org/1999/xhtml">
 			<input type="hidden" name="textAreaValue" value="#{emailSenderStateBean.message}" />
 		
 			<div class="emailSenderFormItem">
-				<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:
-					<span class="requiredField">*</span>
-				</label>
-				<input id="emailSenderFrom" class="required" type="text" name="emailSenderFrom" value="#{emailSenderStateBean.from}" />
+				<t:div rendered="#{!emailSenderStateBean.addressFromReadOnly}">
+					<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:
+						<span class="requiredField">*</span>
+					</label>
+					<input id="emailSenderFrom" class="required" type="text" name="emailSenderFrom" value="#{emailSenderStateBean.from}"/>
+				</t:div>
+				<t:div rendered="#{emailSenderStateBean.addressFromReadOnly}">
+					<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}: </label>
+					<input type="hidden" id="emailSenderFrom" name="emailSenderFrom" value="#{emailSenderStateBean.from}"/>
+					<label>#{emailSenderStateBean.from}</label>
+				</t:div>
 		 	</div>
 		 	<div class="emailSenderFormItem">
 				<label for="emailSenderReplyTo">#{localizedStrings['com.idega.block.email']['email_sender.reply_to']}:</label>

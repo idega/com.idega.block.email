@@ -49,6 +49,8 @@ public class EmailSenderStateBean {
 
 	private boolean saveMessageIntoDB = false;
 
+	private boolean addressFromReadOnly = false;
+
 	public String getFrom() {
 		if (from == null) {
 			from = getCurrentUserEmail();
@@ -163,6 +165,12 @@ public class EmailSenderStateBean {
 	}
 	public void setSaveMessageIntoDB(boolean saveMessageIntoDB) {
 		this.saveMessageIntoDB = saveMessageIntoDB;
+	}
+	public boolean isAddressFromReadOnly() {
+		return addressFromReadOnly;
+	}
+	public void setAddressFromReadOnly(boolean addressFromReadOnly) {
+		this.addressFromReadOnly = addressFromReadOnly;
 	}
 
 
