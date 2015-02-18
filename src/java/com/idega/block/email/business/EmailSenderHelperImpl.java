@@ -1,7 +1,5 @@
 package com.idega.block.email.business;
 
-import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
-
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -49,6 +47,7 @@ import com.idega.util.ListUtil;
 import com.idega.util.SendMail;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
@@ -220,8 +219,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			UserBusiness userBusiness = getUserBusiness(iwac);
 			User sender = getUserByEmail(userBusiness, parameters.getFrom());
 			//Getting the receivers and saving the emails
-			CommuneMessageBusiness communeMessageBusiness = getCommuneMessageBusiness(iwac);
-			if (communeMessageBusiness != null && sender != null) {
+			if (sender != null) {
 				List<String> receiversList = new ArrayList<String>();
 				//Adding to the receivers list recipients to
 				addRecipients(receiversList, parameters.getRecipientTo());
@@ -235,17 +233,15 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 						User receiver = getUserByEmail(userBusiness, receiversEmail);
 						if (receiver != null) {
 							try {
-								getCommuneMessageBusiness(iwac).createUserMessage(receiver, parameters.getSubject(), parameters.getMessage(), sender, false);
+								ELUtil.getInstance().publishEvent(new com.idega.block.email.event.UserMessage(this, receiver, parameters.getSubject(), parameters.getMessage(), sender, false));
 							} catch (Exception e) {
-								LOGGER.warning("Could not save the email message: " + e.getLocalizedMessage());
-								e.printStackTrace();
+								LOGGER.log(Level.WARNING, "Could not save the email message: " + e.getLocalizedMessage(), e);
 							}
 						}
 					}
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -303,17 +299,6 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		}
 
 		return true;
-	}
-
-
-
-	private CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
-		try {
-			return IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
 	}
 
 	private UserBusiness getUserBusiness(IWApplicationContext iwac) {
