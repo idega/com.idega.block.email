@@ -34,24 +34,42 @@ xmlns="http://www.w3.org/1999/xhtml">
 					<label>#{emailSenderStateBean.from}</label>
 				</t:div>
 		 	</div>
+<!-- 		 	
 		 	<div class="emailSenderFormItem">
 				<label for="emailSenderReplyTo">#{localizedStrings['com.idega.block.email']['email_sender.reply_to']}:</label>
 				<input id="emailSenderReplyTo" type="text" name="emailSenderReplyTo" value="#{emailSenderStateBean.replyTo}" />
 		 	</div>
-			<div class="emailSenderFormItem">
+		 	
+ -->			
+
+ 			<div class="emailSenderFormItem">
 				<label for="emailSenderTo">#{localizedStrings['com.idega.block.email']['email_sender.to']}:
 					<span class="requiredField">*</span>
 				</label>
 				<input id="emailSenderTo" class="required" type="text" name="emailSenderTo" value="#{emailSenderStateBean.recipientTo}" />
 			</div>
+
+			<!-- CC -->
+ 			<div class="emailSenderFormItem">
+				<label for="showCC">#{localizedStrings['com.idega.block.email']['email_sender.show_cc']}:</label>
+				<input name="showCC" type="checkbox" value="true" onchange="onShowCChange();"></input>
+			</div>
 			<div class="emailSenderFormItem">
-				<label for="emailSenderCc">#{localizedStrings['com.idega.block.email']['email_sender.cc']}:</label>
+				<label id="emailSenderCcLabelId" for="emailSenderCc">#{localizedStrings['com.idega.block.email']['email_sender.cc']}:</label>
 				<input id="emailSenderCc" type="text" name="emailSenderCc" value="#{emailSenderStateBean.recipientCc}" />
 			</div>
+
+			<!-- BCC -->
+ 			<div class="emailSenderFormItem">
+				<label for="showBCC">#{localizedStrings['com.idega.block.email']['email_sender.show_bcc']}:</label>
+				<input name="showBCC" type="checkbox" value="true" onchange="onShowBCChange();"></input>
+			</div>
 			<div class="emailSenderFormItem">
-				<label for="emailSenderBcc">#{localizedStrings['com.idega.block.email']['email_sender.bcc']}:</label>
+				<label id="emailSenderBccLabelId" for="emailSenderBcc">#{localizedStrings['com.idega.block.email']['email_sender.bcc']}:</label>
 				<input id="emailSenderBcc" type="text" name="emailSenderBcc" value="#{emailSenderStateBean.recipientBcc}" />
 			</div>
+			
+			
 			<div class="emailSenderFormItem">
 				<label for="emailSenderSubject">#{localizedStrings['com.idega.block.email']['email_sender.subject']}:</label>
 				<input id="emailSenderSubject" type="text" name="emailSenderSubject" value="#{emailSenderStateBean.subject}" />

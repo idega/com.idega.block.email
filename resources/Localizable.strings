@@ -45,3 +45,5 @@ email_sender.enter_recipient_email=Please enter a valid recipient email address
 email_sender.enter_valid_email=Please enter a valid email address
 email_sender.enter_subject=Please enter subject
 email_sender.enter_message=Please enter some message
+email_sender.show_cc=Show CC
+email_sender.show_bcc=Show BCC

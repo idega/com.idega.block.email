@@ -247,3 +247,33 @@ EmailSenderHelper.getValueFromInput = function(filter, container) {
 	var value = jQuery(objects[objects.length -1]).attr('value');
 	return value == null ? null : value == '' ? null : value;
 }
+
+
+jQuery(document).ready(function() {
+	jQuery('input[type="text"][name="emailSenderCc"]', jQuery('#emailSenderFormId')).hide();
+	jQuery('#emailSenderCcLabelId', jQuery('#emailSenderFormId')).hide();
+	jQuery('input[type="text"][name="emailSenderBcc"]', jQuery('#emailSenderFormId')).hide();
+	jQuery('#emailSenderBccLabelId', jQuery('#emailSenderFormId')).hide();
+});
+
+function onShowCChange() {
+	var value = jQuery('input[type="checkbox"][name="showCC"]', jQuery('#emailSenderFormId')).prop('checked');
+	if (value) {
+		jQuery('input[type="text"][name="emailSenderCc"]', jQuery('#emailSenderFormId')).show();
+		jQuery('#emailSenderCcLabelId', jQuery('#emailSenderFormId')).show();
+	} else {
+		jQuery('input[type="text"][name="emailSenderCc"]', jQuery('#emailSenderFormId')).hide();
+		jQuery('#emailSenderCcLabelId', jQuery('#emailSenderFormId')).hide();
+	}
+}
+
+function onShowBCChange() {
+	var value = jQuery('input[type="checkbox"][name="showBCC"]', jQuery('#emailSenderFormId')).prop('checked');
+	if (value) {
+		jQuery('input[type="text"][name="emailSenderBcc"]', jQuery('#emailSenderFormId')).show();
+		jQuery('#emailSenderBccLabelId', jQuery('#emailSenderFormId')).show();
+	} else {
+		jQuery('input[type="text"][name="emailSenderBcc"]', jQuery('#emailSenderFormId')).hide();
+		jQuery('#emailSenderBccLabelId', jQuery('#emailSenderFormId')).hide();
+	}
+}
