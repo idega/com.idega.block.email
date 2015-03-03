@@ -81,4 +81,11 @@ span.requiredField {
 	display:none;
 }
 
+.helperText {
+	padding-top: 8px;
+	padding-bottom: 8px;
+	width: 250px;
+	position: absolute;
+    right: 0px;
+}
 

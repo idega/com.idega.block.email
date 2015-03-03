@@ -47,3 +47,4 @@ email_sender.enter_subject=Please enter subject
 email_sender.enter_message=Please enter some message
 email_sender.show_cc=Show CC
 email_sender.show_bcc=Show BCC
+email_sender.help_text_for_cc_and_bcc=Select CC or BCC and write an email address into the text field

@@ -20,3 +20,4 @@ email_sender.enter_subject=Ange subjekt
 email_sender.enter_message=Ange några meddelande
 email_sender.show_cc=Visa CC
 email_sender.show_bcc=Visa BCC
+email_sender.help_text_for_cc_and_bcc=Välj CC eller BCC och sedan klicka på ''Visa CC'' för att skriva e-post adress
