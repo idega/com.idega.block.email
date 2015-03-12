@@ -32,6 +32,7 @@ EmailSenderHelper.init = function(){
 		theme_advanced_statusbar_location : "bottom",
 		width : "500px",
 		height : "300px",
+		language : 'sv',
 		//file_browser_callback : 'EmailSenderHelper.openFileBrowser',
 		relative_urls: false
 
