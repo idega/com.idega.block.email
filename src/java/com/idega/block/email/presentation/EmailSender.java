@@ -130,7 +130,7 @@ public class EmailSender extends IWBaseComponent {
 			if (currentUser != null && getUserBusiness(iwc) != null) {
 				try {
 					Email email = getUserBusiness(iwc).getUserMail(currentUser);
-					if (email != null && StringUtils.isNotBlank(email.getEmailAddress())) {
+					if (email != null && !StringUtil.isEmpty(email.getEmailAddress())) {
 						setFrom(email.getEmailAddress());
 					}
 				} catch (Exception e) {
@@ -398,7 +398,7 @@ public class EmailSender extends IWBaseComponent {
 	public UserBusiness getUserBusiness(IWApplicationContext iwc) {
 		if (this.userBiz == null) {
 			try {
-				this.userBiz = (UserBusiness) com.idega.business.IBOLookup.getServiceInstance(iwc, UserBusiness.class);
+				this.userBiz = com.idega.business.IBOLookup.getServiceInstance(iwc, UserBusiness.class);
 			}
 			catch (java.rmi.RemoteException rme) {
 				throw new RuntimeException(rme.getMessage());

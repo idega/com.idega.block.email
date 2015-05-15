@@ -253,7 +253,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	private User getUserByEmail(UserBusiness userBusiness, String email) {
 		User user = null;
 		try {
-			if (userBusiness != null && StringUtils.isNotBlank(email)) {
+			if (userBusiness != null && !StringUtil.isEmpty(email)) {
 				Collection<User> senderUsersCol = userBusiness.getUsersByEmail(email);
 				if (senderUsersCol != null && !senderUsersCol.isEmpty()) {
 					user = senderUsersCol.iterator().next();
@@ -272,7 +272,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	 * @param addresses Addresses to be added
 	 */
 	private void addRecipients(List<String> addressesList, String addresses) {
-		if (StringUtils.isNotBlank(addresses)) {
+		if (!StringUtil.isEmpty(addresses)) {
 			String fixedAddresses = StringHandler.replace(addresses, CoreConstants.SEMICOLON, CoreConstants.COMMA).trim();
 			if (doValidateAddresses(fixedAddresses)) {
 				addressesList.addAll(Arrays.asList(StringUtils.split(fixedAddresses, CoreConstants.COMMA)));
