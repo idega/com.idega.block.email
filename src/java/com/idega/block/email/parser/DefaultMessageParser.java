@@ -127,16 +127,12 @@ public abstract class DefaultMessageParser implements EmailParser {
 		//	Checking if mail is auto generated
 		if (doExistHeaderFlag(message, SendMail.HEADER_AUTO_SUBMITTED, "auto-generated") &&
 				!doExistHeaderFlag(message, SendMail.HEADER_PRECEDENCE, "bulk")) {
-			LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
-					") is auto generated, skipping it");
 			return false;
 		}
 
 		//	Checking if mail is auto reply
 		if (!StringUtil.isEmpty(subject)) {
 			if (subject.toLowerCase().indexOf("[autoreply]") != -1) {
-				LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
-						") is a result of auto reply, skipping it");
 				return false;
 			}
 		}
@@ -144,8 +140,6 @@ public abstract class DefaultMessageParser implements EmailParser {
 		//	Checking if mail is report type
 		try {
 			if (message.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
-				LOGGER.warning("Message (subject: " + subject + ", sent: " + sentDate + ", content type: " + contentType +
-						") is a report, skipping it");
 				return false;
 			}
 		} catch (MessagingException e) {
