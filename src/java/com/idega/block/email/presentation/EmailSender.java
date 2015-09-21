@@ -44,18 +44,21 @@ import com.idega.util.expression.ELUtil;
  */
 public class EmailSender extends IWBaseComponent {
 
-	public static final String FROM_PARAMETER = "from";
-	public static final String REPLY_TO_PARAMETER = "replyTo";
-	public static final String RECIPIENT_TO_PARAMETER = "recipientTo";
-	public static final String RECIPIENT_CC_PARAMETER = "recipientCc";
-	public static final String RECIPIENT_BCC_PARAMETER = "recipientBcc";
-	public static final String SUBJECT_PARAMETER = "subject";
-	public static final String MESSAGE_PARAMETER = "message";
+	public static final String	FROM_PARAMETER = "from",
+								REPLY_TO_PARAMETER = "replyTo",
+								RECIPIENT_TO_PARAMETER = "recipientTo",
+								RECIPIENT_CC_PARAMETER = "recipientCc",
+								RECIPIENT_BCC_PARAMETER = "recipientBcc",
+								SUBJECT_PARAMETER = "subject",
+								MESSAGE_PARAMETER = "message",
 
-	public static final String EXTERNAL_PARAMETERS = "externalParameters";
-	public static final String NAMES_FOR_EXTERNAL_PARAMETERS = "namesForExternalParameters";
+								EXTERNAL_PARAMETERS = "externalParameters",
+								NAMES_FOR_EXTERNAL_PARAMETERS = "namesForExternalParameters",
 
-	public static final String ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER = "allowChangeRecipientAddress";
+								ALLOW_CHANGE_RECIPIENT_ADDRESS_PARAMETER = "allowChangeRecipientAddress",
+								USE_RICH_TEXT_EDITOR = "useRichTextEditor",
+
+								ALLOW_MULTIPLE_FILES = "allowMultipleFiles";
 
 	@Autowired
 	private EmailSenderStateBean emailSender;
@@ -81,9 +84,11 @@ public class EmailSender extends IWBaseComponent {
 
 	private boolean allowChangeRecipientAddress = true,
 					useRichTextEditor = false,
-					saveMessageIntoDB = false;
+					saveMessageIntoDB = false,
 
-	private boolean addressFromReadOnly = false;
+					allowMultipleFiles = false,
+
+					addressFromReadOnly = false;
 
 	@Override
 	protected void initializeComponent(FacesContext context) {
@@ -115,13 +120,10 @@ public class EmailSender extends IWBaseComponent {
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, jQuery.getBundleURISToValidation(false));
 
 		//	TinyMCE
-		if (isUseRichTextEditor()) {
-			PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, web2.getScriptsForTinyMCE());
+		if (isUseRichTextEditor() || (iwc.isParameterSet(USE_RICH_TEXT_EDITOR) && Boolean.valueOf(iwc.getParameter(USE_RICH_TEXT_EDITOR)))) {
+			PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, web2.getScriptsForTinyMCE("4.1.7"));
 			PresentationUtil.addJavaScriptSourceLineToHeader(iwc, bundle.getVirtualPathWithFileNameString("javascript/TinyMCEInit.js"));
-			//List<String> tinyMceFiles = Arrays.asList("tiny_mce.js");
-			//PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, web2.getBundleUrisToTinyMceScriptFiles("3.5b3", tinyMceFiles));
 		}
-
 
 		if (iwc.isParameterSet(FROM_PARAMETER)) {
 			setFrom(iwc.getParameter(FROM_PARAMETER));
@@ -192,6 +194,8 @@ public class EmailSender extends IWBaseComponent {
 
 		getEmailSender().setAllowChangeRecipientAddress(isAllowChangeRecipientAddress());
 
+		getEmailSender().setAllowMultipleFiles(isAllowMultipleFiles() || (iwc.isParameterSet(ALLOW_MULTIPLE_FILES) && Boolean.valueOf(iwc.getParameter(ALLOW_MULTIPLE_FILES))));
+
 		String initAction = new StringBuilder("EmailSenderHelper.setLocalizations({sending: '")
 			.append(iwrb.getLocalizedString("email_sender.sending", "Sending...")).append("', error: '")
 			.append(iwrb.getLocalizedString("email_sender.error", "Ooops... Some error occurred while sending email...")).append("', success: '")
@@ -225,8 +229,7 @@ public class EmailSender extends IWBaseComponent {
 					properties.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 				}
 			}
-		}
-		else {
+		} else {
 			for (int i = 0; i < externalParameters.size(); i++) {
 				properties.append(getProperty(namesForExternalParameters.get(i), externalParameters.get(i)));
 
@@ -407,5 +410,12 @@ public class EmailSender extends IWBaseComponent {
 		return this.userBiz;
 	}
 
+	public boolean isAllowMultipleFiles() {
+		return allowMultipleFiles;
+	}
+
+	public void setAllowMultipleFiles(boolean allowMultipleFiles) {
+		this.allowMultipleFiles = allowMultipleFiles;
+	}
 
 }

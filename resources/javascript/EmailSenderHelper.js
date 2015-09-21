@@ -13,76 +13,33 @@ EmailSenderHelper.localizations = {
 
 EmailSenderHelper.properties = null;
 
+EmailSenderHelper.settings = {
+		validateBCCMail: true
+};
+
 EmailSenderHelper.setLocalizations = function(localizations) {
 	EmailSenderHelper.localizations = localizations;
 }
 
 EmailSenderHelper.init = function(){
-	tinyMCE.init({
-		// General options
-		mode : "textareas",
-		theme : "advanced",
-		plugins : "autolink,lists,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,inlinepopups,autosave",
+	tinymce.init({
+	    selector: "textarea",
+	    plugins: [
+	              "advlist autolink lists link image charmap print preview hr anchor pagebreak",
+	              "searchreplace wordcount visualblocks visualchars code fullscreen",
+	              "insertdatetime media nonbreaking save table contextmenu directionality",
+	              "emoticons template paste textcolor colorpicker textpattern"
+	    ],
+	    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
 
-		theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,fontselect,fontsizeselect,cut,copy,paste,pastetext,pasteword,|,search,replace,|,bullist,numlist",
-		theme_advanced_buttons2 :"outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate, inserttime,preview,|,forecolor,backcolor,tablecontrols,|",
-		theme_advanced_buttons3 : "hr,removeformat,visualaid,|,sub,sup,|,charmap,emotions,iespell,media,advhr,|,print,|,ltr,rtl,|,fullscreen,insertlayer,moveforward,movebackward,absolute,|,styleprops,|,cite,abbr,acronym,del,ins,attribs,|,visualchars,nonbreaking,template,pagebreak,restoredraft",
-		theme_advanced_toolbar_location : "top",
-		theme_advanced_toolbar_align : "left",
-		theme_advanced_statusbar_location : "bottom",
-		width : "500px",
-		height : "300px",
-		//file_browser_callback : 'EmailSenderHelper.openFileBrowser',
-		relative_urls: false
-
+	    relative_urls: false
 	});
-	
 }
-
-
-//EmailSenderHelper.init = function(){
-//	tinyMCE.init({
-//		// General options
-//		mode : "textareas",
-//		theme : "advanced",
-//		plugins : "autolink,lists,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,inlinepopups,autosave",
-//
-//		theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,styleselect,formatselect,fontselect,fontsizeselect,cut,copy,paste,pastetext,pasteword,|,search,replace",
-//		theme_advanced_buttons2 :"bullist,numlist,|,outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate, inserttime,preview,|,forecolor,backcolor,tablecontrols,|",
-//		theme_advanced_buttons3 : "hr,removeformat,visualaid,|,sub,sup,|,charmap,emotions,iespell,media,advhr,|,print,|,ltr,rtl,|,fullscreen,insertlayer,moveforward,movebackward,absolute,|,styleprops,|,cite,abbr,acronym,del,ins,attribs,|,visualchars,nonbreaking,template,pagebreak,restoredraft",
-//		theme_advanced_toolbar_location : "top",
-//		theme_advanced_toolbar_align : "left",
-//		theme_advanced_statusbar_location : "bottom",
-//		width : "100%",
-//		height : "200px",
-//		//file_browser_callback : 'EmailSenderHelper.openFileBrowser',
-//		relative_urls: false
-//
-//	});
-//	
-//}
 
 function onLoad() { 
 	var textAreaValue = EmailSenderHelper.getValueFromInput('input[type=\'hidden\'][name=\'textAreaValue\']', jQuery('#emailSenderFormId'));
-	tinyMCE.get('emailSenderMessage').setContent(textAreaValue);
+	tinymce.get('emailSenderMessage').setContent(textAreaValue);
 }
-
-//EmailSenderHelper.openFileBrowser = function(field_name, url, type, win) {
-//    tinyMCE.activeEditor.windowManager.open({
-//        file : EmailSenderHelper.URI_TO_FILE_BROWSER,
-//        title : 'My File Browser',
-//        width : "300px",//document.body.offsetWidth * 0.8,  // Your dimensions may differ - toy around with them!
-//        height : "150px",//document.body.offsetHeight * 0.8,
-//        resizable : "yes",
-//        inline : "yes",  // This parameter only has an effect if you use the inlinepopups plugin!
-//        close_previous : "no"
-//    }, {
-//        window : win,
-//        input : field_name
-//    });
-//    return false;
-// }
-
 
 EmailSenderHelper.setProperties = function(properties) {
 	EmailSenderHelper.properties = properties;
@@ -130,7 +87,7 @@ EmailSenderHelper.proceedValidator = function() {
 				email: true
 			},
 			emailSenderBcc: {
-				email: true
+				email: EmailSenderHelper.settings.validateBCCMail
 			}
 		},
 		messages: {
@@ -180,10 +137,9 @@ EmailSenderHelper.proceedSendingMessage = function() {
 		message = tinyMCE.get('emailSenderMessage').getContent();
 	}
 	
-	var attachment = null;
-	
 	showLoadingMessage(EmailSenderHelper.localizations.sending);
-	EmailSender.sendMessage(EmailSenderHelper.getMessageParametersObject(from, replyTo, recipientTo, recipientCc, recipientBcc, subject, message, attachment), {
+	var params = EmailSenderHelper.getMessageParametersObject(from, replyTo, recipientTo, recipientCc, recipientBcc, subject, message, null);
+	EmailSender.sendMessage(params, {
 		callback: function(result) {
 			closeAllLoadingMessages();
 			
