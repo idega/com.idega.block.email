@@ -75,9 +75,6 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	@Autowired
 	private ApplicationContext context;
 
-//	@Autowired
-//	private CommuneMessageBusiness communeMessageBusiness;
-
 	@Override
 	@RemoteMethod
 	public boolean sendMessage(MessageParameters parameters) {
@@ -93,8 +90,21 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		Message mail = null;
 		boolean success = false;
 		try {
-			mail = SendMail.send(parameters.getFrom(), parameters.getRecipientTo(), parameters.getRecipientCc(), parameters.getRecipientBcc(), parameters.getReplyTo(),
-					host, parameters.getSubject(), parameters.getMessage(), MimeTypeUtil.MIME_TYPE_HTML, null, false, false, attachedFile);
+			mail = SendMail.send(
+					parameters.getFrom(),
+					parameters.getRecipientTo(),
+					parameters.getRecipientCc(),
+					parameters.getRecipientBcc(),
+					parameters.getReplyTo(),
+					host,
+					parameters.getSubject(),
+					parameters.getMessage(),
+					MimeTypeUtil.MIME_TYPE_HTML,
+					null,
+					false,
+					false,
+					attachedFile
+			);
 			success = mail != null;
 
 			if (parameters.isSaveMessageIntoDB()) {

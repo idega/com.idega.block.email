@@ -12,6 +12,7 @@ import com.idega.core.contact.data.EmailType;
 import com.idega.core.contact.data.EmailTypeBMPBean;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -50,6 +51,8 @@ public class EmailSenderStateBean {
 	private boolean saveMessageIntoDB = false;
 
 	private boolean addressFromReadOnly = false;
+
+	private boolean allowMultipleFiles = false;
 
 	public String getFrom() {
 		if (from == null) {
@@ -173,5 +176,25 @@ public class EmailSenderStateBean {
 		this.addressFromReadOnly = addressFromReadOnly;
 	}
 
+	public boolean isAllowMultipleFiles() {
+		return allowMultipleFiles;
+	}
+	public void setAllowMultipleFiles(boolean allowMultipleFiles) {
+		this.allowMultipleFiles = allowMultipleFiles;
+	}
+
+	private String uploadPath;
+
+	public String getUploadPath() {
+		if (uploadPath == null) {
+			uploadPath = CoreConstants.PUBLIC_PATH;
+		}
+
+		return uploadPath;
+	}
+
+	public void setUploadPath(String uploadPath) {
+		this.uploadPath = uploadPath;
+	}
 
 }

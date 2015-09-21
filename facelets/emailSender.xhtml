@@ -26,7 +26,7 @@ xmlns="http://www.w3.org/1999/xhtml">
 					<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}:
 						<span class="requiredField">*</span>
 					</label>
-					<input id="emailSenderFrom" class="required" type="text" name="emailSenderFrom" value="#{emailSenderStateBean.from}"/>
+					<input id="emailSenderFrom" class="email-form-input email-form-from required" type="text" name="emailSenderFrom" value="#{emailSenderStateBean.from}"/>
 				</t:div>
 				<t:div rendered="#{emailSenderStateBean.addressFromReadOnly}">
 					<label for="emailSenderFrom">#{localizedStrings['com.idega.block.email']['email_sender.from']}: </label>
@@ -36,36 +36,44 @@ xmlns="http://www.w3.org/1999/xhtml">
 		 	</div>
 		 	<div class="emailSenderFormItem">
 				<label for="emailSenderReplyTo">#{localizedStrings['com.idega.block.email']['email_sender.reply_to']}:</label>
-				<input id="emailSenderReplyTo" type="text" name="emailSenderReplyTo" value="#{emailSenderStateBean.replyTo}" />
+				<input id="emailSenderReplyTo" class="email-form-input email-form-reply-to" type="text" name="emailSenderReplyTo" value="#{emailSenderStateBean.replyTo}" />
 		 	</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderTo">#{localizedStrings['com.idega.block.email']['email_sender.to']}:
 					<span class="requiredField">*</span>
 				</label>
-				<input id="emailSenderTo" class="required" type="text" name="emailSenderTo" value="#{emailSenderStateBean.recipientTo}" />
+				<input id="emailSenderTo" class="email-form-input email-form-to required" type="text" name="emailSenderTo" value="#{emailSenderStateBean.recipientTo}" />
 			</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderCc">#{localizedStrings['com.idega.block.email']['email_sender.cc']}:</label>
-				<input id="emailSenderCc" type="text" name="emailSenderCc" value="#{emailSenderStateBean.recipientCc}" />
+				<input id="emailSenderCc" class="email-form-input email-form-cc" type="text" name="emailSenderCc" value="#{emailSenderStateBean.recipientCc}" />
 			</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderBcc">#{localizedStrings['com.idega.block.email']['email_sender.bcc']}:</label>
-				<input id="emailSenderBcc" type="text" name="emailSenderBcc" value="#{emailSenderStateBean.recipientBcc}" />
+				<input id="emailSenderBcc" class="email-form-input email-form-bcc" type="text" name="emailSenderBcc" value="#{emailSenderStateBean.recipientBcc}" />
 			</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderSubject">#{localizedStrings['com.idega.block.email']['email_sender.subject']}:</label>
-				<input id="emailSenderSubject" type="text" name="emailSenderSubject" value="#{emailSenderStateBean.subject}" />
+				<input id="emailSenderSubject" class="email-form-input email-form-subject" type="text" name="emailSenderSubject" value="#{emailSenderStateBean.subject}" />
 			</div>
 			<div class="emailSenderFormItem">
 				<label>#{localizedStrings['com.idega.block.email']['email_sender.upload_file']}:</label>
-				<content:fileUploadViewer allowMultipleFiles="false" autoAddFileInput="false" autoUpload="true" showUploadedFiles="true" formId="emailSenderFormId" />
-			</div>
+				<content:fileUploadViewer
+					allowMultipleFiles="#{emailSenderStateBean.allowMultipleFiles}"
+					autoUpload="true"
+					autoAddFileInput="false"
+					showUploadedFiles="true"
+					formId="emailSenderFormId"
+					stripNonRomanLetters="true"
+					uploadPath="#{emailSenderStateBean.uploadPath}"
+				/>	
+				</div>
 			<div class="emailSenderFormItem">
 				<label for="emailSenderMessage">#{localizedStrings['com.idega.block.email']['email_sender.message']}:</label>
-				<textarea id="emailSenderMessage" name="emailSenderMessage" cols="25" rows="10" />
+				<textarea id="emailSenderMessage" class="email-form-input email-form-message" name="emailSenderMessage" cols="25" rows="10" />
 			</div>
 			
-			<div class="emailSenderButtons">
+			<div class="emailSenderButtons buttonLayer">
 				<input type="button" value="#{localizedStrings['com.idega.block.email']['email_sender.send']}" onclick="EmailSenderHelper.sendMessage(event);" />
 			</div>
 		</form>
