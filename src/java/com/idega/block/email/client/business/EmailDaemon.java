@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.email.bean.FoundMessagesInfo;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWMainApplicationShutdownEvent;
@@ -36,9 +36,8 @@ import com.idega.util.datastructures.map.MapUtil;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class EmailDaemon implements ApplicationContextAware, ApplicationListener<ApplicationEvent>, ActionListener {
+public class EmailDaemon extends DefaultSpringBean implements ApplicationContextAware, ApplicationListener<ApplicationEvent>, ActionListener {
 
-	private static final Logger LOGGER = Logger.getLogger(EmailDaemon.class.getName());
 	public static final String THREAD_NAME = "email_daemon";
 
 	private EventTimer emailTimer;
@@ -71,7 +70,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 			emailTimer.start(checkInterval);
 
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Exception while starting up email daemon", e);
+			getLogger().log(Level.SEVERE, "Exception while starting up email daemon", e);
 		}
 	}
 
@@ -86,7 +85,12 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 					lock.lock();
 
 					try {
-						IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+						IWMainApplicationSettings settings = getSettings();
+						if (settings == null) {
+							getLogger().warning(IWMainApplicationSettings.class.getSimpleName() + " not available!");
+							return;
+						}
+
 						String host = settings.getProperty(PROP_MAIL_HOST, CoreConstants.EMPTY);
 						accountName = settings.getProperty(CoreConstants.PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 						String protocol = settings.getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
@@ -96,7 +100,7 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 							return;
 						}
 						if (StringUtil.isEmpty(accountName) || StringUtil.isEmpty(protocol) || StringUtil.isEmpty(password)) {
-							LOGGER.warning("Mail properties are empty: either account name (" + accountName + ") or email protocol (" + protocol +
+							getLogger().warning("Mail properties are empty: either account name (" + accountName + ") or email protocol (" + protocol +
 									") or password for the mailbox ("+password+") are not known!");
 							return;
 						}
@@ -108,21 +112,21 @@ public class EmailDaemon implements ApplicationContextAware, ApplicationListener
 						if (MapUtil.isEmpty(messages)) {
 							emailFinder.logout(params);
 						} else {
-							LOGGER.info("Found " + messages.size() + " new emails at " + accountName + ". Keys: " + messages.keySet());
+							getLogger().info("Found " + messages.size() + " new emails at " + accountName + ". Keys: " + messages.keySet());
 							ApplicationEmailEvent eventEmail = new ApplicationEmailEvent(this);
 							eventEmail.setMessages(messages);
 							eventEmail.setEmailParams(params);
 							ctx.publishEvent(eventEmail);
 						}
 					} catch (Exception e) {
-						LOGGER.log(Level.WARNING, "Error scanning " + accountName + " for new emails. Parameters: " + params, e);
+						getLogger().log(Level.WARNING, "Error scanning " + accountName + " for new emails. Parameters: " + params, e);
 					} finally {
 						lock.unlock();
 					}
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Exception while processing emails found in " + accountName + ". Parameters: " + params, e);
+			getLogger().log(Level.WARNING, "Exception while processing emails found in " + accountName + ". Parameters: " + params, e);
 		}
 
 	}
