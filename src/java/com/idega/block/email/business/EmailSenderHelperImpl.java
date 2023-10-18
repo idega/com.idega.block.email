@@ -175,9 +175,11 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 				StringHandler.stripNonRomanCharacters(name, new char[] {'-', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}));
 		fileName = fileName.concat(".zip");
 		try {
-			return FileUtil.getZippedFiles(filesToZip, fileName);
+			File zippedFile = FileUtil.getZippedFiles(filesToZip, fileName);
+			LOGGER.info("Zipped files " + filesToZip + " into " + fileName + ": " + zippedFile);
+			return zippedFile;
 		} catch(Exception e) {
-			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInRepository);
+			LOGGER.log(Level.WARNING, "Error zipping uploaded files: " + filesInRepository, e);
 		}
 
 		return null;
