@@ -22,6 +22,7 @@ public class EmailParams {
 	private Store store;
 	private String protocol;
 	private Message[] messagesFound;
+	private Integer port;
 
 	private boolean loggedOut;
 
@@ -80,9 +81,17 @@ public class EmailParams {
 		this.loggedOut = loggedOut;
 	}
 
+
+
+	public Integer getPort() {
+		return port;
+	}
+	public void setPort(Integer port) {
+		this.port = port;
+	}
 	@Override
 	public String toString() {
 		return "Hostname: " + getHostname() + ", protocol: " + getProtocol() + ", user name: " + getUsername() + ", password: " +
-				getPassword() + ", session: " + getSession() + ", store: " + getStore() + ", folder: " + getFolder();
+				getPassword() + ", session: " + getSession() + ", store: " + getStore() + ", folder: " + getFolder() + ", port: " + getPort();
 	}
 }

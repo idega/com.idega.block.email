@@ -1,6 +1,9 @@
 package com.idega.block.email.business;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +14,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.lang.StringUtils;
 import org.directwebremoting.annotations.Param;
@@ -24,6 +32,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.email.EmailConstants;
 import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParameters;
 import com.idega.block.email.bean.MessageParserType;
@@ -40,6 +49,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 import com.idega.util.EmailValidator;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
@@ -48,6 +58,7 @@ import com.idega.util.SendMail;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+import com.sun.mail.imap.IMAPNestedMessage;
 
 /**
  * Implementation for {@link EmailSenderHelper}. Spring/DWR bean
@@ -321,4 +332,309 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			throw new IBORuntimeException(ile);
 		}
 	}
+
+	@Override
+	public Object[] getParsedContent(Message msg) {
+		return getParsedContent(msg, true);
+	}
+
+	@Override
+	public Object[] getParsedContent(Message msg, boolean full) {
+		String messageTxt = CoreConstants.EMPTY;
+
+		Object[] msgAndAttachments = new Object[2];
+		try {
+			Object content = msg.getContent();
+			Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
+			msgAndAttachments[1] = attachemntMap;
+			msgAndAttachments[0] = messageTxt;
+			if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
+				if (content instanceof String) {
+					msgAndAttachments[0] = parsePlainTextMessage((String) content);
+				}
+
+			} else if (msg.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
+				if (content instanceof String) {
+					msgAndAttachments[0] = parseHTMLMessage((String) content);
+				}
+
+			} else if (msg.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
+				msgAndAttachments = parseMultipartMixed((Multipart) content, full);
+
+			} else if (msg.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
+				IMAPNestedMessage nestedMessage = (IMAPNestedMessage) msg.getContent();
+				msgAndAttachments = parseRFC822(nestedMessage, full);
+
+			} else if (msg.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
+				msgAndAttachments = parseMultipartAlternative((Multipart) content, full);
+
+			} else if (msg.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
+				msgAndAttachments[0] = parseMultipartRelated((Multipart) msg.getContent());
+
+			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
+				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +	") is signed! Parsing may be incorrect!");
+				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent(), full);
+
+			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_REPORT)) {
+				msgAndAttachments[0] = getParsedMultipart((Multipart) msg.getContent(), full);
+
+			} else {
+				String message = "There is no content parser for MIME type ('" + msg.getContentType() + "') message: " + msg + ", subject: " + msg.getSubject();
+				LOGGER.warning(message);
+				CoreUtil.sendExceptionNotification(message, null);
+				return null;
+			}
+		} catch (MessagingException e) {
+			LOGGER.log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+		} catch (Exception e) {
+
+		}
+		return msgAndAttachments;
+	}
+
+	private Object[] getParsedMultipart(Multipart mp, boolean full) throws MessagingException, IOException {
+		return parseMultipartMixed(mp, full);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object[] parseMultipartMixed(Multipart messageMultipart, boolean full) throws MessagingException, IOException {
+		String msg = CoreConstants.EMPTY;
+		Object[] msgAndAttachements = new Object[2];
+		Map<String, InputStream> attachmenstMap = new HashMap<String, InputStream>();
+		msgAndAttachements[1] = attachmenstMap;
+		for (int i = 0; i < messageMultipart.getCount(); i++) {
+			Part messagePart = messageMultipart.getBodyPart(i);
+			String contentType = messagePart.getContentType();
+			String disposition = messagePart.getDisposition();
+			// it is attachment
+			if ((disposition != null) && (!messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) && ((disposition.equalsIgnoreCase(Part.ATTACHMENT) ||
+																											disposition.equalsIgnoreCase(Part.INLINE)))) {
+				//	Copying attachments to memory
+				InputStream input = messagePart.getInputStream();
+				ByteArrayOutputStream memory = new ByteArrayOutputStream();
+				FileUtil.streamToOutputStream(input, memory);
+				InputStream streamFromMemory = new ByteArrayInputStream(memory.toByteArray());
+				IOUtil.closeInputStream(input);
+				IOUtil.closeOutputStream(memory);
+
+				String fileName = messagePart.getFileName();
+				if (fileName != null) {
+					fileName = MimeUtility.decodeText(fileName);
+				} else if (contentType.indexOf("name*=") != -1) {
+					// When attachments send from evolution mail client,
+					// there is errors so we do what we can.
+					fileName = contentType.substring(contentType.indexOf("name*=") + 6);
+					// maybe we are lucky to decode it, if not, well
+					// better something then nothing.
+					fileName = MimeUtility.decodeText(fileName);
+
+				} else {
+					// well not much can be done then can it?:)
+					fileName = "UnknownFile";
+				}
+				attachmenstMap.put(fileName, streamFromMemory);
+
+				// It's a message body
+			} else if (messagePart.getContent() instanceof String) {
+				if (messagePart.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
+					if (StringUtil.isEmpty(msg) || full) {
+						msg += parseHTMLMessage((String) messagePart.getContent());
+					}
+				} else {
+					// it's plain text
+					if (StringUtil.isEmpty(msg) || full) {
+						msg += (String) messagePart.getContent();
+					}
+				}
+
+				// "multipart/Mixed" can have multipart/alternative sub type.
+			} else if (messagePart.getContent() instanceof Multipart && (messagePart.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE) || contentType.toLowerCase().equals(EmailConstants.MULTIPART_ALTERNATIVE_TYPE))) {
+				Object[] parsedMsg = parseMultipartMixed((Multipart) messagePart.getContent(), full);
+				msg += parsedMsg[0];
+
+				attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+
+			} else if (messagePart.getContent() instanceof Multipart && (messagePart.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE) || contentType.toLowerCase().equals(EmailConstants.MULTIPART_RELATED_TYPE))) {
+				msg += parseMultipartRelated((Multipart) messagePart.getContent());
+
+			} else if (messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
+				IMAPNestedMessage nestedMessage = (IMAPNestedMessage) messagePart.getContent();
+
+				Object[] parsedMsg = parseRFC822(nestedMessage, full);
+
+				msg += parsedMsg[0];
+				attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+
+			} else if (messagePart.getContent() instanceof Multipart) {
+				Object[] parsedMsg = parseMultipartMixed((Multipart) messagePart.getContent(), full);
+				if (!ArrayUtil.isEmpty(parsedMsg)) {
+					msg += parsedMsg[0];
+
+					attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+				}
+
+			} else {
+				Object content = messagePart.getContent();
+				LOGGER.warning("Do not know how to handle content type " + messagePart.getContentType() + ", content: " + (content == null ? "unknown" : content.getClass().getName()));
+			}
+		}
+		msgAndAttachements[0] = msg;
+		return msgAndAttachements;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object[] parseRFC822(IMAPNestedMessage part, boolean full) throws MessagingException, IOException {
+		String msg = CoreConstants.EMPTY;
+
+		Object[] msgAndAttachements = new Object[2];
+		Map<String, InputStream> attachmentMap = new HashMap<String, InputStream>();
+		msgAndAttachements[1] = attachmentMap;
+
+		if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
+			//	Plain text
+			if (part.getContent() instanceof String) {
+				if (StringUtil.isEmpty(msg) || full) {
+					msg += parsePlainTextMessage((String) part.getContent());
+				}
+			}
+			msgAndAttachements[0] = msg;
+
+		} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
+			//	HTML
+			if (part.getContent() instanceof String) {
+				if (StringUtil.isEmpty(msg) || full) {
+					msg += parseHTMLMessage((String) part.getContent());
+				}
+			}
+			msgAndAttachements[0] = msg;
+
+		} else if (part.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
+			//	Multipart mixed
+			msgAndAttachements = parseMultipartMixed((Multipart) part.getContent(), full);
+
+		} else if (part.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
+			//	Multipart alternative
+			Object[] parsedMsg = parseMultipartMixed((Multipart) part.getContent(), full);
+			msg += parsedMsg[0];
+
+			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+
+			//msg += parseMultipartAlternative((MimeMultipart) part.getContent());
+			msgAndAttachements[0] = msg;
+
+		} else if (part.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE) || part.getContentType().toLowerCase().equals("multipart/related")) {
+			//	Multipart related
+			msg += parseMultipartRelated((Multipart) part.getContent());
+			msgAndAttachements[0] = msg;
+
+		} else if (part.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
+			//	RCF822
+			IMAPNestedMessage nestedMessage = (IMAPNestedMessage) part.getContent();
+
+			Object[] parsedMsg = parseRFC822(nestedMessage, full);
+			msg += parsedMsg[0];
+
+			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+
+		} else if (part.getContent() instanceof Multipart) {
+			Object[] parsedMsg = parseMultipartMixed((Multipart) part.getContent(), full);
+			if (!ArrayUtil.isEmpty(parsedMsg)) {
+				msg += parsedMsg[0];
+
+				attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+			}
+
+		} else {
+			Object content = part.getContent();
+			LOGGER.warning("Do not know how to handle content type " + part.getContentType() + ", content: " + (content == null ? "unknown" : content.getClass().getName()));
+		}
+
+		return msgAndAttachements;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object[] parseMultipartAlternative(Multipart multipart, boolean full) throws MessagingException, IOException {
+		String msg = CoreConstants.EMPTY;
+
+		Object[] msgAndAttachements = new Object[2];
+		Map<String, InputStream> attachmentMap = new HashMap<String, InputStream>();
+		msgAndAttachements[1] = attachmentMap;
+
+		for (int i = 0; i < multipart.getCount(); i++) {
+			Part part = multipart.getBodyPart(i);
+			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
+				if (StringUtil.isEmpty(msg) || full) {
+					msg += parseHTMLMessage((String) part.getContent());
+				}
+				msgAndAttachements[0] = msg;
+			} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
+				if (StringUtil.isEmpty(msg) || full) {
+					msg += parsePlainTextMessage((String) part.getContent());
+				}
+				msgAndAttachements[0] = msg;
+			} else if (part.getContent() instanceof Multipart && part.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
+				Object[] parsedMsg = parseMultipartMixed((Multipart) part.getContent(), full);
+				if (parsedMsg[0] != null && parsedMsg[0] instanceof String) {
+					msg += (String) parsedMsg[0];
+				}
+
+				attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+			}
+		}
+
+		return msgAndAttachements;
+	}
+
+	private String parseMultipartRelated(Multipart multipart) throws MessagingException, IOException {
+		String content = null;
+		StringBuffer allContent = new StringBuffer();
+
+		for (int i = 0; i < multipart.getCount(); i++) {
+			BodyPart part = multipart.getBodyPart(i);
+			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
+				content = parseHTMLMessage((String) part.getContent());
+				if (content != null) {
+					return content;
+				}
+			/*} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
+				content = parsePlainTextMessage((String) part.getContent());
+				if (content != null) {
+					return content;
+				}*/
+			} else {
+				String contentType = multipart.getContentType();
+				Object contentObject = part.getContent();
+				if (contentObject instanceof Multipart) {
+					String partContent = parseMultipartRelated((Multipart) contentObject);
+					if (partContent != null) {
+						allContent.append(partContent);
+					}
+				} else if (contentObject instanceof Message) {
+					LOGGER.warning("Do not know how to handle content object (" + Message.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass());
+				} else if (contentObject instanceof String) {
+					allContent.append((String) contentObject);
+				} else if (contentObject instanceof InputStream) {
+					LOGGER.warning("Do not know how to handle content object (" + InputStream.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass());
+				} else {
+					LOGGER.warning("Unhandled content: " + contentType + ", content object: " + contentObject.getClass());
+				}
+			}
+		}
+
+		return content == null ? allContent.toString() : content;
+	}
+
+	private String parseHTMLMessage(String message) {
+		return message;// "<[!CDATA ["+ message+"]]>";
+	}
+
+	private String parsePlainTextMessage(String message) {
+		String msgWithEscapedHTMLChars = StringUtil.escapeHTMLSpecialChars(message);
+		// replacing all new line characktes to <br/> so it will
+		// be displayed in html as it should
+		return msgWithEscapedHTMLChars.replaceAll("\n", "<br/>");
+	}
+
 }

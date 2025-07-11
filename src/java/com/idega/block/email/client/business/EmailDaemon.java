@@ -50,6 +50,7 @@ public class EmailDaemon extends DefaultSpringBean implements ApplicationContext
 	public static final String PROP_MAIL_HOST = "mail_host";
 	private static final String PROP_SYSTEM_PROTOCOL = "mail_protocol";
 	private static final String PROP_SYSTEM_PASSWORD = "mail_password";
+	private static final String PROP_SYSTEM_PORT = "mail_port";
 
 	public void start() {
 
@@ -95,6 +96,7 @@ public class EmailDaemon extends DefaultSpringBean implements ApplicationContext
 						accountName = settings.getProperty(CoreConstants.PROP_SYSTEM_ACCOUNT, CoreConstants.EMPTY);
 						String protocol = settings.getProperty(PROP_SYSTEM_PROTOCOL, CoreConstants.EMPTY);
 						String password = settings.getProperty(PROP_SYSTEM_PASSWORD, CoreConstants.EMPTY);
+						Integer port = settings.getInt(PROP_SYSTEM_PORT, -1);
 
 						if (StringUtil.isEmpty(host)) {
 							return;
@@ -106,7 +108,7 @@ public class EmailDaemon extends DefaultSpringBean implements ApplicationContext
 						}
 
 						EmailSubjectPatternFinder emailFinder = getEmailFinder();
-						params = emailFinder.login(host, accountName, password, protocol);
+						params = emailFinder.login(host, accountName, password, protocol, port);
 						// Getting message map
 						Map<String, FoundMessagesInfo> messages = emailFinder.getMessageMap(params);
 						if (MapUtil.isEmpty(messages)) {

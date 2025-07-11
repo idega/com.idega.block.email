@@ -58,7 +58,15 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 	}
 
 	public void moveMessage(Message message, EmailParams params) throws MessagingException {
-		moveMessage(message, params.getFolder(), params.getStore().getFolder(MSGS_FOLDER), params, true);
+		String readMessagesFolder = getSettings().getProperty("messages.read_email_msg_folder", MSGS_FOLDER);
+
+		moveMessage(
+				message,
+				params.getFolder(),
+				params.getStore().getFolder(readMessagesFolder),
+				params,
+				true
+		);
 	}
 
 	public void moveMessage(Message message, EmailParams params, String destinationFolderName) throws MessagingException {
@@ -150,7 +158,12 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 
 		params.setStore(store);
 
-		store.connect(params.getHostname(), params.getUsername(), params.getPassword());
+		store.connect(
+				params.getHostname(),
+				params.getPort() != null ? params.getPort().intValue() : -1,
+				params.getUsername(),
+				params.getPassword()
+		);
 
 		String folderName = IWMainApplication.getDefaultIWMainApplication().getSettings().getProperty("mail_inbox_folder", DEFAULT_FOLDER);
 		Folder folder = store.getFolder(folderName);
@@ -164,13 +177,14 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 	/**
 	 * Method used to login to the mail inbox.
 	 */
-	public EmailParams login(String hostname, String username, String password,  String protocol) throws Exception {
+	public EmailParams login(String hostname, String username, String password,  String protocol, Integer port) throws Exception {
 
 		EmailParams params = new EmailParams();
 		params.setProtocol(protocol);
 		params.setHostname(hostname);
 		params.setUsername(username);
 		params.setPassword(password);
+		params.setPort(port);
 
 		login(params);
 

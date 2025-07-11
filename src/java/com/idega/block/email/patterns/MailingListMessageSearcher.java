@@ -2,9 +2,11 @@ package com.idega.block.email.patterns;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Flags;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
@@ -50,6 +52,19 @@ public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 			String subject = message.getSubject();
 			if (StringUtil.isEmpty(subject)) {
 				continue;
+			}
+
+			try {
+				//Skip the message, if it is seen/read already
+				if (message.isSet(Flags.Flag.SEEN)) {
+					continue;
+				}
+
+				//Set message as read
+				//message.setFlag(Flags.Flag.SEEN, true);
+				//message.saveChanges();
+			} catch (Exception eSeen) {
+				getLogger().log(Level.WARNING, "Could not check or set the message as SEEN. Message: " + message, eSeen);
 			}
 
 			Matcher subjectMatcher = getPatterns().get(0).matcher(subject);
