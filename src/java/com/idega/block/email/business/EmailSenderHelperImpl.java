@@ -363,13 +363,13 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 			} else if (msg.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
 				IMAPNestedMessage nestedMessage = (IMAPNestedMessage) msg.getContent();
-				msgAndAttachments = parseRFC822(nestedMessage, full);
+				msgAndAttachments = parseRFC822(nestedMessage, full, attachemntMap);
 
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_ALTERNATIVE_TYPE)) {
 				msgAndAttachments = parseMultipartAlternative((Multipart) content, full);
 
 			} else if (msg.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE)) {
-				msgAndAttachments[0] = parseMultipartRelated((Multipart) msg.getContent());
+				msgAndAttachments[0] = parseMultipartRelated((Multipart) msg.getContent(), attachemntMap);
 
 			} else if (msg.isMimeType(EmailConstants.MESSAGE_MULTIPART_SIGNED)) {
 				LOGGER.warning("Message (subject: " + msg.getSubject() + ", sent: " + msg.getSentDate() + "; type: " + msg.getClass() +	") is signed! Parsing may be incorrect!");
@@ -398,12 +398,13 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		return parseMultipartMixed(mp, full);
 	}
 
+
 	@SuppressWarnings("unchecked")
 	private Object[] parseMultipartMixed(Multipart messageMultipart, boolean full) throws MessagingException, IOException {
 		String msg = CoreConstants.EMPTY;
 		Object[] msgAndAttachements = new Object[2];
-		Map<String, InputStream> attachmenstMap = new HashMap<String, InputStream>();
-		msgAndAttachements[1] = attachmenstMap;
+		Map<String, InputStream> attachmentsMap = new HashMap<String, InputStream>();
+		msgAndAttachements[1] = attachmentsMap;
 		for (int i = 0; i < messageMultipart.getCount(); i++) {
 			Part messagePart = messageMultipart.getBodyPart(i);
 			String contentType = messagePart.getContentType();
@@ -411,30 +412,9 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			// it is attachment
 			if ((disposition != null) && (!messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) && ((disposition.equalsIgnoreCase(Part.ATTACHMENT) ||
 																											disposition.equalsIgnoreCase(Part.INLINE)))) {
-				//	Copying attachments to memory
 				InputStream input = messagePart.getInputStream();
-				ByteArrayOutputStream memory = new ByteArrayOutputStream();
-				FileUtil.streamToOutputStream(input, memory);
-				InputStream streamFromMemory = new ByteArrayInputStream(memory.toByteArray());
-				IOUtil.closeInputStream(input);
-				IOUtil.closeOutputStream(memory);
-
 				String fileName = messagePart.getFileName();
-				if (fileName != null) {
-					fileName = MimeUtility.decodeText(fileName);
-				} else if (contentType.indexOf("name*=") != -1) {
-					// When attachments send from evolution mail client,
-					// there is errors so we do what we can.
-					fileName = contentType.substring(contentType.indexOf("name*=") + 6);
-					// maybe we are lucky to decode it, if not, well
-					// better something then nothing.
-					fileName = MimeUtility.decodeText(fileName);
-
-				} else {
-					// well not much can be done then can it?:)
-					fileName = "UnknownFile";
-				}
-				attachmenstMap.put(fileName, streamFromMemory);
+				getAttachmentAndAddToMap(attachmentsMap, input, contentType, fileName);
 
 				// It's a message body
 			} else if (messagePart.getContent() instanceof String) {
@@ -454,25 +434,25 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 				Object[] parsedMsg = parseMultipartMixed((Multipart) messagePart.getContent(), full);
 				msg += parsedMsg[0];
 
-				attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+				attachmentsMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 
 			} else if (messagePart.getContent() instanceof Multipart && (messagePart.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE) || contentType.toLowerCase().equals(EmailConstants.MULTIPART_RELATED_TYPE))) {
-				msg += parseMultipartRelated((Multipart) messagePart.getContent());
+				msg += parseMultipartRelated((Multipart) messagePart.getContent(), attachmentsMap);
 
 			} else if (messagePart.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
 				IMAPNestedMessage nestedMessage = (IMAPNestedMessage) messagePart.getContent();
 
-				Object[] parsedMsg = parseRFC822(nestedMessage, full);
+				Object[] parsedMsg = parseRFC822(nestedMessage, full, attachmentsMap);
 
 				msg += parsedMsg[0];
-				attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+				attachmentsMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 
 			} else if (messagePart.getContent() instanceof Multipart) {
 				Object[] parsedMsg = parseMultipartMixed((Multipart) messagePart.getContent(), full);
 				if (!ArrayUtil.isEmpty(parsedMsg)) {
 					msg += parsedMsg[0];
 
-					attachmenstMap.putAll((Map<String, InputStream>) parsedMsg[1]);
+					attachmentsMap.putAll((Map<String, InputStream>) parsedMsg[1]);
 				}
 
 			} else {
@@ -485,7 +465,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object[] parseRFC822(IMAPNestedMessage part, boolean full) throws MessagingException, IOException {
+	private Object[] parseRFC822(IMAPNestedMessage part, boolean full, Map<String, InputStream> attachmenstMap) throws MessagingException, IOException {
 		String msg = CoreConstants.EMPTY;
 
 		Object[] msgAndAttachements = new Object[2];
@@ -526,14 +506,14 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 		} else if (part.isMimeType(EmailConstants.MULTIPART_RELATED_TYPE) || part.getContentType().toLowerCase().equals("multipart/related")) {
 			//	Multipart related
-			msg += parseMultipartRelated((Multipart) part.getContent());
+			msg += parseMultipartRelated((Multipart) part.getContent(), attachmenstMap);
 			msgAndAttachements[0] = msg;
 
 		} else if (part.isMimeType(EmailConstants.MESSAGE_RFC822_TYPE)) {
 			//	RCF822
 			IMAPNestedMessage nestedMessage = (IMAPNestedMessage) part.getContent();
 
-			Object[] parsedMsg = parseRFC822(nestedMessage, full);
+			Object[] parsedMsg = parseRFC822(nestedMessage, full, attachmenstMap);
 			msg += parsedMsg[0];
 
 			attachmentMap.putAll((Map<String, InputStream>) parsedMsg[1]);
@@ -587,7 +567,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		return msgAndAttachements;
 	}
 
-	private String parseMultipartRelated(Multipart multipart) throws MessagingException, IOException {
+	private String parseMultipartRelated(Multipart multipart, Map<String, InputStream> attachmenstMap) throws MessagingException, IOException {
 		String content = null;
 		StringBuffer allContent = new StringBuffer();
 
@@ -607,7 +587,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 				String contentType = multipart.getContentType();
 				Object contentObject = part.getContent();
 				if (contentObject instanceof Multipart) {
-					String partContent = parseMultipartRelated((Multipart) contentObject);
+					String partContent = parseMultipartRelated((Multipart) contentObject, attachmenstMap);
 					if (partContent != null) {
 						allContent.append(partContent);
 					}
@@ -616,7 +596,17 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 				} else if (contentObject instanceof String) {
 					allContent.append((String) contentObject);
 				} else if (contentObject instanceof InputStream) {
-					LOGGER.warning("Do not know how to handle content object (" + InputStream.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass());
+					LOGGER.warning("Do not know how to handle content object (" + InputStream.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass()
+							+ ". We will try to parse as input stream.");
+					try {
+
+						InputStream input = (InputStream) contentObject;
+						String fileName = part.getFileName();
+						getAttachmentAndAddToMap(attachmenstMap, input, contentType, fileName);
+
+					} catch (Exception ePI) {
+						LOGGER.log(Level.WARNING, "Could not parse as Input stream.", ePI);
+					}
 				} else {
 					LOGGER.warning("Unhandled content: " + contentType + ", content object: " + contentObject.getClass());
 				}
@@ -635,6 +625,36 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 		// replacing all new line characktes to <br/> so it will
 		// be displayed in html as it should
 		return msgWithEscapedHTMLChars.replaceAll("\n", "<br/>");
+	}
+
+	private void getAttachmentAndAddToMap(
+			Map<String, InputStream> attachmentsMap,
+			InputStream input,
+			String contentType,
+			String fileName
+	)  throws MessagingException, IOException {
+		//	Copying attachments to memory
+		ByteArrayOutputStream memory = new ByteArrayOutputStream();
+		FileUtil.streamToOutputStream(input, memory);
+		InputStream streamFromMemory = new ByteArrayInputStream(memory.toByteArray());
+		IOUtil.closeInputStream(input);
+		IOUtil.closeOutputStream(memory);
+
+		if (fileName != null) {
+			fileName = MimeUtility.decodeText(fileName);
+		} else if (contentType.indexOf("name*=") != -1) {
+			// When attachments send from evolution mail client,
+			// there is errors so we do what we can.
+			fileName = contentType.substring(contentType.indexOf("name*=") + 6);
+			// maybe we are lucky to decode it, if not, well
+			// better something then nothing.
+			fileName = MimeUtility.decodeText(fileName);
+
+		} else {
+			// well not much can be done then can it?:)
+			fileName = "UnknownFile";
+		}
+		attachmentsMap.put(fileName, streamFromMemory);
 	}
 
 }

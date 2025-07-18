@@ -59,10 +59,6 @@ public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 				if (message.isSet(Flags.Flag.SEEN)) {
 					continue;
 				}
-
-				//Set message as read
-				//message.setFlag(Flags.Flag.SEEN, true);
-				//message.saveChanges();
 			} catch (Exception eSeen) {
 				getLogger().log(Level.WARNING, "Could not check or set the message as SEEN. Message: " + message, eSeen);
 			}
