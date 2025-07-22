@@ -82,6 +82,16 @@ public abstract class DefaultSubjectPatternFinder extends DefaultSpringBean impl
 			return messagesMap;
 		}
 
+
+		boolean skip = true;
+		try {
+			skip = getSettings().getBoolean("mail.skip_default_subject_pattern_finder", true);
+		} catch (Exception eSeen) {
+		}
+		if (skip) {
+			return messagesMap;
+		}
+
 		for (Message message: messages) {
 			String subject = message.getSubject();
 			if (StringUtil.isEmpty(subject)) {
