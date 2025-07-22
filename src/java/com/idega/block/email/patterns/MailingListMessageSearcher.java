@@ -48,6 +48,15 @@ public class MailingListMessageSearcher extends DefaultSubjectPatternFinder {
 
 		Map<String, FoundMessagesInfo> mailingListsMessages = new HashMap<String, FoundMessagesInfo>();
 
+		boolean skip = true;
+		try {
+			skip = getSettings().getBoolean("mail.skip_mailing_list_message_searcher", true);
+		} catch (Exception eSeen) {
+		}
+		if (skip) {
+			return mailingListsMessages;
+		}
+
 		for (Message message: messages) {
 			String subject = message.getSubject();
 			if (StringUtil.isEmpty(subject)) {

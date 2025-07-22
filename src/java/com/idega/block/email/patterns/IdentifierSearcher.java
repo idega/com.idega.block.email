@@ -4,10 +4,13 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Flags;
@@ -58,7 +61,7 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 
 	@Override
 	public Map<String, FoundMessagesInfo> getSearchResultsFormatted(EmailParams params) throws MessagingException {
-		Map<String, FoundMessagesInfo> messagesMap = super.getCaseIdentifierSearchResultsFormatted(params);
+		Map<String, FoundMessagesInfo> messagesMap = new HashMap<String, FoundMessagesInfo>(); //super.getCaseIdentifierSearchResultsFormatted(params);
 
 		if (getApplication().getSettings().getBoolean("email.identifier_searcher.msg_body_and_attachment", true)) {
 			getCaseIdentifierSearchResultsFormattedForBodyAndAttachments(params, messagesMap);
@@ -120,6 +123,7 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 
 						List<String> fileNames = null;
 						String messageBody = null;
+						String subject = message.getSubject();
 
 						//Get the data from the message
 						Object[] msgAndAttachments = getEmailSenderHelper().getParsedContent(message);
@@ -153,9 +157,33 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 							}
 						}
 
-						//Check
 						String caseIdentifierFound = null;
-						if (!ListUtil.isEmpty(fileNames)) {
+
+						//Check the message subject
+						if (!StringUtil.isEmpty(subject)) {
+							Matcher matcher = null;
+							for (Iterator<Pattern> patternsIter = getPatterns().iterator(); (patternsIter.hasNext() && matcher == null);) {
+								Pattern pattern = patternsIter.next();
+								try {
+									matcher = pattern.matcher(subject);
+									if (!matcher.find()) {
+										matcher = null;
+									}
+								} catch (Exception e) {
+									getLogger().log(Level.WARNING, "Error trying to match subject '" + subject + "' with pattern " + pattern, e);
+									matcher = null;
+								}
+							}
+							if (matcher != null) {
+								String identifier = subject.substring(matcher.start(), matcher.end());
+								if (!StringUtil.isEmpty(identifier)) {
+									caseIdentifierFound = getFixedIdentifier(identifier);
+								}
+							}
+						}
+
+						//Check file names
+						if (!ListUtil.isEmpty(fileNames) && StringUtil.isEmpty(caseIdentifierFound)) {
 							boolean shouldProceedWithFilesCheck = true;
 							for (String fileN : fileNames) {
 								if (!StringUtil.isEmpty(fileN)) {
@@ -173,6 +201,7 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 							}
 						}
 
+						//Check message body
 						if (!StringUtil.isEmpty(messageBody) && StringUtil.isEmpty(caseIdentifierFound)) {
 							for (String caseIdentifier : caseIdentifiers) {
 								if (messageBody.contains(caseIdentifier)) {
@@ -182,6 +211,7 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 							}
 						}
 
+						//Add the message
 						if (!StringUtil.isEmpty(caseIdentifierFound)) {
 							FoundMessagesInfo messagesInfo = messagesMap.get(caseIdentifierFound);
 							if (messagesInfo == null) {
