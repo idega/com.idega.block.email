@@ -3,9 +3,12 @@ package com.idega.block.email.client.business;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -27,6 +30,11 @@ import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.datastructures.map.MapUtil;
+import com.microsoft.aad.msal4j.ClientCredentialFactory;
+import com.microsoft.aad.msal4j.ClientCredentialParameters;
+import com.microsoft.aad.msal4j.ConfidentialClientApplication;
+import com.microsoft.aad.msal4j.IAuthenticationResult;
+import com.microsoft.aad.msal4j.IClientCredential;
 
 /**
  * This JavaBean is used to store mail user information.
@@ -38,7 +46,7 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 	public static final String BEAN_IDENTIFIER = "email_EmailSubjectPatternFinder";
 	private static final String DEFAULT_PROTOCOL = "pop3";
 	private static final String DEFAULT_FOLDER = "Inbox";
-	private static final String MSGS_FOLDER = "ReadMessages";
+	public static final String MSGS_FOLDER = "ReadMessages";
 
 	private Collection<EmailSubjectSearchable> emailSubjectSearchers;
 
@@ -231,5 +239,49 @@ public class EmailSubjectPatternFinder extends DefaultSpringBean {
 		}
 		emailSubjectSearchers.add(emailSubjectSearcher);
 	}
+
+
+	/**
+	 * Method used to login to the Microsoft mail inbox.
+	 */
+	public EmailParams loginToMSOffice(
+			String clientId,
+			String clientSecret,
+			String tenantId,
+			String userEmail
+	) {
+		EmailParams params = new EmailParams();
+
+		try {
+	        System.setProperty("https.protocols", "TLSv1.2");
+
+	        String authority = "https://login.microsoftonline.com/" + tenantId + "/";
+
+	        IClientCredential credential = ClientCredentialFactory.createFromSecret(clientSecret);
+
+	        ConfidentialClientApplication app = ConfidentialClientApplication.builder(
+	        		clientId,
+	        		credential)
+	            .authority(authority)
+	            .build();
+
+	        ClientCredentialParameters ccpParams = ClientCredentialParameters.builder(
+	                Collections.singleton("https://graph.microsoft.com/.default"))
+	            .build();
+
+
+	        CompletableFuture<IAuthenticationResult> future = app.acquireToken(ccpParams);
+	        IAuthenticationResult token = future.get();
+
+	        params.setToken(token);
+	        params.setUserEmail(userEmail);
+
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Could not login to the MS Office mailbox.", e);
+		}
+
+		return params;
+	}
+
 
 }
