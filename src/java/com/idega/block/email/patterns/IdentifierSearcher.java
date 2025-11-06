@@ -3,16 +3,12 @@ package com.idega.block.email.patterns;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,12 +18,6 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -38,7 +28,6 @@ import com.idega.block.email.bean.FoundMessagesInfo;
 import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.business.EmailSenderHelper;
 import com.idega.block.email.client.business.EmailParams;
-import com.idega.block.email.client.business.EmailSubjectPatternFinder;
 import com.idega.data.SimpleQuerier;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
@@ -46,18 +35,6 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
-import com.microsoft.aad.msal4j.IAuthenticationResult;
-import com.microsoft.graph.models.Attachment;
-import com.microsoft.graph.models.FileAttachment;
-import com.microsoft.graph.models.ItemAttachment;
-import com.microsoft.graph.models.MailFolder;
-import com.microsoft.graph.models.MessageMoveParameterSet;
-import com.microsoft.graph.models.ReferenceAttachment;
-import com.microsoft.graph.models.Request;
-import com.microsoft.graph.requests.AttachmentCollectionPage;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.MailFolderCollectionPage;
-import com.microsoft.graph.requests.MessageCollectionPage;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -117,26 +94,8 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 
 	private void getCaseIdentifierSearchResultsFormattedForBodyAndAttachments(EmailParams params, Map<String, FoundMessagesInfo> messagesMap) {
 		try {
-			List<Message> messages = null;
-
-			if (params == null) {
-				getLogger().warning("Could not fetch the messages and parse them. Params are not defined.");
-				return;
-			}
-
-			if (params.getToken() != null) {
-				//*** Microsoft mailbox ***
-				messages = fetchUnreadMessagesWithAttachmentsFromMicrosoftMailbox(
-						params.getToken(),
-						params.getUserEmail()
-				);
-			} else {
-				//*** Regular smtp/pop3 messages ***
-				messages = getAllMessages(params);
-			}
-
-
-			if (!ListUtil.isEmpty(messages)) {
+			Message[] messages = getAllMessages(params);
+			if (!ArrayUtil.isEmpty(messages)) {
 
 				List<String> caseIdentifiers = getCaseIndentifiers();
 				if (ListUtil.isEmpty(caseIdentifiers)) {
@@ -297,17 +256,12 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 		}
 	}
 
-	private List<Message> getAllMessages(EmailParams params) throws MessagingException {
+	private Message[] getAllMessages(EmailParams params) throws MessagingException {
 		Folder folder = params.getFolder();
 
 		Message[] messages = folder.getMessages();
 
-		List<Message> messagesList = new ArrayList<>();
-		if (messages != null && messages.length > 0) {
-			messagesList = new ArrayList<>(Arrays.asList(messages));
-		}
-
-		return messagesList;
+		return messages;
 	}
 
     public String getMessageBody(Message message) throws MessagingException, java.io.IOException {
@@ -384,215 +338,6 @@ public class IdentifierSearcher extends DefaultSubjectPatternFinder {
 	public void setEmailSenderHelper(EmailSenderHelper emailSenderHelper) {
 		this.emailSenderHelper = emailSenderHelper;
 	}
-
-
-    private MailFolder getParsedEmailsFolder(
-    		GraphServiceClient<Request> graphClient,
-    		String userEmail
-    ) {
-        try {
-        	String parsedMessagesFolder = getSettings().getProperty("messages.read_email_msg_folder", EmailSubjectPatternFinder.MSGS_FOLDER);
-
-            MailFolderCollectionPage folders = graphClient.users(userEmail)
-                    .mailFolders()
-                    .buildRequest()
-                    .get();
-
-            for (MailFolder folder : folders.getCurrentPage()) {
-                if (parsedMessagesFolder.equalsIgnoreCase(folder.displayName)) {
-                    return folder;
-                }
-            }
-
-            // Create folder
-            MailFolder newFolder = new MailFolder();
-            newFolder.displayName = parsedMessagesFolder;
-            return graphClient.users(userEmail)
-                    .mailFolders()
-                    .buildRequest()
-                    .post(newFolder);
-
-        } catch (Exception ex) {
-        	getLogger().log(Level.WARNING, "Failed to ensure if 'Parsed' folder exists in Microsoft mailbox.", ex);
-        }
-        return null;
-    }
-
-
-	private List<Message> fetchUnreadMessagesWithAttachmentsFromMicrosoftMailbox(
-			IAuthenticationResult token,
-			String userEmail
-	) {
-        List<Message> processedMessages = new ArrayList<>();
-
-        if (
-        		token == null
-        		|| StringUtil.isEmpty(token.accessToken())
-        		|| StringUtil.isEmpty(userEmail)
-        ) {
-        	getLogger().warning("Could not fetch the Microsoft mailbox messages. Acces token or user email is empty.");
-        	return processedMessages;
-        }
-
-		try {
-	        Session session = Session.getInstance(new Properties());
-
-	        //*** Build Graph client - we get the access to the Microsoft email box ***
-			@SuppressWarnings("rawtypes")
-			GraphServiceClient graphClient = GraphServiceClient.builder()
-				    .authenticationProvider(request -> CompletableFuture.completedFuture(token.accessToken()))
-				    .buildClient();
-
-
-	        //*** Get unread messages ***
-	        MessageCollectionPage messages = graphClient.users(userEmail)
-	                .mailFolders("Inbox")
-	                .messages()
-	                .buildRequest()
-	                .filter("isRead eq false")
-	                .top(1000)
-	                .select("id,subject,from,body,bodyPreview,receivedDateTime,hasAttachments,isRead")
-	                .orderBy("receivedDateTime desc")
-	                .get();
-
-	        //*** Get the "Parsed" folder - create if does not exist ***
-	        @SuppressWarnings("unchecked")
-			MailFolder parsedFolder = getParsedEmailsFolder(
-	        		graphClient,
-	        		userEmail
-	        );
-
-	        //*** Reading the messages one by one ***
-	        for (com.microsoft.graph.models.Message msg : messages.getCurrentPage()) {
-	            try {
-	                getLogger().info("MICROSOFT EMAIL FETCHER. Processing the message: " + msg.subject);
-
-	                //*** Convert to javax.mail.Message ***
-	                MimeMessage mimeMessage = new MimeMessage(session);
-
-	                //Subject
-	                mimeMessage.setSubject(msg.subject != null ? msg.subject : "No subject");
-
-	                //From
-	                String fromAddr = "unknown@domain.is";
-	                if (msg.from != null && msg.from.emailAddress != null) {
-	                    fromAddr = msg.from.emailAddress.address;
-	                }
-	                mimeMessage.setFrom(new InternetAddress(fromAddr));
-
-	                //Date
-	                if (msg.receivedDateTime != null) {
-	                	mimeMessage.setSentDate(Date.from(msg.receivedDateTime.toInstant()));
-	                }
-
-	                //Build multipart (body + attachments)
-	                MimeMultipart multipart = new MimeMultipart("mixed");
-
-	                //Body
-	                MimeBodyPart bodyPart = new MimeBodyPart();
-	                String bodyContent = (msg.body != null && !StringUtil.isEmpty(msg.body.content))
-	                        ? msg.body.content
-	                        : !StringUtil.isEmpty(msg.bodyPreview) ? msg.bodyPreview : "";
-	                String contentType = (msg.body != null && !StringUtil.isEmpty(msg.body.content)
-	                        && msg.body.contentType.toString().equalsIgnoreCase("html"))
-	                        ? "text/html; charset=utf-8"
-	                        : "text/plain; charset=utf-8";
-	                bodyPart.setContent(bodyContent, contentType);
-	                multipart.addBodyPart(bodyPart);
-	                //mimeMessage.setText(bodyContent);
-
-	                //*** Fetch attachments if any ***
-	                if (msg.hasAttachments != null && msg.hasAttachments) {
-	                    AttachmentCollectionPage attachmentsPage = graphClient
-	                            .users(userEmail)
-	                            .messages(msg.id)
-	                            .attachments()
-	                            .buildRequest()
-	                            .get();
-
-	                    for (Attachment att : attachmentsPage.getCurrentPage()) {
-                            MimeBodyPart attachPart = new MimeBodyPart();
-
-	                        if (att instanceof FileAttachment) {
-	                            FileAttachment fileAtt = (FileAttachment) att;
-	                            attachPart.setFileName(fileAtt.name);
-	                            if (fileAtt.contentBytes != null) {
-	                                ByteArrayDataSource ds = new ByteArrayDataSource(
-	                                        fileAtt.contentBytes,
-	                                        fileAtt.contentType != null ? fileAtt.contentType : "application/octet-stream"
-	                                );
-	                                attachPart.setDataHandler(new javax.activation.DataHandler(ds));
-	                                //attachPart.setContent(fileAtt.contentBytes, fileAtt.contentType != null ? fileAtt.contentType : "application/octet-stream");
-
-	                                //If it is an inline image, set the Content-ID header
-	                                //if (fileAtt.isInline != null && fileAtt.isInline) {
-	                                //	attachPart.setHeader("Content-ID", "<" + fileAtt.id + ">");
-	                                //	attachPart.setDisposition(MimeBodyPart.INLINE);
-	                                //} else {
-	                                //	attachPart.setDisposition(MimeBodyPart.ATTACHMENT);
-	                                //}
-
-	                                multipart.addBodyPart(attachPart);
-
-	                            } else if (att instanceof ItemAttachment) {
-	                            	ItemAttachment itemAtt = (ItemAttachment) att;
-	                            	if (itemAtt.item instanceof com.microsoft.graph.models.Message) {
-	                            		com.microsoft.graph.models.Message nestedMsg = (com.microsoft.graph.models.Message) itemAtt.item;
-	                            		attachPart.setFileName(itemAtt.name + ".eml");
-	                            		ByteArrayDataSource ds = new ByteArrayDataSource( nestedMsg.toString().getBytes("UTF-8"), "message/rfc822" );
-	                            		attachPart.setDataHandler(new javax.activation.DataHandler(ds));
-	                            		attachPart.setDisposition(MimeBodyPart.ATTACHMENT);
-	                            		multipart.addBodyPart(attachPart);
-	                            	}
-
-	                            } else if (att instanceof ReferenceAttachment) {
-	                            	ReferenceAttachment refAtt = (ReferenceAttachment) att;
-	                            	attachPart.setFileName(refAtt.name != null ? refAtt.name : "reference.txt");
-	                            	attachPart.setText("Reference attachment, content not directly available.");
-	                            	multipart.addBodyPart(attachPart);
-	                            }
-	                        }
-
-	                    }
-	                }
-
-	                mimeMessage.setContent(multipart);
-	                mimeMessage.saveChanges();
-
-	                //*** Mark message as READ ***
-	                com.microsoft.graph.models.Message updateMessage = new com.microsoft.graph.models.Message();
-	                updateMessage.isRead = true;
-	                graphClient.users(userEmail)
-	                        .messages(msg.id)
-	                        .buildRequest()
-	                        .patch(updateMessage);
-
-	                //*** Move message to "Parsed" map ***
-	                MessageMoveParameterSet moveParams = MessageMoveParameterSet
-	                	    .newBuilder()
-	                	    .withDestinationId(parsedFolder.id)
-	                	    .build();
-	                graphClient.users(userEmail)
-	                	    .messages(msg.id)
-	                	    .move(moveParams)
-	                	    .buildRequest()
-	                	    .post();
-
-	                //*** Add the read message into the list ***
-	                processedMessages.add(mimeMessage);
-
-	            } catch (Exception exM) {
-	            	getLogger().log(Level.WARNING, "Failed fetch the email message from Microsoft mailbox. Token: " + token + ", user email: " + userEmail + ", email subject: " + msg.subject, exM);
-	            }
-	        }
-        } catch (Exception ex) {
-        	getLogger().log(Level.WARNING, "Failed to fetch the email messages from Microsoft mailbox. Token: " + token + ", user email: " + userEmail, ex);
-        }
-
-        return processedMessages;
-    }
-
-
 
 
 }

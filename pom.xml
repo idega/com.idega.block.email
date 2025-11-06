@@ -66,38 +66,5 @@
   		<groupId>com.idega.block.platform</groupId>
 		<artifactId>com.idega.jackrabbit</artifactId>
   	</dependency>
-  	
-  	<!-- External dependencies -->
-  	
-	<!-- Microsoft Graph SDK -->
-    <dependency>
-        <groupId>com.microsoft.graph</groupId>
-        <artifactId>microsoft-graph</artifactId>
-        <version>5.65.0</version>
-    </dependency>
-
-    <!-- MSAL4J (for authentication) -->
-    <dependency>
-        <groupId>com.microsoft.azure</groupId>
-        <artifactId>msal4j</artifactId>
-        <version>1.13.8</version>
-    </dependency>
-
-	<!-- Microsoft Graph Core (required) -->
-    <dependency>
-        <groupId>com.microsoft.graph</groupId>
-        <artifactId>microsoft-graph-core</artifactId>
-        <version>2.0.21</version>
-    </dependency>
-
-    <!-- OkHttp (used by Graph client internally) -->
-    <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>4.12.0</version>
-    </dependency>
-  	
   </dependencies>
-
-  
 </project>

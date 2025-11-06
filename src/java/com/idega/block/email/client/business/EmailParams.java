@@ -5,9 +5,6 @@ import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Store;
 
-import com.idega.util.StringUtil;
-import com.microsoft.aad.msal4j.IAuthenticationResult;
-
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -28,10 +25,6 @@ public class EmailParams {
 	private Integer port;
 
 	private boolean loggedOut;
-
-	private IAuthenticationResult token;
-	private String userEmail;
-
 
 	public Message[] getMessagesFound() {
 		return messagesFound;
@@ -88,33 +81,17 @@ public class EmailParams {
 		this.loggedOut = loggedOut;
 	}
 
+
+
 	public Integer getPort() {
 		return port;
 	}
 	public void setPort(Integer port) {
 		this.port = port;
 	}
-
-	public IAuthenticationResult getToken() {
-		return token;
-	}
-	public void setToken(IAuthenticationResult token) {
-		this.token = token;
-	}
-	public String getUserEmail() {
-		return userEmail;
-	}
-	public void setUserEmail(String userEmail) {
-		this.userEmail = userEmail;
-	}
-
-
-
 	@Override
 	public String toString() {
 		return "Hostname: " + getHostname() + ", protocol: " + getProtocol() + ", user name: " + getUsername() + ", password: " +
-				getPassword() + ", session: " + getSession() + ", store: " + getStore() + ", folder: " + getFolder() + ", port: " + getPort()
-				 + ", token: " + (getToken() != null ? getToken().accessToken() : "NULL")
-				 + ", user email: " + (!StringUtil.isEmpty(getUserEmail()) ? getUserEmail() : "NULL");
+				getPassword() + ", session: " + getSession() + ", store: " + getStore() + ", folder: " + getFolder() + ", port: " + getPort();
 	}
 }
