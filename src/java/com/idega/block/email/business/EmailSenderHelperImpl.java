@@ -544,16 +544,60 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 		for (int i = 0; i < multipart.getCount(); i++) {
 			Part part = multipart.getBodyPart(i);
+		    String contentType = part.getContentType() != null ? part.getContentType().toLowerCase() : "";
+
+			//Nested multipart/related (Apple Mail inline images)
+	        if (
+	        		part.getContent() instanceof Multipart
+	        		&& contentType.startsWith(EmailConstants.MULTIPART_RELATED_TYPE)
+	        ) {
+	            String htmlContent = parseMultipartRelated((Multipart) part.getContent(), attachmentMap);
+	            if (StringUtil.isEmpty(msg) || full) {
+	                msg += htmlContent;
+	            }
+	            continue;
+	        }
+
 			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
 				if (StringUtil.isEmpty(msg) || full) {
 					msg += parseHTMLMessage((String) part.getContent());
 				}
 				msgAndAttachements[0] = msg;
+			} else if (part.isMimeType("image/*")) {
+	            String fileName = part.getFileName();
+	            if (StringUtil.isEmpty(fileName)) {
+	                String extension = "jpg";
+	                String type = part.getContentType();
+	                if (
+	                	type.contains("png")
+	                ) {
+	                	extension = "png";
+	                } else if (
+	                	type.contains("gif")
+	                ) {
+	                	extension = "gif";
+	                }
+	                fileName = "inline-image-" + i + "." + extension;
+	            }
+
+	            InputStream input = part.getInputStream();
+	            String[] contentIdHeader = part.getHeader("Content-ID");
+	            String contentId = null;
+	            if (contentIdHeader != null && contentIdHeader.length > 0) {
+	                contentId = contentIdHeader[0].trim();
+	                contentId = contentId.replaceAll("[<>]", "");
+	                LOGGER.info("Inline image with CID: " + contentId + " -> fileName: " + fileName);
+	                attachmentMap.put("cid-" + contentId + "_" + fileName, input);
+	            } else {
+	                getAttachmentAndAddToMap(attachmentMap, input, contentType, fileName);
+	            }
+
+	            continue;
 			} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
 				if (StringUtil.isEmpty(msg) || full) {
 					msg += parsePlainTextMessage((String) part.getContent());
 				}
-				msgAndAttachements[0] = msg;
+				//msgAndAttachements[0] = msg;
 			} else if (part.getContent() instanceof Multipart && part.isMimeType(EmailConstants.MULTIPART_MIXED_TYPE)) {
 				Object[] parsedMsg = parseMultipartMixed((Multipart) part.getContent(), full);
 				if (parsedMsg[0] != null && parsedMsg[0] instanceof String) {
@@ -564,56 +608,98 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 			}
 		}
 
+		msgAndAttachements[0] = msg;
+
 		return msgAndAttachements;
 	}
 
-	private String parseMultipartRelated(Multipart multipart, Map<String, InputStream> attachmenstMap) throws MessagingException, IOException {
-		String content = null;
+	private String parseMultipartRelated(Multipart multipart, Map<String, InputStream> attachmentsMap) throws MessagingException, IOException {
 		StringBuffer allContent = new StringBuffer();
 
 		for (int i = 0; i < multipart.getCount(); i++) {
 			BodyPart part = multipart.getBodyPart(i);
+		    String contentType = part.getContentType() != null ? part.getContentType().toLowerCase() : "";
+
+			//HTML body
 			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_HTML)) {
-				content = parseHTMLMessage((String) part.getContent());
-				if (content != null) {
-					return content;
-				}
-			/*} else if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
-				content = parsePlainTextMessage((String) part.getContent());
-				if (content != null) {
-					return content;
-				}*/
-			} else {
-				String contentType = multipart.getContentType();
-				Object contentObject = part.getContent();
-				if (contentObject instanceof Multipart) {
-					String partContent = parseMultipartRelated((Multipart) contentObject, attachmenstMap);
-					if (partContent != null) {
-						allContent.append(partContent);
-					}
-				} else if (contentObject instanceof Message) {
-					LOGGER.warning("Do not know how to handle content object (" + Message.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass());
-				} else if (contentObject instanceof String) {
-					allContent.append((String) contentObject);
-				} else if (contentObject instanceof InputStream) {
-					LOGGER.warning("Do not know how to handle content object (" + InputStream.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass()
-							+ ". We will try to parse as input stream.");
-					try {
+	            String content = parseHTMLMessage((String) part.getContent());
+	            if (content != null) {
+	                allContent.append(content);
+	            }
+	            continue;
+	        }
 
-						InputStream input = (InputStream) contentObject;
-						String fileName = part.getFileName();
-						getAttachmentAndAddToMap(attachmenstMap, input, contentType, fileName);
+			//Inline images (Apple Mail pasted or embedded)
+	        if (part.isMimeType("image/*")) {
+	            String fileName = part.getFileName();
+	            if (StringUtil.isEmpty(fileName)) {
+	                String extension = "jpg";
+	                String type = part.getContentType();
+	                if (
+	                	type.contains("png")
+	                ) {
+	                	extension = "png";
+	                } else if (
+	                	type.contains("gif")
+	                ) {
+	                	extension = "gif";
+	                }
+	                fileName = "inline-image-" + i + "." + extension;
+	            }
 
-					} catch (Exception ePI) {
-						LOGGER.log(Level.WARNING, "Could not parse as Input stream.", ePI);
-					}
-				} else {
-					LOGGER.warning("Unhandled content: " + contentType + ", content object: " + contentObject.getClass());
-				}
+	            InputStream input = part.getInputStream();
+                getAttachmentAndAddToMap(attachmentsMap, input, contentType, fileName);
+
+	            continue;
+	        }
+
+	        //Nested multipart
+	        Object contentObject = part.getContent();
+	        if (contentObject instanceof Multipart) {
+	            String partContent = parseMultipartRelated((Multipart) contentObject, attachmentsMap);
+	            if (partContent != null) {
+	                allContent.append(partContent);
+	            }
+	            continue;
+	        }
+
+	        //Plain text
+			if (part.isMimeType(MimeTypeUtil.MIME_TYPE_TEXT_PLAIN)) {
+				String content = parsePlainTextMessage((String) part.getContent());
+	            if (content != null) {
+	                allContent.append(content);
+	            }
+	            continue;
 			}
+
+	        //Binary streams (non-image)
+	        if (contentObject instanceof InputStream) {
+				LOGGER.warning("Do not know how to handle content object (" + InputStream.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass()
+					+ ". We will try to parse as input stream.");
+				try {
+		            InputStream input = (InputStream) contentObject;
+		            String fileName = part.getFileName();
+		            getAttachmentAndAddToMap(attachmentsMap, input, part.getContentType(), fileName);
+				} catch (Exception ePI) {
+					LOGGER.log(Level.WARNING, "Could not parse as Input stream.", ePI);
+				}
+	            continue;
+	        }
+
+			if (contentObject instanceof Message) {
+				LOGGER.warning("Do not know how to handle content object (" + Message.class.getName() + ") of " + contentType + ", content object: " + contentObject.getClass());
+				continue;
+			}
+
+			if (contentObject instanceof String) {
+	            allContent.append((String) contentObject);
+	            continue;
+	        }
+
+			LOGGER.warning("Unhandled content: " + contentType + ", content object: " + contentObject.getClass());
 		}
 
-		return content == null ? allContent.toString() : content;
+		return allContent.toString();
 	}
 
 	private String parseHTMLMessage(String message) {
@@ -622,7 +708,7 @@ public class EmailSenderHelperImpl implements EmailSenderHelper {
 
 	private String parsePlainTextMessage(String message) {
 		String msgWithEscapedHTMLChars = StringUtil.escapeHTMLSpecialChars(message);
-		// replacing all new line characktes to <br/> so it will
+		// replacing all new line characters to <br/> so it will
 		// be displayed in html as it should
 		return msgWithEscapedHTMLChars.replaceAll("\n", "<br/>");
 	}
